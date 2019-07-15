@@ -165,7 +165,20 @@ def _check_couchbase_document(host, user, password):
         return checked, error
 
 
+def _check_couchbase_conn(host):
+    checked = True
+    error = ""
+
+    req = requests.get("https://{0}:18091/pools/".format(host), verify=False)
+    if not req.ok:
+        checked = False
+        error = req.text
+    return checked, error
+
+
 def wait_for_couchbase(manager, max_wait_time, sleep_duration, **kwargs):
+    conn_only = as_boolean(kwargs.get("conn_only", False))
+
     host = os.environ.get("GLUU_COUCHBASE_URL", "localhost")
     user = manager.config.get("couchbase_server_user")
     password = decode_text(manager.secret.get("encoded_couchbase_server_pw"),
@@ -173,8 +186,11 @@ def wait_for_couchbase(manager, max_wait_time, sleep_duration, **kwargs):
 
     for i in range(0, max_wait_time, sleep_duration):
         try:
-            checked, error = _check_couchbase_document(user, host, password)
-            if checked:
+            if conn_only:
+                _, error = _check_couchbase_conn(host)
+            else:
+                _, error = _check_couchbase_document(host, user, password)
+            if not error:
                 logger.info("Couchbase is ready")
                 return
             reason = error
@@ -214,8 +230,9 @@ def wait_for_oxauth(manager, max_wait_time, sleep_duration, **kwargs):
     sys.exit(1)
 
 
-def wait_for(manager, deps=None, **kwargs):
+def wait_for(manager, deps=None, conn_only=None):
     deps = deps or []
+    conn_only = conn_only or []
     callbacks = {
         "config": wait_for_config,
         "couchbase": wait_for_couchbase,
@@ -239,4 +256,9 @@ def wait_for(manager, deps=None, **kwargs):
         if not callable(callback):
             logger.warn("unable to find callback for {} dependency".format(dep))
             continue
+
+        kwargs = {}
+        if dep in conn_only:
+            kwargs["conn_only"] = True
+
         callback(manager, max_wait_time, sleep_duration, **kwargs)
