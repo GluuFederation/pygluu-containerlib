@@ -93,6 +93,7 @@ def wait_for_ldap(manager, max_wait_time, sleep_duration, **kwargs):
         "site": "o=site",
         "cache": "o=gluu",
         "statistic": "o=metric",
+        "authorization": "o=gluu",
     }
     search_base = search_base_mapping[ldap_mapping]
 
