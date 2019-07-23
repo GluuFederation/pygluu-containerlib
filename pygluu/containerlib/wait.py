@@ -218,16 +218,41 @@ def wait_for_oxauth(manager, max_wait_time, sleep_duration, **kwargs):
                 return
             else:
                 logger.warn(
-                    "oxAuth {} is not ready; retrying in {} seconds".format(url, sleep_duration)
+                    "oxAuth is not ready; retrying in {} seconds".format(sleep_duration)
                 )
         except Exception as exc:
             logger.warn(
-                "oxAuth {} is not ready; error={}; "
-                "retrying in {} seconds".format(url, exc, sleep_duration)
+                "oxAuth is not ready; reason={}; "
+                "retrying in {} seconds".format(exc.message, sleep_duration)
             )
         time.sleep(sleep_duration)
 
     logger.error("oxAuth is not ready, after {} seconds.".format(max_wait_time))
+    sys.exit(1)
+
+
+def wait_for_oxtrust(manager, max_wait_time, sleep_duration, **kwargs):
+    addr = os.environ.get("GLUU_OXTRUST_BACKEND", "localhost:8082")
+    url = "http://{}/identity/restv1/scim-configuration".format(addr)
+
+    for i in range(0, max_wait_time, sleep_duration):
+        try:
+            r = requests.get(url)
+            if r.ok:
+                logger.info("oxTrust is ready")
+                return
+            else:
+                logger.warn(
+                    "oxTrust is not ready; retrying in {} seconds".format(sleep_duration)
+                )
+        except Exception as exc:
+            logger.warn(
+                "oxTrust is not ready; error={}; "
+                "retrying in {} seconds".format(exc.message, sleep_duration)
+            )
+        time.sleep(sleep_duration)
+
+    logger.error("oxTrust is not ready, after {} seconds.".format(max_wait_time))
     sys.exit(1)
 
 
@@ -240,6 +265,7 @@ def wait_for(manager, deps=None, conn_only=None):
         "ldap": wait_for_ldap,
         "secret": wait_for_secret,
         "oxauth": wait_for_oxauth,
+        "oxtrust": wait_for_oxtrust,
     }
 
     try:
