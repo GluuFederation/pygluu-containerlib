@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-import json
 import logging
 import os
-import random
 import sys
 import time
 
@@ -74,6 +72,7 @@ def wait_for_secret(manager, max_wait_time, sleep_duration, **kwargs):
 
 
 def wait_for_ldap(manager, max_wait_time, sleep_duration, **kwargs):
+    persistence_type = os.environ.get("GLUU_PERSISTENCE_TYPE", "ldap")
     ldap_url = os.environ.get("GLUU_LDAP_URL", "localhost:1636")
     ldap_mapping = os.environ.get("GLUU_PERSISTENCE_LDAP_MAPPING", "default")
 
@@ -87,26 +86,29 @@ def wait_for_ldap(manager, max_wait_time, sleep_duration, **kwargs):
     # initial data;
     successive_entries_check = 0
 
-    search_base_mapping = {
-        "default": "o=gluu",
-        "user": "o=gluu",
-        "site": "o=site",
-        "cache": "o=gluu",
-        "statistic": "o=metric",
-        "authorization": "o=gluu",
-    }
-    search_base = search_base_mapping[ldap_mapping]
+    search = ("o=gluu", "(objectClass=gluuConfiguration)")
+    if persistence_type == "hybrid":
+        search_mapping = {
+            "default": ("o=gluu", "(objectClass=gluuConfiguration)"),
+            "user": ("o=gluu", "(objectClass=gluuGroup)"),
+            "site": ("o=site", "(ou=people)"),
+            "cache": ("o=gluu", "(objectClass=gluuConfiguration)"),
+            "statistic": ("o=metric", "(ou=statistic)"),
+            "authorization": ("o=gluu", "(objectClass=gluuConfiguration)"),
+        }
+        search = search_mapping[ldap_mapping]
 
     for i in range(0, max_wait_time, sleep_duration):
         try:
+            reason = "LDAP is not initialized yet"
             with ldap3.Connection(
                     ldap_server,
                     ldap_bind_dn,
                     ldap_password) as ldap_connection:
 
                 ldap_connection.search(
-                    search_base=search_base,
-                    search_filter="(objectClass=*)",
+                    search_base=search[0],
+                    search_filter=search[1],
                     search_scope=ldap3.SUBTREE,
                     attributes=['objectClass'],
                     size_limit=1,
@@ -118,7 +120,6 @@ def wait_for_ldap(manager, max_wait_time, sleep_duration, **kwargs):
                 if successive_entries_check >= 3:
                     logger.info("LDAP is ready")
                     return
-                reason = "LDAP is not initialized yet"
         except Exception as exc:
             reason = exc
 
@@ -130,71 +131,40 @@ def wait_for_ldap(manager, max_wait_time, sleep_duration, **kwargs):
     sys.exit(1)
 
 
-def _check_couchbase_document(host, user, password):
+def _check_couchbase_document(host, user, password, max_wait_time, sleep_duration):
     persistence_type = os.environ.get("GLUU_PERSISTENCE_TYPE", "ldap")
     ldap_mapping = os.environ.get("GLUU_PERSISTENCE_LDAP_MAPPING", "default")
-    checked = True
-    error = ""
-    bucket = "gluu"
 
-    with requests.Session() as session:
-        session.auth = (user, password)
-        session.verify = False
+    # only `gluu` and `gluu_user` buckets that may have initial data
+    # these data also affected by LDAP mapping selection;
+    # by default we will choose the `gluu` bucket
+    bucket, key = "gluu", "_"
 
-        if persistence_type == "hybrid":
-            req = session.get(
-                "https://{0}:18091/pools/default/buckets".format(host)
-            )
-            if not req.ok:
-                checked = False
-                error = json.loads(req.text)["errors"][0]["msg"]
-                return checked, error
+    # if `hybrid` is selected and default mapping is stored in LDAP,
+    # the `gluu` bucket won't have data, hence we check the `gluu_user`
+    # instead
+    if persistence_type == "hybrid" and ldap_mapping == "default":
+        bucket, key = "gluu_user", "groups_60B7"
+    query = "SELECT objectClass FROM {0} USE KEYS '{1}'".format(bucket, key)
 
-            bucket = random.choice([
-                _bucket["name"] for _bucket in req.json()
-                if _bucket["name"] != ldap_mapping
-            ])
-
-        query = "SELECT COUNT(*) FROM `{}`".format(bucket)
-        req = session.post(
-            "https://{0}:18093/query/service".format(host),
-            data={"statement": query},
-        )
-        if not req.ok:
-            checked = False
-            error = json.loads(req.text)["errors"][0]["msg"]
-        return checked, error
-
-
-def _check_couchbase_conn(host):
-    checked = True
-    error = ""
-
-    req = requests.get("https://{0}:18091/pools/".format(host), verify=False)
-    if not req.ok:
-        checked = False
-        error = req.text
-    return checked, error
-
-
-def wait_for_couchbase(manager, max_wait_time, sleep_duration, **kwargs):
-    conn_only = as_boolean(kwargs.get("conn_only", False))
-
-    host = os.environ.get("GLUU_COUCHBASE_URL", "localhost")
-    user = manager.config.get("couchbase_server_user")
-    password = decode_text(manager.secret.get("encoded_couchbase_server_pw"),
-                           manager.secret.get("encoded_salt"))
+    # check the entries few times to ensure Couchbase document is actually ready
+    successive_entries_check = 0
 
     for i in range(0, max_wait_time, sleep_duration):
         try:
-            if conn_only:
-                _, error = _check_couchbase_conn(host)
-            else:
-                _, error = _check_couchbase_document(host, user, password)
-            if not error:
+            reason = "Couchbase is not initialized yet"
+            req = requests.post(
+                "https://{0}:18093/query/service".format(host),
+                data={"statement": query},
+                auth=(user, password),
+                verify=False,
+            )
+            if req.ok and req.json()["results"]:
+                successive_entries_check += 1
+
+            if successive_entries_check >= 3:
                 logger.info("Couchbase is ready")
                 return
-            reason = error
         except Exception as exc:
             reason = exc
 
@@ -204,6 +174,43 @@ def wait_for_couchbase(manager, max_wait_time, sleep_duration, **kwargs):
 
     logger.error("Couchbase backend is not ready after {} seconds.".format(max_wait_time))
     sys.exit(1)
+
+
+def _check_couchbase_connection(host, user, password, max_wait_time, sleep_duration):
+    for i in range(0, max_wait_time, sleep_duration):
+        try:
+            reason = "Couchbase is not initialized yet"
+            req = requests.get(
+                "https://{0}:18091/pools/".format(host),
+                auth=(user, password),
+                verify=False,
+            )
+            if req.ok:
+                logger.info("Couchbase is ready")
+                return
+        except Exception as exc:
+            reason = exc
+
+        logger.warn("Couchbase backend is not ready; reason={}; "
+                    "retrying in {} seconds.".format(reason, sleep_duration))
+        time.sleep(sleep_duration)
+
+    logger.error("Couchbase backend is not ready after {} seconds.".format(max_wait_time))
+    sys.exit(1)
+
+
+def wait_for_couchbase(manager, max_wait_time, sleep_duration, **kwargs):
+    conn_only = as_boolean(kwargs.get("conn_only", False))
+    host = os.environ.get("GLUU_COUCHBASE_URL", "localhost")
+    user = manager.config.get("couchbase_server_user")
+    password = decode_text(manager.secret.get("encoded_couchbase_server_pw"),
+                           manager.secret.get("encoded_salt"))
+
+    if conn_only:
+        callback = _check_couchbase_connection
+    else:
+        callback = _check_couchbase_document
+    callback(host, user, password, max_wait_time, sleep_duration)
 
 
 def wait_for_oxauth(manager, max_wait_time, sleep_duration, **kwargs):
