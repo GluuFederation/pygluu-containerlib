@@ -100,7 +100,11 @@ def wait_for_ldap(manager, max_wait_time, sleep_duration, **kwargs):
 
     for i in range(0, max_wait_time, sleep_duration):
         try:
-            reason = "LDAP is not initialized yet"
+            if successive_entries_check >= 3:
+                logger.info("LDAP is ready")
+                return
+
+            reason = "LDAP is not fully initialized yet"
             with ldap3.Connection(
                     ldap_server,
                     ldap_bind_dn,
@@ -116,10 +120,6 @@ def wait_for_ldap(manager, max_wait_time, sleep_duration, **kwargs):
 
                 if ldap_connection.entries:
                     successive_entries_check += 1
-
-                if successive_entries_check >= 3:
-                    logger.info("LDAP is ready")
-                    return
         except Exception as exc:
             reason = exc
 
@@ -152,7 +152,11 @@ def _check_couchbase_document(host, user, password, max_wait_time, sleep_duratio
 
     for i in range(0, max_wait_time, sleep_duration):
         try:
-            reason = "Couchbase is not initialized yet"
+            if successive_entries_check >= 3:
+                logger.info("Couchbase is ready")
+                return
+
+            reason = "Couchbase is not fully initialized yet"
             req = requests.post(
                 "https://{0}:18093/query/service".format(host),
                 data={"statement": query},
@@ -161,10 +165,6 @@ def _check_couchbase_document(host, user, password, max_wait_time, sleep_duratio
             )
             if req.ok and req.json()["results"]:
                 successive_entries_check += 1
-
-            if successive_entries_check >= 3:
-                logger.info("Couchbase is ready")
-                return
         except Exception as exc:
             reason = exc
 
