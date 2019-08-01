@@ -86,17 +86,21 @@ def wait_for_ldap(manager, max_wait_time, sleep_duration, **kwargs):
     # initial data;
     successive_entries_check = 0
 
-    search = ("o=gluu", "(objectClass=gluuConfiguration)")
+    default_search = ("o=gluu", "(objectClass=gluuConfiguration)")
     if persistence_type == "hybrid":
         search_mapping = {
-            "default": ("o=gluu", "(objectClass=gluuConfiguration)"),
+            "default": default_search,
             "user": ("o=gluu", "(objectClass=gluuGroup)"),
             "site": ("o=site", "(ou=people)"),
-            "cache": ("o=gluu", "(objectClass=gluuConfiguration)"),
+            "cache": default_search,
             "statistic": ("o=metric", "(ou=statistic)"),
-            "authorization": ("o=gluu", "(objectClass=gluuConfiguration)"),
+            "authorization": default_search,
+            "tokens": default_search,
+            "clients": ("o=gluu", "(objectClass=oxAuthClient)"),
         }
         search = search_mapping[ldap_mapping]
+    else:
+        search = default_search
 
     for i in range(0, max_wait_time, sleep_duration):
         try:
