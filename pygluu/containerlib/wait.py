@@ -95,8 +95,8 @@ def wait_for_ldap(manager, max_wait_time, sleep_duration, **kwargs):
             "cache": default_search,
             "statistic": ("o=metric", "(ou=statistic)"),
             "authorization": default_search,
-            "tokens": default_search,
-            "clients": ("o=gluu", "(objectClass=oxAuthClient)"),
+            "token": default_search,
+            "client": ("o=gluu", "(objectClass=oxAuthClient)"),
         }
         search = search_mapping[ldap_mapping]
     else:
@@ -139,14 +139,15 @@ def _check_couchbase_document(host, user, password, max_wait_time, sleep_duratio
     persistence_type = os.environ.get("GLUU_PERSISTENCE_TYPE", "ldap")
     ldap_mapping = os.environ.get("GLUU_PERSISTENCE_LDAP_MAPPING", "default")
 
-    # only `gluu` and `gluu_user` buckets that may have initial data
-    # these data also affected by LDAP mapping selection;
+    # only `gluu`, `gluu_user`, and `gluu_client` buckets that may have
+    # initial data; these data also affected by LDAP mapping selection;
     # by default we will choose the `gluu` bucket
     bucket, key = "gluu", "_"
 
     # if `hybrid` is selected and default mapping is stored in LDAP,
     # the `gluu` bucket won't have data, hence we check the `gluu_user`
-    # instead
+    # instead; note, `gluu_client` is not selected because it contains
+    # data with random inum
     if persistence_type == "hybrid" and ldap_mapping == "default":
         bucket, key = "gluu_user", "groups_60B7"
     query = "SELECT objectClass FROM {0} USE KEYS '{1}'".format(bucket, key)
