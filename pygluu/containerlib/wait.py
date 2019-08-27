@@ -71,16 +71,10 @@ def wait_for_secret(manager, max_wait_time, sleep_duration, **kwargs):
     sys.exit(1)
 
 
-def wait_for_ldap(manager, max_wait_time, sleep_duration, **kwargs):
+def _check_ldap_entry(host, user, password, max_wait_time, sleep_duration):
     persistence_type = os.environ.get("GLUU_PERSISTENCE_TYPE", "ldap")
-    ldap_url = os.environ.get("GLUU_LDAP_URL", "localhost:1636")
     ldap_mapping = os.environ.get("GLUU_PERSISTENCE_LDAP_MAPPING", "default")
-
-    ldap_bind_dn = manager.config.get("ldap_binddn")
-    ldap_password = decode_text(manager.secret.get("encoded_ox_ldap_pw"),
-                                manager.secret.get("encoded_salt"))
-
-    ldap_server = ldap3.Server(ldap_url, 1636, use_ssl=True)
+    ldap_server = ldap3.Server(host, 1636, use_ssl=True)
 
     # check the entries few times, to ensure OpenDJ is running after importing
     # initial data;
@@ -109,12 +103,8 @@ def wait_for_ldap(manager, max_wait_time, sleep_duration, **kwargs):
                 return
 
             reason = "LDAP is not fully initialized yet"
-            with ldap3.Connection(
-                    ldap_server,
-                    ldap_bind_dn,
-                    ldap_password) as ldap_connection:
-
-                ldap_connection.search(
+            with ldap3.Connection(ldap_server, user, password) as conn:
+                conn.search(
                     search_base=search[0],
                     search_filter=search[1],
                     search_scope=ldap3.SUBTREE,
@@ -122,7 +112,7 @@ def wait_for_ldap(manager, max_wait_time, sleep_duration, **kwargs):
                     size_limit=1,
                 )
 
-                if ldap_connection.entries:
+                if conn.entries:
                     successive_entries_check += 1
         except Exception as exc:
             reason = exc
@@ -133,6 +123,50 @@ def wait_for_ldap(manager, max_wait_time, sleep_duration, **kwargs):
 
     logger.error("LDAP not ready, after " + str(max_wait_time) + " seconds.")
     sys.exit(1)
+
+
+def _check_ldap_connection(host, user, password, max_wait_time, sleep_duration):
+    ldap_server = ldap3.Server(host, 1636, use_ssl=True)
+    search = ("", "(objectClass=*)")
+
+    for i in range(0, max_wait_time, sleep_duration):
+        try:
+            reason = "LDAP is not initialized yet"
+
+            with ldap3.Connection(ldap_server, user, password) as conn:
+                conn.search(
+                    search_base=search[0],
+                    search_filter=search[1],
+                    search_scope=ldap3.BASE,
+                    attributes=["1.1"],
+                    size_limit=1,
+                )
+                if conn.entries:
+                    logger.info("LDAP is ready")
+                    return
+        except Exception as exc:
+            reason = exc
+
+        logger.warn("LDAP backend is not ready; reason={}; "
+                    "retrying in {} seconds.".format(reason, sleep_duration))
+        time.sleep(sleep_duration)
+
+    logger.error("LDAP backend is not ready after {} seconds.".format(max_wait_time))
+    sys.exit(1)
+
+
+def wait_for_ldap(manager, max_wait_time, sleep_duration, **kwargs):
+    conn_only = as_boolean(kwargs.get("conn_only", False))
+    host = os.environ.get("GLUU_LDAP_URL", "localhost:1636")
+    user = manager.config.get("ldap_binddn")
+    password = decode_text(manager.secret.get("encoded_ox_ldap_pw"),
+                           manager.secret.get("encoded_salt"))
+
+    if conn_only:
+        callback = _check_ldap_connection
+    else:
+        callback = _check_ldap_entry
+    callback(host, user, password, max_wait_time, sleep_duration)
 
 
 def _check_couchbase_document(host, user, password, max_wait_time, sleep_duration):
