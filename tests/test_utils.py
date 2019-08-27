@@ -1,3 +1,8 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
 import pytest
 
 
@@ -44,6 +49,7 @@ def test_get_quad():
 
 def test_join_quad_str():
     from pygluu.containerlib.utils import join_quad_str
+
     # should have dot char
     assert join_quad_str(2).find(".") != 0
 
@@ -56,3 +62,21 @@ def test_join_quad_str():
 def test_safe_inum_str(val, expected):
     from pygluu.containerlib.utils import safe_inum_str
     assert safe_inum_str(val) == expected
+
+
+@pytest.mark.parametrize("text, num_spaces, expected", [
+    ("ab\n\tcd", 0, "ab\ncd"),
+    ("ab\n\tcd", 1, " ab\n cd"),
+])
+def test_reindent(text, num_spaces, expected):
+    from pygluu.containerlib.utils import reindent
+    assert reindent(text, num_spaces) == expected
+
+
+@pytest.mark.parametrize("text, num_spaces, expected", [
+    ("abcd", 0, "YWJjZA=="),
+    ("abcd", 1, " YWJjZA=="),
+])
+def test_generate_base64_contents(text, num_spaces, expected):
+    from pygluu.containerlib.utils import generate_base64_contents
+    assert generate_base64_contents(text, num_spaces) == expected

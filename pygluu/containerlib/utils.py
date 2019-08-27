@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
 import base64
+import codecs
 import json
 import random
 import re
@@ -96,13 +102,16 @@ def safe_render(text, ctx):
 
 
 def reindent(text, num_spaces=1):
-    text = [(num_spaces * " ") + line.lstrip() for line in text.splitlines()]
+    text = [
+        "{0}{1}".format(num_spaces * " ", line.lstrip())
+        for line in text.splitlines()
+    ]
     text = "\n".join(text)
     return text
 
 
 def generate_base64_contents(text, num_spaces=1):
-    text = text.encode("base64").strip()
-    if num_spaces > 0:
-        text = reindent(text, num_spaces)
-    return text
+    if six.PY3:
+        text = codecs.encode(text)
+    text = base64.b64encode(text)
+    return reindent(text.decode(), num_spaces)
