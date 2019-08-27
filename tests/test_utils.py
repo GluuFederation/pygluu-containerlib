@@ -80,3 +80,21 @@ def test_reindent(text, num_spaces, expected):
 def test_generate_base64_contents(text, num_spaces, expected):
     from pygluu.containerlib.utils import generate_base64_contents
     assert generate_base64_contents(text, num_spaces) == expected
+
+
+def test_encode_text():
+    from pygluu.containerlib.utils import encode_text
+
+    text = "abcd"
+    key = "a" * 16
+    expected = "YgH8NDxhxmA="
+    assert encode_text(text, key) == expected
+
+
+def test_decode_text():
+    from pygluu.containerlib.utils import decode_text
+
+    text = "YgH8NDxhxmA="
+    key = "a" * 16
+    expected = "abcd"
+    assert decode_text(text, key) == expected

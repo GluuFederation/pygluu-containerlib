@@ -18,7 +18,7 @@ import pyDes
 import six
 
 if six.PY2:
-    string.ascii_lowercase = string.lowercase
+    string.ascii_lowercase = string.lowercase  # pragma: no cover
 
 # Default charset
 _DEFAULT_CHARS = "".join([string.ascii_uppercase,
@@ -81,17 +81,29 @@ def exec_cmd(cmd):
 
 
 def encode_text(text, key):
-    cipher = pyDes.triple_des(b"{}".format(key), pyDes.ECB,
-                              padmode=pyDes.PAD_PKCS5)
-    encrypted_text = cipher.encrypt(b"{}".format(text))
-    return base64.b64encode(encrypted_text)
+    if six.PY3:
+        text = codecs.encode(text)
+        key = codecs.encode(key)
+    else:
+        text = b"{}".format(text)
+        key = b"{}".format(key)
+
+    cipher = pyDes.triple_des(key, pyDes.ECB, padmode=pyDes.PAD_PKCS5)
+    encrypted_text = cipher.encrypt(text)
+    return base64.b64encode(encrypted_text).decode()
 
 
 def decode_text(encoded_text, key):
-    cipher = pyDes.triple_des(b"{}".format(key), pyDes.ECB,
-                              padmode=pyDes.PAD_PKCS5)
-    decrypted_text = b"{}".format(base64.b64decode(encoded_text))
-    return cipher.decrypt(decrypted_text)
+    if six.PY3:
+        key = codecs.encode(key)
+    else:
+        key = b"{}".format(key)
+
+    cipher = pyDes.triple_des(key, pyDes.ECB, padmode=pyDes.PAD_PKCS5)
+    decrypted_text = base64.b64decode(encoded_text)
+    if six.PY2:
+        decrypted_text = b"{}".format(base64.b64decode(encoded_text))
+    return cipher.decrypt(decrypted_text).decode()
 
 
 def safe_render(text, ctx):
