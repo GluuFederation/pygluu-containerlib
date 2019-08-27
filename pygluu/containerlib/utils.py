@@ -11,10 +11,13 @@ import uuid
 import pyDes
 import six
 
+if six.PY2:
+    string.ascii_lowercase = string.lowercase
+
 # Default charset
 _DEFAULT_CHARS = "".join([string.ascii_uppercase,
                           string.digits,
-                          string.lowercase])
+                          string.ascii_lowercase])
 
 
 def as_boolean(val, default=False):
@@ -48,18 +51,16 @@ def get_sys_random_chars(size=12, chars=_DEFAULT_CHARS):
     return ''.join(random.SystemRandom().choice(chars) for _ in range(size))
 
 
-def join_quad_str(x):
-    return ".".join([get_quad() for _ in xrange(x)])
-
-
-def safe_inum_str(x):
-    return x.replace("@", "").replace("!", "").replace(".", "")
-
-
 def get_quad():
-    # borrowed from community-edition-setup project
-    # see http://git.io/he1p
-    return str(uuid.uuid4())[:4].upper()
+    return "{}".format(uuid.uuid4())[:4].upper()
+
+
+def join_quad_str(num):
+    return ".".join([get_quad() for _ in six.moves.range(num)])
+
+
+def safe_inum_str(val):
+    return val.replace("@", "").replace("!", "").replace(".", "")
 
 
 def exec_cmd(cmd):
