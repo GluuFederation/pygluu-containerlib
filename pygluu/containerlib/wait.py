@@ -87,10 +87,7 @@ def _check_ldap_entry(host, user, password, max_wait_time, sleep_duration):
             "user": ("o=gluu", "(objectClass=gluuGroup)"),
             "site": ("o=site", "(ou=people)"),
             "cache": default_search,
-            "statistic": ("o=metric", "(ou=statistic)"),
-            "authorization": default_search,
             "token": default_search,
-            "client": ("o=gluu", "(objectClass=oxAuthClient)"),
         }
         search = search_mapping[ldap_mapping]
     else:
