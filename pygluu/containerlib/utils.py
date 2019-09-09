@@ -81,10 +81,10 @@ def exec_cmd(cmd):
 
 
 def encode_text(text, key):
-    if six.PY3:
-        text = codecs.encode(text)
-        key = codecs.encode(key)
-    else:
+    text = codecs.encode(text)
+    key = codecs.encode(key)
+
+    if six.PY2:
         text = b"{}".format(text)
         key = b"{}".format(key)
 
@@ -94,16 +94,19 @@ def encode_text(text, key):
 
 
 def decode_text(encoded_text, key):
-    if six.PY3:
-        key = codecs.encode(key)
-    else:
+    text = base64.b64decode(encoded_text)
+    key = codecs.encode(key)
+
+    if six.PY2:
         key = b"{}".format(key)
+        text = b"{}".format(text)
 
     cipher = pyDes.triple_des(key, pyDes.ECB, padmode=pyDes.PAD_PKCS5)
-    decrypted_text = base64.b64decode(encoded_text)
-    if six.PY2:
-        decrypted_text = b"{}".format(base64.b64decode(encoded_text))
-    return cipher.decrypt(decrypted_text).decode()
+    decoded_text = cipher.decrypt(text)
+
+    if six.PY3:
+        decoded_text = decoded_text.decode()
+    return decoded_text
 
 
 def safe_render(text, ctx):
@@ -127,3 +130,11 @@ def generate_base64_contents(text, num_spaces=1):
         text = codecs.encode(text)
     text = base64.b64encode(text)
     return reindent(text.decode(), num_spaces)
+
+
+def cert_to_truststore(alias, cert_file, keystore_file, store_pass):
+    cmd = "keytool -importcert -trustcacerts -alias {0} " \
+          "-file {1} -keystore {2} -storepass {3} " \
+          "-noprompt".format(alias, cert_file, keystore_file, store_pass)
+    out, err, code = exec_cmd(cmd)
+    return out.strip(), err.strip(), code
