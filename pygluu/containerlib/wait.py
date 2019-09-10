@@ -10,7 +10,7 @@ import requests
 from .utils import decode_text
 from .utils import as_boolean
 from .persistence.couchbase import get_couchbase_user
-from .persistence.couchbase import get_encoded_couchbase_password
+from .persistence.couchbase import get_couchbase_password
 
 logger = logging.getLogger(__name__)
 
@@ -194,7 +194,6 @@ def _check_couchbase_document(host, user, password, max_wait_time, sleep_duratio
                 logger.info("Couchbase is ready")
                 return
 
-            reason = "Couchbase is not fully initialized yet"
             req = requests.post(
                 "https://{0}:18093/query/service".format(host),
                 data={"statement": query},
@@ -207,6 +206,9 @@ def _check_couchbase_document(host, user, password, max_wait_time, sleep_duratio
                     reason = resp["errors"][0]["msg"]
                 else:
                     successive_entries_check += 1
+                    reason = "Couchbase is not fully initialized yet"
+            else:
+                reason = req.reason
         except Exception as exc:
             reason = exc
 
@@ -221,7 +223,6 @@ def _check_couchbase_document(host, user, password, max_wait_time, sleep_duratio
 def _check_couchbase_connection(host, user, password, max_wait_time, sleep_duration):
     for i in range(0, max_wait_time, sleep_duration):
         try:
-            reason = "Couchbase is not initialized yet"
             req = requests.get(
                 "https://{0}:18091/pools/".format(host),
                 auth=(user, password),
@@ -230,6 +231,7 @@ def _check_couchbase_connection(host, user, password, max_wait_time, sleep_durat
             if req.ok:
                 logger.info("Couchbase is ready")
                 return
+            reason = req.reason
         except Exception as exc:
             reason = exc
 
@@ -245,10 +247,7 @@ def wait_for_couchbase(manager, max_wait_time, sleep_duration, **kwargs):
     conn_only = as_boolean(kwargs.get("conn_only", False))
     host = os.environ.get("GLUU_COUCHBASE_URL", "localhost")
     user = get_couchbase_user(manager)
-    password = decode_text(
-        get_encoded_couchbase_password(manager),
-        manager.secret.get("encoded_salt"),
-    )
+    password = get_couchbase_password(manager)
 
     if conn_only:
         callback = _check_couchbase_connection
