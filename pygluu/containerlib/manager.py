@@ -67,16 +67,16 @@ class SecretManager(object):
             value = decode_text(value, salt)
 
         mode = "w"
-        if binary_mode:
-            mode = "wb"
+        # if binary_mode:
+        #     mode = "wb"
 
         with open(dest, mode) as f:
             f.write(value)
 
     def from_file(self, key, src, encode=False, binary_mode=False):
         mode = "r"
-        if binary_mode:
-            mode = "rb"
+        # if binary_mode:
+        #     mode = "rb"
 
         with open(src, mode) as f:
             value = f.read()
