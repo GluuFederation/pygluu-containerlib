@@ -17,8 +17,7 @@ def get_encoded_couchbase_password(manager):
         return manager.secret.get("encoded_couchbase_server_pw")
 
     with open(password_file) as f:
-        plain = f.read()
-        return encode_text(plain, manager.secret.get("encoded_salt"))
+        return encode_text(f.read().strip(), manager.secret.get("encoded_salt"))
 
 
 def get_couchbase_mappings(persistence_type, ldap_mapping):

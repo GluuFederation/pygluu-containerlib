@@ -9,6 +9,8 @@ import requests
 
 from .utils import decode_text
 from .utils import as_boolean
+from .persistence.couchbase import get_couchbase_user
+from .persistence.couchbase import get_encoded_couchbase_password
 
 logger = logging.getLogger(__name__)
 
@@ -199,8 +201,12 @@ def _check_couchbase_document(host, user, password, max_wait_time, sleep_duratio
                 auth=(user, password),
                 verify=False,
             )
-            if req.ok and req.json()["results"]:
-                successive_entries_check += 1
+            if req.ok:
+                resp = req.json()
+                if resp["status"] != "success":
+                    reason = resp["errors"][0]["msg"]
+                else:
+                    successive_entries_check += 1
         except Exception as exc:
             reason = exc
 
@@ -238,9 +244,11 @@ def _check_couchbase_connection(host, user, password, max_wait_time, sleep_durat
 def wait_for_couchbase(manager, max_wait_time, sleep_duration, **kwargs):
     conn_only = as_boolean(kwargs.get("conn_only", False))
     host = os.environ.get("GLUU_COUCHBASE_URL", "localhost")
-    user = manager.config.get("couchbase_server_user")
-    password = decode_text(manager.secret.get("encoded_couchbase_server_pw"),
-                           manager.secret.get("encoded_salt"))
+    user = get_couchbase_user(manager)
+    password = decode_text(
+        get_encoded_couchbase_password(manager),
+        manager.secret.get("encoded_salt"),
+    )
 
     if conn_only:
         callback = _check_couchbase_connection
