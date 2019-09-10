@@ -2,14 +2,6 @@
 
 Utilities for Gluu Server Docker container deployment.
 
-## Running Testcases
+## Developer Guide
 
-**NOTE**: the testcases targetting Python 2.7 and Python 3.7
-
-Install `tox`:
-
-    pip install tox
-
-Run the test suite:
-
-    tox
+Refer to https://github.com/GluuFederation/pygluu-containerlib/wiki for guidance on how to use/develop this library.
