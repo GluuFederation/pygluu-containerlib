@@ -81,10 +81,10 @@ def exec_cmd(cmd):
 
 
 def encode_text(text, key):
-    text = codecs.encode(text)
-    key = codecs.encode(key)
-
-    if six.PY2:
+    if six.PY3:
+        text = codecs.encode(text)
+        key = codecs.encode(key)
+    else:
         text = b"{}".format(text)
         key = b"{}".format(key)
 
