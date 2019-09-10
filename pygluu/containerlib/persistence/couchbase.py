@@ -1,5 +1,7 @@
 import os
+from functools import partial
 
+from ..utils import decode_text
 from ..utils import encode_text
 from ..utils import cert_to_truststore
 
@@ -10,14 +12,24 @@ def get_couchbase_user(manager):
     return os.environ.get("GLUU_COUCHBASE_USER") or manager.config.get("couchbase_server_user")
 
 
-def get_encoded_couchbase_password(manager):
+def _get_couchbase_password(manager, plaintext=False):
     password_file = os.environ.get("GLUU_COUCHBASE_PASSWORD_FILE", "/etc/gluu/conf/couchbase_password")
 
-    if not os.path.isfile(password_file):
-        return manager.secret.get("encoded_couchbase_server_pw")
+    if not os.path.exists(password_file):
+        password = manager.secret.get("encoded_couchbase_server_pw")
+        if plaintext:
+            password = decode_text(password, manager.secret.get("encoded_salt"))
+        return password
 
     with open(password_file) as f:
-        return encode_text(f.read().strip(), manager.secret.get("encoded_salt"))
+        password = f.read().strip()
+        if not plaintext:
+            password = encode_text(password, manager.secret.get("encoded_salt"))
+        return password
+
+
+get_couchbase_password = partial(_get_couchbase_password, plaintext=True)
+get_encoded_couchbase_password = partial(_get_couchbase_password, plaintext=False)
 
 
 def get_couchbase_mappings(persistence_type, ldap_mapping):
