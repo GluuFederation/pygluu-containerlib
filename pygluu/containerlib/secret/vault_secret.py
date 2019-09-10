@@ -3,6 +3,7 @@ import logging
 import os
 
 import hvac
+import six
 
 from .base_secret import BaseSecret
 from ..utils import as_boolean
@@ -13,7 +14,7 @@ logger = logging.getLogger(__name__)
 class VaultSecret(BaseSecret):
     def __init__(self):
         self.settings = {
-            k: v for k, v in os.environ.iteritems()
+            k: v for k, v in six.iteritems(os.environ)
             if k.isupper() and k.startswith("GLUU_SECRET_VAULT_")
         }
         self.settings.setdefault(

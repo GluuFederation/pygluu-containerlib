@@ -2,6 +2,7 @@
 import logging
 import os
 
+import six
 from consul import Consul
 
 from .base_config import BaseConfig
@@ -14,7 +15,7 @@ logger = logging.getLogger(__name__)
 class ConsulConfig(BaseConfig):
     def __init__(self):
         self.settings = {
-            k: v for k, v in os.environ.iteritems()
+            k: v for k, v in six.iteritems(os.environ)
             if k.isupper() and k.startswith("GLUU_CONFIG_CONSUL_")
         }
 
