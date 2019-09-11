@@ -10,6 +10,7 @@ import json
 import random
 import re
 import shlex
+import ssl
 import string
 import subprocess
 import uuid
@@ -138,3 +139,10 @@ def cert_to_truststore(alias, cert_file, keystore_file, store_pass):
           "-noprompt".format(alias, cert_file, keystore_file, store_pass)
     out, err, code = exec_cmd(cmd)
     return out.strip(), err.strip(), code
+
+
+def get_server_certificate(host, port, filepath):
+    cert = ssl.get_server_certificate([host, port])
+    with open(filepath, "w") as f:
+        f.write(cert)
+    return cert
