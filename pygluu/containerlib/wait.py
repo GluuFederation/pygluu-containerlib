@@ -324,9 +324,9 @@ def wait_for(manager, deps=None, conn_only=None):
         max_wait_time = 300
 
     try:
-        sleep_duration = int(os.environ.get("GLUU_WAIT_SLEEP_DURATION", 5))
+        sleep_duration = int(os.environ.get("GLUU_WAIT_SLEEP_DURATION", 10))
     except ValueError:
-        sleep_duration = 5
+        sleep_duration = 10
 
     for dep in deps:
         callback = callbacks.get(dep)
