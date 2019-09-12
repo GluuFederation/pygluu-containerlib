@@ -141,8 +141,14 @@ def cert_to_truststore(alias, cert_file, keystore_file, store_pass):
     return out.strip(), err.strip(), code
 
 
-def get_server_certificate(host, port, filepath):
-    cert = ssl.get_server_certificate([host, port])
+def get_server_certificate(host, port, filepath, server_hostname=""):
+    server_hostname = server_hostname or host
+
+    conn = ssl.create_connection((host, port))
+    context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+    sock = context.wrap_socket(conn, server_hostname=server_hostname)
+    cert = ssl.DER_cert_to_PEM_cert(sock.getpeercert(True))
+
     with open(filepath, "w") as f:
         f.write(cert)
     return cert
