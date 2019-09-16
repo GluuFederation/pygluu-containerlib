@@ -175,7 +175,7 @@ def _check_couchbase_document(host, user, password, max_wait_time, sleep_duratio
     # only `gluu`, `gluu_user`, and `gluu_client` buckets that may have
     # initial data; these data also affected by LDAP mapping selection;
     # by default we will choose the `gluu` bucket
-    bucket, key = "gluu", "_"
+    bucket, key = "gluu", "configuration"
 
     # if `hybrid` is selected and default mapping is stored in LDAP,
     # the `gluu` bucket won't have data, hence we check the `gluu_user`
@@ -202,11 +202,11 @@ def _check_couchbase_document(host, user, password, max_wait_time, sleep_duratio
             )
             if req.ok:
                 resp = req.json()
-                if resp["status"] != "success":
-                    reason = resp["errors"][0]["msg"]
-                else:
+                if resp["results"]:
                     successive_entries_check += 1
                     reason = "Couchbase is not fully initialized yet"
+                else:
+                    reason = resp["errors"][0]["msg"]
             else:
                 reason = req.reason
         except Exception as exc:
