@@ -265,7 +265,7 @@ def wait_for(manager, deps=None):
 
     for dep in deps:
         callback = callbacks.get(dep)
-        if not callable(callback):
-            logger.warn("Unsupported/uncallable callback for {} dependency".format(dep))
+        if not callback:
+            logger.warn("Unsupported callback for {} dependency".format(dep))
             continue
         callback["func"](manager, **callback["kwargs"])
