@@ -37,6 +37,7 @@ setup(
         "six>=1.12.0",
         "pyDes>=2.0.1",
         "ldap3>=2.5",
+        "backoff>=1.8.0",
     ],
     entry_points={
         "console_scripts": ["gluu-wait=pygluu.containerlib.cli:wait_for_cli"],
