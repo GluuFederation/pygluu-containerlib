@@ -89,7 +89,7 @@ def wait_for_ldap(manager, **kwargs):
     password = decode_text(manager.secret.get("encoded_ox_ldap_pw"),
                            manager.secret.get("encoded_salt"))
 
-    persistence_type = "ldap"
+    persistence_type = os.environ.get("GLUU_PERSISTENCE_TYPE", "ldap")
     ldap_mapping = os.environ.get("GLUU_PERSISTENCE_LDAP_MAPPING", "default")
     ldap_server = ldap3.Server(host, 1636, use_ssl=True)
 
@@ -147,7 +147,7 @@ def wait_for_couchbase(manager, **kwargs):
     user = get_couchbase_user(manager)
     password = get_couchbase_password(manager)
 
-    persistence_type = "couchbase"
+    persistence_type = os.environ.get("GLUU_PERSISTENCE_TYPE", "couchbase")
     ldap_mapping = os.environ.get("GLUU_PERSISTENCE_LDAP_MAPPING", "default")
 
     # only `gluu` and `gluu_user` buckets that may have initial data;
