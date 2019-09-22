@@ -93,14 +93,19 @@ def wait_for_ldap(manager, **kwargs):
     ldap_mapping = os.environ.get("GLUU_PERSISTENCE_LDAP_MAPPING", "default")
     ldap_server = ldap3.Server(host, 1636, use_ssl=True)
 
-    default_search = ("o=gluu", "(objectClass=gluuConfiguration)")
+    # a minimum service stack is having oxTrust, hence check whether entry
+    # for oxTrust exists in LDAP
+    default_search = ("ou=oxtrust,ou=configuration,o=gluu",
+                      "(objectClass=oxTrustConfiguration)")
+
     if persistence_type == "hybrid":
+        # `cache` and `token` mapping only have base entries
         search_mapping = {
             "default": default_search,
-            "user": ("o=gluu", "(objectClass=gluuGroup)"),
-            "site": ("o=site", "(ou=people)"),
-            "cache": default_search,
-            "token": default_search,
+            "user": ("inum=60B7,ou=groups,o=gluu", "(objectClass=gluuGroup)"),
+            "site": ("ou=cache-refresh,o=site", "(ou=people)"),
+            "cache": ("o=gluu", "(objectClass=gluuOrganization)"),
+            "token": ("ou=tokens,o=gluu", "(ou=tokens)"),
         }
         search = search_mapping[ldap_mapping]
     else:
@@ -110,7 +115,7 @@ def wait_for_ldap(manager, **kwargs):
         conn.search(
             search_base=search[0],
             search_filter=search[1],
-            search_scope=ldap3.BASE,
+            search_scope=ldap3.SUBTREE,
             attributes=['objectClass'],
             size_limit=1,
         )
@@ -143,6 +148,9 @@ def wait_for_ldap_conn(manager, **kwargs):
 
 @retry_on_exception
 def wait_for_couchbase(manager, **kwargs):
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
     host = os.environ.get("GLUU_COUCHBASE_URL", "localhost")
     user = get_couchbase_user(manager)
     password = get_couchbase_password(manager)
@@ -153,7 +161,7 @@ def wait_for_couchbase(manager, **kwargs):
     # only `gluu` and `gluu_user` buckets that may have initial data;
     # these data also affected by LDAP mapping selection;
     # by default we will choose the `gluu` bucket
-    bucket, key = "gluu", "configuration"
+    bucket, key = "gluu", "configuration_oxtrust"
 
     # if `hybrid` is selected and default mapping is stored in LDAP,
     # the `gluu` bucket won't have data, hence we check the `gluu_user` instead
@@ -181,6 +189,9 @@ def wait_for_couchbase(manager, **kwargs):
 
 @retry_on_exception
 def wait_for_couchbase_conn(manager, **kwargs):
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
     host = os.environ.get("GLUU_COUCHBASE_URL", "localhost")
     user = get_couchbase_user(manager)
     password = get_couchbase_password(manager)
