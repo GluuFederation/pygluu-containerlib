@@ -223,8 +223,7 @@ def wait_for_oxauth(manager, **kwargs):
     req = requests.get(url)
 
     if not req.ok:
-        err = req.text or req.reason
-        raise WaitError(err)
+        raise WaitError(req.reason)
 
 
 @retry_on_exception
@@ -234,8 +233,7 @@ def wait_for_oxtrust(manager, **kwargs):
     req = requests.get(url)
 
     if not req.ok:
-        err = req.text or req.reason
-        raise WaitError(err)
+        raise WaitError(req.reason)
 
 
 def wait_for(manager, deps=None):
