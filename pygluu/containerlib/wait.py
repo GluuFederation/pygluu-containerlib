@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 import logging
 import os
 import sys
@@ -178,13 +179,17 @@ def wait_for_couchbase(manager, **kwargs):
     )
 
     if not req.ok:
-        err = req.text or req.reason
+        try:
+            data = json.loads(req.text)
+            err = data["errors"][0]["msg"]
+        except (ValueError, KeyError, IndexError):
+            err = req.reason
         raise WaitError(err)
 
     # request is OK, but result is not found
     data = req.json()
     if not data["results"]:
-        raise WaitError(data["errors"][0]["msg"])
+        raise WaitError("Missing document {!r} in bucket {!r}".format(key, bucket))
 
 
 @retry_on_exception
@@ -203,7 +208,11 @@ def wait_for_couchbase_conn(manager, **kwargs):
     )
 
     if not req.ok:
-        err = req.text or req.reason
+        try:
+            data = json.loads(req.text)
+            err = data["errors"][0]["msg"]
+        except (ValueError, KeyError, IndexError):
+            err = req.reason
         raise WaitError(err)
 
 
