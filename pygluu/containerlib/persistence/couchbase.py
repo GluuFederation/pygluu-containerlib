@@ -1,7 +1,13 @@
 import os
 from functools import partial
 
+import requests
 import six
+
+try:
+    from concurrent import futures
+except ImportError:
+    import futures
 
 from ..utils import decode_text
 from ..utils import encode_text
@@ -126,3 +132,34 @@ def sync_couchbase_truststore(manager):
         manager.config.get("couchbaseTrustStoreFn"),
         GLUU_COUCHBASE_TRUSTSTORE_PASSWORD,
     )
+
+
+def check_couchbase_conn(host, user, password):
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+    return requests.get(
+        "https://{0}:18091/pools/".format(host),
+        auth=(user, password),
+        verify=False,
+        timeout=10,
+    )
+
+
+def resolve_couchbase_host(hosts, user, password):
+    hosts = filter(None, map(str.strip, hosts.split(",")))
+
+    with futures.ThreadPoolExecutor(max_workers=len(hosts)) as executor:
+        future_check_conn = {
+            executor.submit(check_couchbase_conn, host, user, password): host
+            for host in hosts
+        }
+
+        for future in futures.as_completed(future_check_conn):
+            host = future_check_conn[future]
+            try:
+                resp = future.result()
+                if resp.ok:
+                    return host
+            except Exception:
+                pass
