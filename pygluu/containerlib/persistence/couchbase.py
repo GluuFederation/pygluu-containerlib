@@ -222,6 +222,7 @@ class RestClient(BaseClient):
         callbacks = {
             "GET": requests.get,
             "POST": partial(requests.post, data=data),
+            "PUT": partial(requests.put, data=data),
         }
 
         req = callbacks.get(method)
@@ -272,3 +273,15 @@ class CouchbaseClient(object):
     def exec_query(self, query):
         data = {'statement': query}
         return self.n1ql_client.exec_api("query/service", data=data)
+
+    def create_user(self, username, password, fullname, roles):
+        data = {
+            'name': fullname,
+            'password': password,
+            'roles': roles,
+        }
+        return self.rest_client.exec_api(
+            'settings/rbac/users/local/{}'.format(username),
+            data=data,
+            method="PUT",
+        )
