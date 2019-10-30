@@ -134,32 +134,141 @@ def sync_couchbase_truststore(manager):
     )
 
 
-def check_couchbase_conn(host, user, password):
-    import urllib3
-    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+class BaseClient(object):
+    def __init__(self, hosts, user, password):
+        self._hosts = hosts
+        self._host = None
+        self.user = user
+        self.password = password
 
-    return requests.get(
-        "https://{0}:18091/pools/".format(host),
-        auth=(user, password),
-        verify=False,
-        timeout=10,
-    )
+    @property
+    def host(self):
+        if not self._host:
+            self._host = self.resolve_host()
+        return self._host
+
+    def resolve_host(self):
+        hosts = filter(None, map(
+            lambda host: host.strip(), self._hosts.split(",")
+        ))
+
+        with futures.ThreadPoolExecutor(max_workers=len(hosts)) as tpe:
+            future_healthcheck = {
+                tpe.submit(self.healthcheck, host): host
+                for host in hosts
+            }
+
+            for future in futures.as_completed(future_healthcheck):
+                host = future_healthcheck[future]
+                try:
+                    resp = future.result()
+                    if resp.ok:
+                        return host
+                except Exception:
+                    pass
+
+    def healthcheck(self, host):
+        raise NotImplementedError
+
+    def exec_api(self, path, **kwargs):
+        raise NotImplementedError
 
 
-def resolve_couchbase_host(hosts, user, password):
-    hosts = filter(None, map(str.strip, hosts.split(",")))
+class N1qlClient(BaseClient):
+    port = 18093
 
-    with futures.ThreadPoolExecutor(max_workers=len(hosts)) as executor:
-        future_check_conn = {
-            executor.submit(check_couchbase_conn, host, user, password): host
-            for host in hosts
+    def healthcheck(self, host):
+        import urllib3
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+        return requests.post(
+            "https://{0}:{1}/query/service".format(host, self.port),
+            data={"statement": "SELECT status FROM system:indexes LIMIT 1"},
+            auth=(self.user, self.password),
+            verify=False,
+        )
+
+    def exec_api(self, path, **kwargs):
+        data = kwargs.get("data", {})
+        verify = kwargs.get("verify", False)
+
+        resp = requests.post(
+            "https://{0}:{1}/{2}".format(self.host, self.port, path),
+            data=data,
+            auth=(self.user, self.password),
+            verify=verify,
+        )
+        return resp
+
+
+class RestClient(BaseClient):
+    port = 18091
+
+    def healthcheck(self, host):
+        import urllib3
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+        return requests.get(
+            "https://{0}:{1}/pools/".format(host, self.port),
+            auth=(self.user, self.password),
+            verify=False,
+        )
+
+    def exec_api(self, path, **kwargs):
+        data = kwargs.get("data", {})
+        verify = kwargs.get("verify", False)
+        method = kwargs.get("method")
+
+        callbacks = {
+            "GET": requests.get,
+            "POST": partial(requests.post, data=data),
         }
 
-        for future in futures.as_completed(future_check_conn):
-            host = future_check_conn[future]
-            try:
-                resp = future.result()
-                if resp.ok:
-                    return host
-            except Exception:
-                pass
+        req = callbacks.get(method)
+        assert callable(req), "Unsupported method {}".format(method)
+
+        resp = req(
+            "https://{0}:{1}/{2}".format(self.host, self.port, path),
+            auth=(self.user, self.password),
+            verify=verify,
+        )
+        return resp
+
+
+class CouchbaseClient(object):
+    def __init__(self, hosts, user, password):
+        self.rest_client = RestClient(hosts, user, password)
+        self.n1ql_client = N1qlClient(hosts, user, password)
+
+    def get_buckets(self):
+        return self.rest_client.exec_api(
+            "pools/default/buckets",
+            method="GET",
+        )
+
+    def add_bucket(self, name, memsize=100, type_="couchbase"):
+        return self.rest_client.exec_api(
+            "pools/default/buckets",
+            data={
+                'name': name,
+                'bucketType': type_,
+                'ramQuotaMB': memsize,
+                'authType': 'sasl',
+            },
+            method="POST",
+        )
+
+    def get_system_info(self):
+        sys_info = {}
+        resp = self.rest_client.exec_api(
+            "pools/default",
+            method="GET",
+        )
+
+        if resp.ok:
+            sys_info = resp.json()
+        return sys_info
+
+    def exec_query(self, query):
+        data = {'statement': query}
+        return self.n1ql_client.exec_api("query/service", data=data)

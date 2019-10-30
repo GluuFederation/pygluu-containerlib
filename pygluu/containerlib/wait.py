@@ -13,7 +13,7 @@ from .utils import decode_text
 from .utils import as_boolean
 from .persistence.couchbase import get_couchbase_user
 from .persistence.couchbase import get_couchbase_password
-from .persistence.couchbase import resolve_couchbase_host
+from .persistence.couchbase import CouchbaseClient
 
 logger = logging.getLogger(__name__)
 
@@ -154,10 +154,6 @@ def wait_for_couchbase(manager, **kwargs):
     user = get_couchbase_user(manager)
     password = get_couchbase_password(manager)
 
-    active_host = resolve_couchbase_host(host, user, password)
-    if not active_host:
-        raise WaitError("Unable to connect to host in {} list".format(host))
-
     persistence_type = os.environ.get("GLUU_PERSISTENCE_TYPE", "couchbase")
     ldap_mapping = os.environ.get("GLUU_PERSISTENCE_LDAP_MAPPING", "default")
 
@@ -173,12 +169,9 @@ def wait_for_couchbase(manager, **kwargs):
 
     query = "SELECT objectClass FROM {0} USE KEYS '{1}'".format(bucket, key)
 
-    req = requests.post(
-        "https://{0}:18093/query/service".format(active_host),
-        data={"statement": query},
-        auth=(user, password),
-        verify=False,
-    )
+    cb_client = CouchbaseClient(host, user, password)
+
+    req = cb_client.exec_query(query)
 
     if not req.ok:
         try:
@@ -200,8 +193,10 @@ def wait_for_couchbase_conn(manager, **kwargs):
     user = get_couchbase_user(manager)
     password = get_couchbase_password(manager)
 
-    active_host = resolve_couchbase_host(host, user, password)
-    if not active_host:
+    cb_client = CouchbaseClient(host, user, password)
+    req = cb_client.get_buckets()
+
+    if not req.ok:
         raise WaitError("Unable to connect to host in {} list".format(host))
 
 
