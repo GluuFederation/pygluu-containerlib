@@ -1,19 +1,17 @@
+import logging
 import os
 from functools import partial
 
 import requests
 import six
 
-try:
-    from concurrent import futures
-except ImportError:
-    import futures
-
 from ..utils import decode_text
 from ..utils import encode_text
 from ..utils import cert_to_truststore
 
 GLUU_COUCHBASE_TRUSTSTORE_PASSWORD = "newsecret"
+
+logger = logging.getLogger(__name__)
 
 
 def get_couchbase_user(manager):
@@ -137,35 +135,26 @@ def sync_couchbase_truststore(manager):
 class BaseClient(object):
     def __init__(self, hosts, user, password):
         self._hosts = hosts
-        self._host = None
+        self.host = None
         self.user = user
         self.password = password
-
-    @property
-    def host(self):
-        if not self._host:
-            self._host = self.resolve_host()
-        return self._host
 
     def resolve_host(self):
         hosts = filter(None, map(
             lambda host: host.strip(), self._hosts.split(",")
         ))
 
-        with futures.ThreadPoolExecutor(max_workers=len(hosts)) as tpe:
-            future_healthcheck = {
-                tpe.submit(self.healthcheck, host): host
-                for host in hosts
-            }
+        for _host in hosts:
+            try:
+                resp = self.healthcheck(_host)
+                if resp.ok:
+                    self.host = _host
+                    return self.host
 
-            for future in futures.as_completed(future_healthcheck):
-                host = future_healthcheck[future]
-                try:
-                    resp = future.result()
-                    if resp.ok:
-                        return host
-                except Exception:
-                    pass
+                logger.warn("Unable to connect to {}:{}; reason={}".format(
+                    _host, self.port, resp.reason))
+            except Exception as exc:
+                logger.warn("Unable to connect to {}:{}; reason={}".format(_host, self.port, exc))
 
     def healthcheck(self, host):
         raise NotImplementedError
@@ -186,6 +175,7 @@ class N1qlClient(BaseClient):
             data={"statement": "SELECT status FROM system:indexes LIMIT 1"},
             auth=(self.user, self.password),
             verify=False,
+            timeout=10,
         )
 
     def exec_api(self, path, **kwargs):
@@ -212,6 +202,7 @@ class RestClient(BaseClient):
             "https://{0}:{1}/pools/".format(host, self.port),
             auth=(self.user, self.password),
             verify=False,
+            timeout=10,
         )
 
     def exec_api(self, path, **kwargs):
@@ -239,7 +230,12 @@ class RestClient(BaseClient):
 class CouchbaseClient(object):
     def __init__(self, hosts, user, password):
         self.rest_client = RestClient(hosts, user, password)
+        self.rest_client.resolve_host()
+        assert self.rest_client.host, "Unable to resolve host for data service from {} list".format(hosts)
+
         self.n1ql_client = N1qlClient(hosts, user, password)
+        self.n1ql_client.resolve_host()
+        assert self.n1ql_client.host, "Unable to resolve host for query service from {} list".format(hosts)
 
     def get_buckets(self):
         return self.rest_client.exec_api(
