@@ -3,7 +3,6 @@ import os
 
 import kubernetes.client
 import kubernetes.config
-import six
 
 from .base_config import BaseConfig
 from ..utils import as_boolean
@@ -13,7 +12,7 @@ from ..utils import safe_value
 class KubernetesConfig(BaseConfig):
     def __init__(self):
         self.settings = {
-            k: v for k, v in six.iteritems(os.environ)
+            k: v for k, v in os.environ.items()
             if k.isupper() and k.startswith("GLUU_CONFIG_KUBERNETES_")
         }
         self.settings.setdefault(

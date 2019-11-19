@@ -3,7 +3,6 @@ import os
 from functools import partial
 
 import requests
-import six
 
 from ..utils import decode_text
 from ..utils import encode_text
@@ -64,7 +63,7 @@ def get_couchbase_mappings(persistence_type, ldap_mapping):
 
     if persistence_type == "hybrid":
         mappings = {
-            name: mapping for name, mapping in six.iteritems(mappings)
+            name: mapping for name, mapping in mappings.items()
             if name != ldap_mapping
         }
 
@@ -80,7 +79,7 @@ def render_couchbase_properties(manager, src, dest):
     couchbase_buckets = []
     couchbase_mappings = []
 
-    for _, mapping in six.iteritems(_couchbase_mappings):
+    for _, mapping in _couchbase_mappings.items():
         couchbase_buckets.append(mapping["bucket"])
 
         if not mapping["mapping"]:

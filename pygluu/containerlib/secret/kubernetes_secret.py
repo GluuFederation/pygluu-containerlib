@@ -4,7 +4,6 @@ import os
 
 import kubernetes.client
 import kubernetes.config
-import six
 
 from .base_secret import BaseSecret
 from ..utils import as_boolean
@@ -13,7 +12,7 @@ from ..utils import as_boolean
 class KubernetesSecret(BaseSecret):
     def __init__(self):
         self.settings = {
-            k: v for k, v in six.iteritems(os.environ)
+            k: v for k, v in os.environ.items()
             if k.isupper() and k.startswith("GLUU_SECRET_KUBERNETES_")
         }
         self.settings.setdefault(

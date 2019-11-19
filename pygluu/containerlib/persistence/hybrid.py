@@ -1,7 +1,5 @@
 import os
 
-import six
-
 from .couchbase import get_couchbase_mappings
 
 
@@ -17,7 +15,7 @@ def render_hybrid_properties(dest):
         default_storage = "couchbase"
 
     couchbase_mappings = [
-        mapping["mapping"] for name, mapping in six.iteritems(_couchbase_mappings)
+        mapping["mapping"] for name, mapping in _couchbase_mappings.items()
         if name != ldap_mapping
     ]
 

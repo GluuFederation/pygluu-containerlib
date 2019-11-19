@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import base64
 import codecs
 import json
@@ -16,15 +11,9 @@ import subprocess
 import uuid
 
 import pyDes
-import six
-
-if six.PY2:
-    string.ascii_lowercase = string.lowercase  # pragma: no cover
 
 # Default charset
-_DEFAULT_CHARS = "".join([string.ascii_uppercase,
-                          string.digits,
-                          string.ascii_lowercase])
+_DEFAULT_CHARS = "".join([string.ascii_letters, string.digits])
 
 
 def as_boolean(val, default=False):
@@ -41,7 +30,7 @@ def as_boolean(val, default=False):
 
 
 def safe_value(value):
-    if not isinstance(value, (six.string_types, six.binary_type)):
+    if not isinstance(value, (str, bytes)):
         value = json.dumps(value)
     return value
 
@@ -63,7 +52,7 @@ def get_quad():
 
 
 def join_quad_str(num):
-    return ".".join([get_quad() for _ in six.moves.range(num)])
+    return ".".join([get_quad() for _ in range(num)])
 
 
 def safe_inum_str(val):
@@ -82,13 +71,8 @@ def exec_cmd(cmd):
 
 
 def encode_text(text, key):
-    if six.PY3:
-        text = codecs.encode(text)
-        key = codecs.encode(key)
-    else:
-        text = b"{}".format(text)
-        key = b"{}".format(key)
-
+    text = codecs.encode(text)
+    key = codecs.encode(key)
     cipher = pyDes.triple_des(key, pyDes.ECB, padmode=pyDes.PAD_PKCS5)
     encrypted_text = cipher.encrypt(text)
     return base64.b64encode(encrypted_text).decode()
@@ -98,15 +82,10 @@ def decode_text(encoded_text, key):
     text = base64.b64decode(encoded_text)
     key = codecs.encode(key)
 
-    if six.PY2:
-        key = b"{}".format(key)
-        text = b"{}".format(text)
-
     cipher = pyDes.triple_des(key, pyDes.ECB, padmode=pyDes.PAD_PKCS5)
     decoded_text = cipher.decrypt(text)
 
-    if six.PY3:
-        decoded_text = decoded_text.decode()
+    decoded_text = decoded_text.decode()
     return decoded_text
 
 
@@ -127,8 +106,7 @@ def reindent(text, num_spaces=1):
 
 
 def generate_base64_contents(text, num_spaces=1):
-    if six.PY3:
-        text = codecs.encode(text)
+    text = codecs.encode(text)
     text = base64.b64encode(text)
     return reindent(text.decode(), num_spaces)
 
