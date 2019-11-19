@@ -32,7 +32,7 @@ setup(
         "requests>=2.22.0",
         "python-consul>=1.0.1",
         "hvac>=0.7.0",
-        "kubernetes>=6.0.0",
+        "kubernetes>=6.0.0,<11.0",
         "urllib3<1.25,>=1.21.1",
         "six>=1.12.0",
         "pyDes>=2.0.1",
