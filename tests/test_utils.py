@@ -24,10 +24,25 @@ import pytest
     (0, False),
     (False, False),
     ("random", False),  # misc
+    (None, False),
 ])
 def test_as_boolean(val, expected):
     from pygluu.containerlib.utils import as_boolean
     assert as_boolean(val) == expected
+
+
+@pytest.mark.parametrize("value, expected", [
+    ("a", "a"),
+    (1, "1"),
+    (b"b", b"b"),
+    (True, "true"),
+    (False, "false"),
+    (None, "null"),
+    ([], "[]"),
+])
+def test_safe_value(value, expected):
+    from pygluu.containerlib.utils import safe_value
+    assert safe_value(value) == expected
 
 
 @pytest.mark.parametrize("size", [12, 10])
@@ -52,6 +67,7 @@ def test_join_quad_str():
 
     # should have dot char
     assert join_quad_str(2).find(".") != 0
+    assert len(join_quad_str(2)) == 9
 
 
 @pytest.mark.parametrize("val, expected", [
@@ -62,6 +78,25 @@ def test_join_quad_str():
 def test_safe_inum_str(val, expected):
     from pygluu.containerlib.utils import safe_inum_str
     assert safe_inum_str(val) == expected
+
+
+@pytest.mark.parametrize("cmd", ["echo foobar"])
+def test_exec_cmd(cmd):
+    from pygluu.containerlib.utils import exec_cmd
+
+    out, err, code = exec_cmd(cmd)
+    assert out == b"foobar"
+    assert err == b""
+    assert code == 0
+
+
+@pytest.mark.parametrize("txt, ctx, expected", [
+    ("%id", {}, "%id"),
+    ("%(id)s", {"id": 1}, "1"),
+])
+def test_safe_render(txt, ctx, expected):
+    from pygluu.containerlib.utils import safe_render
+    assert safe_render(txt, ctx) == expected
 
 
 @pytest.mark.parametrize("text, num_spaces, expected", [
