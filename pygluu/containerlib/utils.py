@@ -9,6 +9,9 @@ import ssl
 import string
 import subprocess
 import uuid
+from typing import Any
+from typing import AnyStr
+from typing import Tuple
 
 import pyDes
 
@@ -16,9 +19,10 @@ import pyDes
 _DEFAULT_CHARS = "".join([string.ascii_letters, string.digits])
 
 
-def as_boolean(val, default=False):
+def as_boolean(val: Any) -> bool:
     """Converts value as boolean.
     """
+    default = False
     truthy = set(('t', 'T', 'true', 'True', 'TRUE', '1', 1, True))
     falsy = set(('f', 'F', 'false', 'False', 'FALSE', '0', 0, False))
 
@@ -29,45 +33,47 @@ def as_boolean(val, default=False):
     return default
 
 
-def safe_value(value):
+def safe_value(value: Any) -> AnyStr:
     if not isinstance(value, (str, bytes)):
         value = json.dumps(value)
     return value
 
 
-def get_random_chars(size=12, chars=_DEFAULT_CHARS):
+def get_random_chars(size: int = 12, chars: str = _DEFAULT_CHARS) -> str:
     """Generates random characters.
     """
-    return ''.join(random.choice(chars) for _ in range(size))
+    return "".join(random.choices(chars, k=size))
 
 
-def get_sys_random_chars(size=12, chars=_DEFAULT_CHARS):
+def get_sys_random_chars(size: int = 12, chars: str = _DEFAULT_CHARS) -> str:
     """Generates random characters based on OS.
     """
-    return ''.join(random.SystemRandom().choice(chars) for _ in range(size))
+    return "".join(random.SystemRandom().choices(chars, k=size))
 
 
-def get_quad():
+def get_quad() -> str:
     return "{}".format(uuid.uuid4())[:4].upper()
 
 
-def join_quad_str(num):
+def join_quad_str(num: int) -> str:
     return ".".join([get_quad() for _ in range(num)])
 
 
-def safe_inum_str(val):
+def safe_inum_str(val: str) -> str:
     return val.replace("@", "").replace("!", "").replace(".", "")
 
 
-def exec_cmd(cmd):
+def exec_cmd(cmd: str) -> Tuple[bytes, bytes, int]:
     args = shlex.split(cmd)
-    popen = subprocess.Popen(args,
-                             stdin=subprocess.PIPE,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
+    popen = subprocess.Popen(
+        args,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
     stdout, stderr = popen.communicate()
     retcode = popen.returncode
-    return stdout, stderr, retcode
+    return stdout.strip(), stderr.strip(), retcode
 
 
 def encode_text(text, key):
@@ -115,8 +121,7 @@ def cert_to_truststore(alias, cert_file, keystore_file, store_pass):
     cmd = "keytool -importcert -trustcacerts -alias {0} " \
           "-file {1} -keystore {2} -storepass {3} " \
           "-noprompt".format(alias, cert_file, keystore_file, store_pass)
-    out, err, code = exec_cmd(cmd)
-    return out.strip(), err.strip(), code
+    return exec_cmd(cmd)
 
 
 def get_server_certificate(host, port, filepath, server_hostname=""):
