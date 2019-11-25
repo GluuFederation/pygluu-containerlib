@@ -5,13 +5,16 @@ import json
 import random
 import re
 import shlex
+import socket
 import ssl
 import string
 import subprocess
 import uuid
-from typing import Any
-from typing import AnyStr
-from typing import Tuple
+from typing import (
+    Any,
+    AnyStr,
+    Tuple,
+)
 
 import pyDes
 
@@ -77,6 +80,7 @@ def exec_cmd(cmd: str) -> Tuple[bytes, bytes, int]:
 
 
 def encode_text(text, key):
+    # @TODO: should return str or bytes?
     text = codecs.encode(text)
     key = codecs.encode(key)
     cipher = pyDes.triple_des(key, pyDes.ECB, padmode=pyDes.PAD_PKCS5)
@@ -85,6 +89,7 @@ def encode_text(text, key):
 
 
 def decode_text(encoded_text, key):
+    # @TODO: should return str or bytes?
     text = base64.b64decode(encoded_text)
     key = codecs.encode(key)
 
@@ -95,14 +100,14 @@ def decode_text(encoded_text, key):
     return decoded_text
 
 
-def safe_render(text, ctx):
+def safe_render(text: str, ctx: dict) -> str:
     text = re.sub(r"%([^\(])", r"%%\1", text)
     # There was a % at the end?
     text = re.sub(r"%$", r"%%", text)
     return text % ctx
 
 
-def reindent(text, num_spaces=1):
+def reindent(text: str, num_spaces: int = 1) -> str:
     text = [
         "{0}{1}".format(num_spaces * " ", line.lstrip())
         for line in text.splitlines()
@@ -111,27 +116,33 @@ def reindent(text, num_spaces=1):
     return text
 
 
-def generate_base64_contents(text, num_spaces=1):
+def generate_base64_contents(text: str, num_spaces: int = 1) -> str:
     text = codecs.encode(text)
     text = base64.b64encode(text)
     return reindent(text.decode(), num_spaces)
 
 
-def cert_to_truststore(alias, cert_file, keystore_file, store_pass):
+def cert_to_truststore(alias: str, cert_file: str, keystore_file: str,
+                       store_pass: str) -> Tuple[bytes, bytes, int]:
     cmd = "keytool -importcert -trustcacerts -alias {0} " \
           "-file {1} -keystore {2} -storepass {3} " \
           "-noprompt".format(alias, cert_file, keystore_file, store_pass)
     return exec_cmd(cmd)
 
 
-def get_server_certificate(host, port, filepath, server_hostname=""):
+def get_server_certificate(host: str, port: int, filepath: str,
+                           server_hostname: str = "") -> str:
+    """Gets PEM-formatted certificate of a given address.
+    """
     server_hostname = server_hostname or host
 
-    conn = ssl.create_connection((host, port))
-    context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
-    sock = context.wrap_socket(conn, server_hostname=server_hostname)
-    cert = ssl.DER_cert_to_PEM_cert(sock.getpeercert(True))
+    with socket.create_connection((host, port)) as conn:
+        context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
 
-    with open(filepath, "w") as f:
-        f.write(cert)
-    return cert
+        with context.wrap_socket(conn, server_hostname=server_hostname) as sock:
+            der = sock.getpeercert(True)
+            cert = ssl.DER_cert_to_PEM_cert(der)
+
+            with open(filepath, "w") as f:
+                f.write(cert)
+            return cert
