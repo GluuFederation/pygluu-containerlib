@@ -9,11 +9,16 @@ import ldap3
 import requests
 
 from .exceptions import WaitError
-from .utils import decode_text
-from .utils import as_boolean
-from .persistence.couchbase import get_couchbase_user
-from .persistence.couchbase import get_couchbase_password
-from .persistence.couchbase import CouchbaseClient
+from .persistence.couchbase import (
+    get_couchbase_user,
+    get_couchbase_password,
+    CouchbaseClient,
+)
+from .utils import (
+    as_boolean,
+    decode_text,
+)
+
 
 logger = logging.getLogger(__name__)
 

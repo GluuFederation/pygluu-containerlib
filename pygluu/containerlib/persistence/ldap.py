@@ -1,7 +1,8 @@
+# -*- coding: utf-8 -*-
 import os
 
 
-def render_ldap_properties(manager, src, dest):
+def render_ldap_properties(manager, src: str, dest: str) -> None:
     ldap_url = os.environ.get("GLUU_LDAP_URL", "localhost:1636")
     ldap_hostname, ldaps_port = ldap_url.split(":")
 
@@ -20,10 +21,11 @@ def render_ldap_properties(manager, src, dest):
         f.write(rendered_txt)
 
 
-def sync_ldap_truststore(manager):
+def sync_ldap_truststore(manager, dest: str = "") -> None:
+    dest = dest or manager.config.get("ldapTrustStoreFn")
     manager.secret.to_file(
         "ldap_pkcs12_base64",
-        manager.config.get("ldapTrustStoreFn"),
+        dest,
         decode=True,
         binary_mode=True,
     )

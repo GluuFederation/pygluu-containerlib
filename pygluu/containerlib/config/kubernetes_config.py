@@ -5,8 +5,10 @@ import kubernetes.client
 import kubernetes.config
 
 from .base_config import BaseConfig
-from ..utils import as_boolean
-from ..utils import safe_value
+from ..utils import (
+    as_boolean,
+    safe_value,
+)
 
 
 class KubernetesConfig(BaseConfig):

@@ -2,12 +2,18 @@
 import os
 from collections import namedtuple
 
-from .config import ConsulConfig
-from .config import KubernetesConfig
-from .secret import KubernetesSecret
-from .secret import VaultSecret
-from .utils import decode_text
-from .utils import encode_text
+from .config import (
+    ConsulConfig,
+    KubernetesConfig,
+)
+from .secret import (
+    KubernetesSecret,
+    VaultSecret,
+)
+from .utils import (
+    decode_text,
+    encode_text,
+)
 
 #: Object as a placeholder of config and secret manager
 _Manager = namedtuple("Manager", "config secret")

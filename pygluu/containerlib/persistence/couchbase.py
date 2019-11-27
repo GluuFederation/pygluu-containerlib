@@ -1,30 +1,27 @@
+# -*- coding: utf-8 -*-
 import logging
 import os
 from functools import partial
+from typing import Dict
 
 import requests
 
-from ..utils import decode_text
-from ..utils import encode_text
-from ..utils import cert_to_truststore
+from ..utils import (
+    encode_text,
+    cert_to_truststore,
+)
 
 GLUU_COUCHBASE_TRUSTSTORE_PASSWORD = "newsecret"
 
 logger = logging.getLogger(__name__)
 
 
-def get_couchbase_user(manager):
-    return os.environ.get("GLUU_COUCHBASE_USER") or manager.config.get("couchbase_server_user")
+def get_couchbase_user(manager) -> str:
+    return os.environ.get("GLUU_COUCHBASE_USER", "")
 
 
-def _get_couchbase_password(manager, plaintext=False):
+def _get_couchbase_password(manager, plaintext: bool = False) -> str:
     password_file = os.environ.get("GLUU_COUCHBASE_PASSWORD_FILE", "/etc/gluu/conf/couchbase_password")
-
-    if not os.path.exists(password_file):
-        password = manager.secret.get("encoded_couchbase_server_pw")
-        if plaintext:
-            password = decode_text(password, manager.secret.get("encoded_salt"))
-        return password
 
     with open(password_file) as f:
         password = f.read().strip()
@@ -37,7 +34,7 @@ get_couchbase_password = partial(_get_couchbase_password, plaintext=True)
 get_encoded_couchbase_password = partial(_get_couchbase_password, plaintext=False)
 
 
-def get_couchbase_mappings(persistence_type, ldap_mapping):
+def get_couchbase_mappings(persistence_type: str, ldap_mapping: str) -> Dict[str, str]:
     mappings = {
         "default": {
             "bucket": "gluu",
@@ -70,7 +67,7 @@ def get_couchbase_mappings(persistence_type, ldap_mapping):
     return mappings
 
 
-def render_couchbase_properties(manager, src, dest):
+def render_couchbase_properties(manager, src: str, dest: str) -> None:
     persistence_type = os.environ.get("GLUU_PERSISTENCE_TYPE", "couchbase")
     ldap_mapping = os.environ.get("GLUU_PERSISTENCE_LDAP_MAPPING", "default")
     hostname = os.environ.get("GLUU_COUCHBASE_URL", "localhost")
@@ -115,13 +112,12 @@ def render_couchbase_properties(manager, src, dest):
             fw.write(rendered_txt)
 
 
-def sync_couchbase_cert(manager):
-    cert_file = os.environ.get("GLUU_COUCHBASE_CERT_FILE", "/etc/certs/couchbase.crt")
-    if not os.path.isfile(cert_file):
-        manager.secret.to_file("couchbase_chain_cert", cert_file)
+def sync_couchbase_cert(manager) -> None:
+    # do nothing; preserved for backward-compatibility
+    pass
 
 
-def sync_couchbase_truststore(manager):
+def sync_couchbase_truststore(manager) -> None:
     cert_file = os.environ.get("GLUU_COUCHBASE_CERT_FILE", "/etc/certs/couchbase.crt")
     cert_to_truststore(
         "gluu_couchbase",

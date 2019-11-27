@@ -5,8 +5,10 @@ import os
 from consul import Consul
 
 from .base_config import BaseConfig
-from ..utils import as_boolean
-from ..utils import safe_value
+from ..utils import (
+    as_boolean,
+    safe_value,
+)
 
 logger = logging.getLogger(__name__)
 

@@ -1,9 +1,10 @@
+# -*- coding: utf-8 -*-
 import os
 
 from .couchbase import get_couchbase_mappings
 
 
-def render_hybrid_properties(dest):
+def render_hybrid_properties(dest: str) -> None:
     persistence_type = os.environ.get("GLUU_PERSISTENCE_TYPE", "couchbase")
     ldap_mapping = os.environ.get("GLUU_PERSISTENCE_LDAP_MAPPING", "default")
 

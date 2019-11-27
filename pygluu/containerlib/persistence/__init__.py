@@ -1,11 +1,16 @@
+# -*- coding: utf-8 -*-
 import os
 
-from .couchbase import render_couchbase_properties  # noqa
-from .couchbase import sync_couchbase_cert  # noqa
-from .couchbase import sync_couchbase_truststore  # noqa
+from .couchbase import (  # noqa
+    render_couchbase_properties,
+    sync_couchbase_cert,
+    sync_couchbase_truststore,
+)
 from .hybrid import render_hybrid_properties  # noqa
-from .ldap import render_ldap_properties  # noqa
-from .ldap import sync_ldap_truststore  # noqa
+from .ldap import (  # noqa
+    render_ldap_properties,
+    sync_ldap_truststore,
+)
 
 
 def render_salt(manager, src, dest):

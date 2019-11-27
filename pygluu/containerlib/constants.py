@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 PERSISTENCE_TYPES = (
     "ldap",
     "couchbase",
