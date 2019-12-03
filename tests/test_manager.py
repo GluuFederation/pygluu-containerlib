@@ -1,4 +1,71 @@
+import os
+
 import pytest
+
+
+class FakeAdapter(object):
+    def get(self, k, default=None):
+        return "GET"
+
+    def set(self, k, v):
+        return "SET"
+
+    def all(self):
+        return {}
+
+
+@pytest.mark.parametrize("adapter, adapter_cls", [
+    ("consul", "ConsulConfig"),
+    ("kubernetes", "KubernetesConfig"),
+    ("random", "NoneType"),
+])
+def test_config_manager(adapter, adapter_cls):
+    from pygluu.containerlib.manager import ConfigManager
+
+    os.environ["GLUU_CONFIG_ADAPTER"] = adapter
+    manager = ConfigManager()
+
+    assert manager.adapter.__class__.__name__ == adapter_cls
+    os.environ.pop("GLUU_CONFIG_ADAPTER", None)
+
+
+@pytest.mark.parametrize("adapter, adapter_cls", [
+    ("vault", "VaultSecret"),
+    ("kubernetes", "KubernetesSecret"),
+    ("random", "NoneType"),
+])
+def test_secret_manager(adapter, adapter_cls):
+    from pygluu.containerlib.manager import SecretManager
+
+    os.environ["GLUU_SECRET_ADAPTER"] = adapter
+    manager = SecretManager()
+
+    assert manager.adapter.__class__.__name__ == adapter_cls
+    os.environ.pop("GLUU_SECRET_ADAPTER", None)
+
+
+def test_config_manager_methods():
+    from pygluu.containerlib.manager import ConfigManager
+
+    fake_adapter = FakeAdapter()
+    manager = ConfigManager()
+    manager.adapter = fake_adapter
+
+    assert manager.get("foo") == fake_adapter.get("foo")
+    assert manager.set("foo", "bar") == fake_adapter.set("foo", "bar")
+    assert manager.all() == fake_adapter.all()
+
+
+def test_secret_manager_methods():
+    from pygluu.containerlib.manager import SecretManager
+
+    fake_adapter = FakeAdapter()
+    manager = SecretManager()
+    manager.adapter = fake_adapter
+
+    assert manager.get("foo") == fake_adapter.get("foo")
+    assert manager.set("foo", "bar") == fake_adapter.set("foo", "bar")
+    assert manager.all() == fake_adapter.all()
 
 
 @pytest.mark.parametrize("value, expected, decode, binary_mode", [
