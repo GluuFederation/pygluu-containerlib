@@ -28,12 +28,18 @@ class KubernetesSecret(BaseSecret):
             False
         )
 
-        if as_boolean(self.settings["GLUU_SECRET_KUBERNETES_USE_KUBE_CONFIG"]):
-            kubernetes.config.load_kube_config()
-        else:
-            kubernetes.config.load_incluster_config()
-        self.client = kubernetes.client.CoreV1Api()
+        self._client = None
         self.name_exists = False
+
+    @property
+    def client(self):
+        if not self._client:
+            if as_boolean(self.settings["GLUU_CONFIG_KUBERNETES_USE_KUBE_CONFIG"]):
+                kubernetes.config.load_kube_config()
+            else:
+                kubernetes.config.load_incluster_config()
+            self._client = kubernetes.client.CoreV1Api()
+        return self._client
 
     def get(self, key, default=None):
         result = self.all()
