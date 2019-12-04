@@ -88,7 +88,7 @@ def test_get_couchbase_user(fake_manager):
 
     os.environ["GLUU_COUCHBASE_USER"] = "root"
     assert get_couchbase_user(fake_manager) == "root"
-    os.environ["GLUU_COUCHBASE_USER"] = ""
+    os.environ.pop("GLUU_COUCHBASE_USER", None)
 
 
 # ======
@@ -111,7 +111,7 @@ storage.couchbase.mapping: people, groups, authorizations, cache, cache-refresh,
     dest = tmpdir.mkdir("pygluu").join("gluu-hybrid.properties")
     render_hybrid_properties(str(dest))
     assert dest.read() == expected
-    os.environ["GLUU_PERSISTENCE_TYPE"] = ""
+    os.environ.pop("GLUU_PERSISTENCE_TYPE", None)
 
 
 def test_render_hybrid_properties_couchbase(tmpdir):
@@ -131,5 +131,5 @@ storage.couchbase.mapping: cache, cache-refresh, tokens
     render_hybrid_properties(str(dest))
     assert dest.read() == expected
 
-    os.environ["GLUU_PERSISTENCE_TYPE"] = ""
-    os.environ["GLUU_PERSISTENCE_LDAP_MAPPING"] = ""
+    os.environ.pop("GLUU_PERSISTENCE_TYPE", None)
+    os.environ.pop("GLUU_PERSISTENCE_LDAP_MAPPING", None)

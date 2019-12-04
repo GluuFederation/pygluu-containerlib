@@ -13,7 +13,7 @@ def test_get_wait_max_time(value, expected):
 
     os.environ["GLUU_WAIT_MAX_TIME"] = str(value)
     assert get_wait_max_time() == expected
-    os.environ["GLUU_WAIT_MAX_TIME"] = ""
+    os.environ.pop("GLUU_WAIT_MAX_TIME", None)
 
 
 @pytest.mark.parametrize("value, expected", [
@@ -26,4 +26,4 @@ def test_get_wait_interval(value, expected):
 
     os.environ["GLUU_WAIT_SLEEP_DURATION"] = str(value)
     assert get_wait_interval() == expected
-    os.environ["GLUU_WAIT_SLEEP_DURATION"] = ""
+    os.environ.pop("GLUU_WAIT_SLEEP_DURATION", None)
