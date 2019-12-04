@@ -20,7 +20,7 @@ def get_couchbase_user(manager) -> str:
     return os.environ.get("GLUU_COUCHBASE_USER", "")
 
 
-def _get_couchbase_password(manager, plaintext: bool = False) -> str:
+def get_couchbase_password(manager, plaintext: bool = True) -> str:
     password_file = os.environ.get("GLUU_COUCHBASE_PASSWORD_FILE", "/etc/gluu/conf/couchbase_password")
 
     with open(password_file) as f:
@@ -30,8 +30,7 @@ def _get_couchbase_password(manager, plaintext: bool = False) -> str:
         return password
 
 
-get_couchbase_password = partial(_get_couchbase_password, plaintext=True)
-get_encoded_couchbase_password = partial(_get_couchbase_password, plaintext=False)
+get_encoded_couchbase_password = partial(get_couchbase_password, plaintext=False)
 
 
 def get_couchbase_mappings(persistence_type: str, ldap_mapping: str) -> Dict[str, str]:
@@ -110,11 +109,6 @@ def render_couchbase_properties(manager, src: str, dest: str) -> None:
                 ),
             }
             fw.write(rendered_txt)
-
-
-def sync_couchbase_cert(manager) -> None:
-    # do nothing; preserved for backward-compatibility
-    pass
 
 
 def sync_couchbase_truststore(manager) -> None:

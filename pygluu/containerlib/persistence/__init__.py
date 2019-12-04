@@ -3,7 +3,6 @@ import os
 
 from .couchbase import (  # noqa
     render_couchbase_properties,
-    sync_couchbase_cert,
     sync_couchbase_truststore,
 )
 from .hybrid import render_hybrid_properties  # noqa
