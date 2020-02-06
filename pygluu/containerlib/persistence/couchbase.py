@@ -5,7 +5,6 @@ from functools import partial
 import requests
 import six
 
-from ..utils import decode_text
 from ..utils import encode_text
 from ..utils import cert_to_truststore
 
@@ -14,18 +13,12 @@ GLUU_COUCHBASE_TRUSTSTORE_PASSWORD = "newsecret"
 logger = logging.getLogger(__name__)
 
 
-def get_couchbase_user(manager):
-    return os.environ.get("GLUU_COUCHBASE_USER") or manager.config.get("couchbase_server_user")
+def get_couchbase_user(manager=None):
+    return os.environ.get("GLUU_COUCHBASE_USER", "admin")
 
 
 def _get_couchbase_password(manager, plaintext=False):
     password_file = os.environ.get("GLUU_COUCHBASE_PASSWORD_FILE", "/etc/gluu/conf/couchbase_password")
-
-    if not os.path.exists(password_file):
-        password = manager.secret.get("encoded_couchbase_server_pw")
-        if plaintext:
-            password = decode_text(password, manager.secret.get("encoded_salt"))
-        return password
 
     with open(password_file) as f:
         password = f.read().strip()
@@ -117,9 +110,7 @@ def render_couchbase_properties(manager, src, dest):
 
 
 def sync_couchbase_cert(manager):
-    cert_file = os.environ.get("GLUU_COUCHBASE_CERT_FILE", "/etc/certs/couchbase.crt")
-    if not os.path.isfile(cert_file):
-        manager.secret.to_file("couchbase_chain_cert", cert_file)
+    return os.environ.get("GLUU_COUCHBASE_CERT_FILE", "/etc/certs/couchbase.crt")
 
 
 def sync_couchbase_truststore(manager):
