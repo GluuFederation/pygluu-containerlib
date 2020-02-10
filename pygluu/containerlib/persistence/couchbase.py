@@ -110,7 +110,9 @@ def render_couchbase_properties(manager, src, dest):
 
 
 def sync_couchbase_cert(manager):
-    return os.environ.get("GLUU_COUCHBASE_CERT_FILE", "/etc/certs/couchbase.crt")
+    cert_file = os.environ.get("GLUU_COUCHBASE_CERT_FILE", "/etc/certs/couchbase.crt")
+    with open(cert_file) as f:
+        return f.read()
 
 
 def sync_couchbase_truststore(manager):
