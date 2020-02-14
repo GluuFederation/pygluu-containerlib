@@ -64,6 +64,26 @@ def get_couchbase_mappings(persistence_type, ldap_mapping):
     return mappings
 
 
+def get_couchbase_conn_timeout():
+    default = 10000
+
+    try:
+        val = int(os.environ.get("GLUU_COUCHBASE_CONN_TIMEOUT", default))
+    except ValueError:
+        val = default
+    return val
+
+
+def get_couchbase_conn_max_wait():
+    default = 20000
+
+    try:
+        val = int(os.environ.get("GLUU_COUCHBASE_CONN_MAX_WAIT", default))
+    except ValueError:
+        val = default
+    return val
+
+
 def render_couchbase_properties(manager, src, dest):
     persistence_type = os.environ.get("GLUU_PERSISTENCE_TYPE", "couchbase")
     ldap_mapping = os.environ.get("GLUU_PERSISTENCE_LDAP_MAPPING", "default")
@@ -105,6 +125,8 @@ def render_couchbase_properties(manager, src, dest):
                     GLUU_COUCHBASE_TRUSTSTORE_PASSWORD,
                     manager.secret.get("encoded_salt"),
                 ),
+                "couchbase_conn_timeout": get_couchbase_conn_timeout(),
+                "couchbase_conn_max_wait": get_couchbase_conn_max_wait(),
             }
             fw.write(rendered_txt)
 
