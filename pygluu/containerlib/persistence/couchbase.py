@@ -84,6 +84,15 @@ def get_couchbase_conn_max_wait():
     return val
 
 
+def get_couchbase_scan_consistency():
+    opts = ("not_bounded", "request_plus", "statement_plus")
+    default = "not_bounded"
+    opt = os.environ.get("GLUU_COUCHBASE_SCAN_CONSISTENCY", default)
+    if opt not in opts:
+        opt = default
+    return opt
+
+
 def render_couchbase_properties(manager, src, dest):
     persistence_type = os.environ.get("GLUU_PERSISTENCE_TYPE", "couchbase")
     ldap_mapping = os.environ.get("GLUU_PERSISTENCE_LDAP_MAPPING", "default")
@@ -127,6 +136,7 @@ def render_couchbase_properties(manager, src, dest):
                 ),
                 "couchbase_conn_timeout": get_couchbase_conn_timeout(),
                 "couchbase_conn_max_wait": get_couchbase_conn_max_wait(),
+                "couchbase_scan_consistency": get_couchbase_scan_consistency(),
             }
             fw.write(rendered_txt)
 
