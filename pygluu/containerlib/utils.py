@@ -17,6 +17,7 @@ from typing import (
 )
 
 import pyDes
+from ldap3.utils import hashed
 
 # Default charset
 _DEFAULT_CHARS = "".join([string.ascii_letters, string.digits])
@@ -146,3 +147,7 @@ def get_server_certificate(host: str, port: int, filepath: str,
             with open(filepath, "w") as f:
                 f.write(cert)
             return cert
+
+
+def ldap_encode(password):
+    return hashed.hashed(hashed.HASHED_SALTED_SHA, password)
