@@ -19,6 +19,12 @@ from .utils import (
 _Manager = namedtuple("Manager", "config secret")
 
 
+def to_str(val):
+    if isinstance(val, bytes):
+        val = val.decode()
+    return val
+
+
 class ConfigManager(object):
     def __init__(self):
         _adapter = os.environ.get(
@@ -33,13 +39,13 @@ class ConfigManager(object):
             self.adapter = None
 
     def get(self, key, default=None):
-        return self.adapter.get(key, default)
+        return to_str(self.adapter.get(key, default))
 
     def set(self, key, value):
         return self.adapter.set(key, value)
 
     def all(self):
-        return self.adapter.all()
+        return {k: to_str(v) for k, v in self.adapter.all().items()}
 
 
 class SecretManager(object):
