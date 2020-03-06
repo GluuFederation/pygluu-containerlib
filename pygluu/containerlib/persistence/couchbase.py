@@ -16,8 +16,8 @@ GLUU_COUCHBASE_TRUSTSTORE_PASSWORD = "newsecret"
 logger = logging.getLogger(__name__)
 
 
-def get_couchbase_user(manager) -> str:
-    return os.environ.get("GLUU_COUCHBASE_USER", "")
+def get_couchbase_user(manager=None) -> str:
+    return os.environ.get("GLUU_COUCHBASE_USER", "admin")
 
 
 def get_couchbase_password(manager, plaintext: bool = True) -> str:
@@ -66,6 +66,35 @@ def get_couchbase_mappings(persistence_type: str, ldap_mapping: str) -> Dict[str
     return mappings
 
 
+def get_couchbase_conn_timeout():
+    default = 10000
+
+    try:
+        val = int(os.environ.get("GLUU_COUCHBASE_CONN_TIMEOUT", default))
+    except ValueError:
+        val = default
+    return val
+
+
+def get_couchbase_conn_max_wait():
+    default = 20000
+
+    try:
+        val = int(os.environ.get("GLUU_COUCHBASE_CONN_MAX_WAIT", default))
+    except ValueError:
+        val = default
+    return val
+
+
+def get_couchbase_scan_consistency():
+    opts = ("not_bounded", "request_plus", "statement_plus")
+    default = "not_bounded"
+    opt = os.environ.get("GLUU_COUCHBASE_SCAN_CONSISTENCY", default)
+    if opt not in opts:
+        opt = default
+    return opt
+
+
 def render_couchbase_properties(manager, src: str, dest: str) -> None:
     persistence_type = os.environ.get("GLUU_PERSISTENCE_TYPE", "couchbase")
     ldap_mapping = os.environ.get("GLUU_PERSISTENCE_LDAP_MAPPING", "default")
@@ -107,11 +136,20 @@ def render_couchbase_properties(manager, src: str, dest: str) -> None:
                     GLUU_COUCHBASE_TRUSTSTORE_PASSWORD,
                     manager.secret.get("encoded_salt"),
                 ),
+                "couchbase_conn_timeout": get_couchbase_conn_timeout(),
+                "couchbase_conn_max_wait": get_couchbase_conn_max_wait(),
+                "couchbase_scan_consistency": get_couchbase_scan_consistency(),
             }
             fw.write(rendered_txt)
 
 
-def sync_couchbase_truststore(manager) -> None:
+def sync_couchbase_cert(manager) -> None:
+    cert_file = os.environ.get("GLUU_COUCHBASE_CERT_FILE", "/etc/certs/couchbase.crt")
+    with open(cert_file) as f:
+        return f.read()
+
+
+def sync_couchbase_truststore(manager):
     cert_file = os.environ.get("GLUU_COUCHBASE_CERT_FILE", "/etc/certs/couchbase.crt")
     cert_to_truststore(
         "gluu_couchbase",
