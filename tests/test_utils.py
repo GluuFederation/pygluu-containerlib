@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import shutil
 
 import pytest
@@ -107,30 +106,36 @@ def test_reindent(text, num_spaces, expected):
 
 
 @pytest.mark.parametrize("text, num_spaces, expected", [
-    ("abcd", 0, "YWJjZA=="),
-    ("abcd", 1, " YWJjZA=="),
+    ("abcd", 0, b"YWJjZA=="),
+    ("abcd", 1, b" YWJjZA=="),
+    (b"abcd", 0, b"YWJjZA=="),
+    (b"abcd", 1, b" YWJjZA=="),
 ])
 def test_generate_base64_contents(text, num_spaces, expected):
     from pygluu.containerlib.utils import generate_base64_contents
     assert generate_base64_contents(text, num_spaces) == expected
 
 
-def test_encode_text():
+@pytest.mark.parametrize("text, key, expected", [
+    ("abcd", "a" * 16, b"YgH8NDxhxmA="),
+    ("abcd", b"a" * 16, b"YgH8NDxhxmA="),
+    (b"abcd", "a" * 16, b"YgH8NDxhxmA="),
+    (b"abcd", b"a" * 16, b"YgH8NDxhxmA="),
+])
+def test_encode_text(text, key, expected):
     from pygluu.containerlib.utils import encode_text
-
-    text = "abcd"
-    key = "a" * 16
-    expected = "YgH8NDxhxmA="
     assert encode_text(text, key) == expected
 
 
-def test_decode_text():
+@pytest.mark.parametrize("encoded_text, key, expected", [
+    ("YgH8NDxhxmA=", "a" * 16, b"abcd"),
+    ("YgH8NDxhxmA=", b"a" * 16, b"abcd"),
+    (b"YgH8NDxhxmA=", "a" * 16, b"abcd"),
+    (b"YgH8NDxhxmA=", b"a" * 16, b"abcd"),
+])
+def test_decode_text(encoded_text, key, expected):
     from pygluu.containerlib.utils import decode_text
-
-    text = "YgH8NDxhxmA="
-    key = "a" * 16
-    expected = "abcd"
-    assert decode_text(text, key) == expected
+    assert decode_text(encoded_text, key) == expected
 
 
 @pytest.mark.skipif(
@@ -184,3 +189,9 @@ def test_get_server_certificate(tmpdir, httpsserver):
 
     cert = get_server_certificate(host, port, str(filepath))
     assert cert == filepath.read()
+
+
+def test_ldap_encode():
+    from pygluu.containerlib.utils import ldap_encode
+
+    assert ldap_encode("secret").startswith("{ssha}")

@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
 import base64
-import codecs
 import json
 import random
 import re
@@ -56,7 +54,8 @@ def get_sys_random_chars(size: int = 12, chars: str = _DEFAULT_CHARS) -> str:
 
 
 def get_quad() -> str:
-    return "{}".format(uuid.uuid4())[:4].upper()
+    uid = uuid.uuid4()
+    return uid.hex[:4].upper()
 
 
 def join_quad_str(num: int) -> str:
@@ -80,25 +79,16 @@ def exec_cmd(cmd: str) -> Tuple[bytes, bytes, int]:
     return stdout.strip(), stderr.strip(), retcode
 
 
-def encode_text(text, key):
-    # @TODO: should return str or bytes?
-    text = codecs.encode(text)
-    key = codecs.encode(key)
+def encode_text(text: AnyStr, key: AnyStr) -> bytes:
     cipher = pyDes.triple_des(key, pyDes.ECB, padmode=pyDes.PAD_PKCS5)
     encrypted_text = cipher.encrypt(text)
-    return base64.b64encode(encrypted_text).decode()
+    return base64.b64encode(encrypted_text)
 
 
-def decode_text(encoded_text, key):
-    # @TODO: should return str or bytes?
+def decode_text(encoded_text: AnyStr, key: AnyStr) -> bytes:
     text = base64.b64decode(encoded_text)
-    key = codecs.encode(key)
-
     cipher = pyDes.triple_des(key, pyDes.ECB, padmode=pyDes.PAD_PKCS5)
-    decoded_text = cipher.decrypt(text)
-
-    decoded_text = decoded_text.decode()
-    return decoded_text
+    return cipher.decrypt(text)
 
 
 def safe_render(text: str, ctx: dict) -> str:
@@ -117,10 +107,15 @@ def reindent(text: str, num_spaces: int = 1) -> str:
     return text
 
 
-def generate_base64_contents(text: str, num_spaces: int = 1) -> str:
-    text = codecs.encode(text)
-    text = base64.b64encode(text)
-    return reindent(text.decode(), num_spaces)
+def as_bytes(val):
+    if isinstance(val, str):
+        val = val.encode()
+    return val
+
+
+def generate_base64_contents(text: AnyStr, num_spaces: int = 1) -> bytes:
+    text = base64.b64encode(as_bytes(text))
+    return reindent(text.decode(), num_spaces).encode()
 
 
 def cert_to_truststore(alias: str, cert_file: str, keystore_file: str,
