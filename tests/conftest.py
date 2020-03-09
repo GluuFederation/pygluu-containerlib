@@ -34,7 +34,7 @@ def fake_manager():
         }
 
         def get(self, key, default=None):
-            return self.ctx[key] or default
+            return self.ctx[key].encode() or default
 
         def set(self, key, value):
             self.ctx[key] = value
@@ -49,12 +49,12 @@ def fake_manager():
         }
 
         def get(self, key, default=None):
-            return self.ctx[key] or default
+            return self.ctx[key].encode() or default
 
         def to_file(self, key, dest, decode=False, binary_mode=False):
             with open(dest, "w") as f:
                 val = self.get(key)
-                f.write(val)
+                f.write(val.decode())
 
     return _FakeManager(config=FakeConfigManager(),
                         secret=FakeSecretManager())

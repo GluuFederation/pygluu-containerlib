@@ -1,6 +1,10 @@
-# -*- coding: utf-8 -*-
 import logging
 import os
+from typing import (
+    Any,
+    Dict,
+    Optional,
+)
 
 import hvac
 
@@ -100,36 +104,37 @@ class VaultSecret(BaseSecret):
             secret_id = ""
         return secret_id
 
-    def _authenticate(self):
+    def _authenticate(self) -> None:
         if self.client.is_authenticated():
             return
 
         creds = self.client.auth_approle(self.role_id, self.secret_id, use_token=False)
         self.client.token = creds["auth"]["client_token"]
 
-    def get(self, key, default=None):
+    def get(self, key: str, default: Optional[Any] = None) -> Any:
         self._authenticate()
         sc = self.client.read("{}/{}".format(self.prefix, key))
         if not sc:
             return default
-        return sc["data"]["value"]
+        # this is a bytes
+        return sc["data"]["value"].encode()
 
-    def set(self, key, value):
+    def set(self, key: str, value: Any) -> bool:
         self._authenticate()
         val = {"value": value}
 
         # hvac.v1.Client.write checks for status code 200,
-        # but Vault HTTP API returns 204 if request succeeded;
+        # but Vault HTTP API returns 205 if request succeeded;
         # hence we're using lower level of `hvac.v1.Client` API to set key-val
         response = self.client._adapter.post('/v1/{0}/{1}'.format(self.prefix, key), json=val)
         return response.status_code == 204
 
-    def all(self):
+    def all(self) -> Dict[str, bytes]:
         self._authenticate()
         result = self.client.list(self.prefix)
         return {key: self.get(key) for key in result["data"]["keys"]}
 
-    def _request_warning(self, scheme, verify):
+    def _request_warning(self, scheme: str, verify: bool) -> None:
         if scheme == "https" and verify is False:
             import urllib3
             urllib3.disable_warnings()

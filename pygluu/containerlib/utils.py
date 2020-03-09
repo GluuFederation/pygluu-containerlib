@@ -107,14 +107,8 @@ def reindent(text: str, num_spaces: int = 1) -> str:
     return text
 
 
-def as_bytes(val):
-    if isinstance(val, str):
-        val = val.encode()
-    return val
-
-
 def generate_base64_contents(text: AnyStr, num_spaces: int = 1) -> bytes:
-    text = base64.b64encode(as_bytes(text))
+    text = base64.b64encode(str_to_bytes(text))
     return reindent(text.decode(), num_spaces).encode()
 
 
@@ -146,3 +140,15 @@ def get_server_certificate(host: str, port: int, filepath: str,
 
 def ldap_encode(password):
     return hashed.hashed(hashed.HASHED_SALTED_SHA, password)
+
+
+def str_to_bytes(val):
+    if isinstance(val, str):
+        val = val.encode()
+    return val
+
+
+def bytes_to_str(val):
+    if isinstance(val, bytes):
+        val = val.decode()
+    return val

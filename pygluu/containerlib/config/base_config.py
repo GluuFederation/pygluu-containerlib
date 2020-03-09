@@ -1,4 +1,8 @@
-# -*- coding: utf-8 -*-
+from typing import (
+    Any,
+    NoReturn,
+    Optional,
+)
 
 
 class BaseConfig(object):
@@ -7,21 +11,21 @@ class BaseConfig(object):
     """
     type = "config"
 
-    def get(self, key, default=None):
+    def get(self, key: str, default: Optional[Any] = None) -> NoReturn:
         """Get specific config.
 
         Subclass __MUST__ implement this method.
         """
         raise NotImplementedError
 
-    def set(self, key, value):
+    def set(self, key: str, value: Any) -> NoReturn:
         """Set specific config.
 
         Subclass __MUST__ implement this method.
         """
         raise NotImplementedError
 
-    def all(self):
+    def all(self) -> NoReturn:
         """Get all config as ``dict`` type.
 
         Subclass __MUST__ implement this method.

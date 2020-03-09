@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
 import os
 from collections import namedtuple
+from typing import NamedTuple
 
 from .config import (
     ConsulConfig,
@@ -16,13 +16,7 @@ from .utils import (
 )
 
 #: Object as a placeholder of config and secret manager
-_Manager = namedtuple("Manager", "config secret")
-
-
-def to_str(val):
-    if isinstance(val, bytes):
-        val = val.decode()
-    return val
+_Manager = namedtuple("Manager", ["config", "secret"])
 
 
 class ConfigManager(object):
@@ -39,13 +33,13 @@ class ConfigManager(object):
             self.adapter = None
 
     def get(self, key, default=None):
-        return to_str(self.adapter.get(key, default))
+        return self.adapter.get(key, default)
 
     def set(self, key, value):
         return self.adapter.set(key, value)
 
     def all(self):
-        return {k: to_str(v) for k, v in self.adapter.all().items()}
+        return {k: v for k, v in self.adapter.all().items()}
 
 
 class SecretManager(object):
@@ -70,7 +64,7 @@ class SecretManager(object):
     def all(self):
         return self.adapter.all()
 
-    def to_file(self, key, dest, decode=False, binary_mode=False):
+    def to_file(self, key: str, dest: str, decode: bool = False, binary_mode: bool = False) -> None:
         """Pull secret and write to a file.
         """
         value = self.adapter.get(key)
@@ -79,17 +73,18 @@ class SecretManager(object):
             value = decode_text(value, salt)
 
         mode = "w"
+        # TODO: is this needed?
         # if binary_mode:
         #     mode = "wb"
-
         with open(dest, mode) as f:
-            f.write(value)
+            # write as str
+            f.write(value.decode())
 
-    def from_file(self, key, src, encode=False, binary_mode=False):
+    def from_file(self, key: str, src: str, encode: bool = False, binary_mode: bool = False) -> None:
         mode = "r"
+        # TODO: is this needed?
         # if binary_mode:
         #     mode = "rb"
-
         with open(src, mode) as f:
             value = f.read()
 
@@ -99,7 +94,7 @@ class SecretManager(object):
         self.adapter.set(key, value)
 
 
-def get_manager():
+def get_manager() -> NamedTuple:
     """Convenient function to get manager instances.
     """
     config_mgr = ConfigManager()

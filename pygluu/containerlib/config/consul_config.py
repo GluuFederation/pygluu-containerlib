@@ -1,6 +1,10 @@
-# -*- coding: utf-8 -*-
 import logging
 import os
+from typing import (
+    Any,
+    Dict,
+    Optional,
+)
 
 from consul import Consul
 
@@ -99,27 +103,28 @@ class ConsulConfig(BaseConfig):
             cert=cert,
         )
 
-    def _merge_path(self, key):
+    def _merge_path(self, key: str) -> str:
         """Add prefix to the key.
         """
         return "".join([self.prefix, key])
 
-    def _unmerge_path(self, key):
+    def _unmerge_path(self, key: str) -> str:
         """Remove prefix from the key.
         """
         return key[len(self.prefix):]
 
-    def get(self, key, default=None):
+    def get(self, key: str, default: Optional[Any] = None) -> Any:
         _, result = self.client.kv.get(self._merge_path(key))
         if not result:
             return default
+        # this is a bytes
         return result["Value"]
 
-    def set(self, key, value):
+    def set(self, key: str, value: Any) -> bool:
         return self.client.kv.put(self._merge_path(key),
                                   safe_value(value))
 
-    def find(self, key):
+    def find(self, key: str) -> Dict[str, bytes]:
         _, resultset = self.client.kv.get(self._merge_path(key),
                                           recurse=True)
 
@@ -131,10 +136,10 @@ class ConsulConfig(BaseConfig):
             for item in resultset
         }
 
-    def all(self):
+    def all(self) -> Dict[str, bytes]:
         return self.find("")
 
-    def _request_warning(self, scheme, verify):
+    def _request_warning(self, scheme: str, verify: bool) -> None:
         if scheme == "https" and verify is False:
             import urllib3
             urllib3.disable_warnings()

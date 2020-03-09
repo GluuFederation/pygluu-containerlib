@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 
 from .couchbase import (  # noqa
@@ -12,7 +11,7 @@ from .ldap import (  # noqa
 )
 
 
-def render_salt(manager, src, dest):
+def render_salt(manager, src: str, dest: str) -> None:
     encode_salt = manager.secret.get("encoded_salt")
 
     with open(src) as f:
@@ -23,7 +22,7 @@ def render_salt(manager, src, dest):
         f.write(rendered_txt)
 
 
-def render_gluu_properties(src, dest):
+def render_gluu_properties(src: str, dest: str) -> None:
     with open(src) as f:
         txt = f.read()
 
