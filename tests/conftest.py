@@ -1,5 +1,4 @@
 # from collections import namedtuple
-# import os
 
 import pytest
 
@@ -13,6 +12,23 @@ def gconfig():
     return GConfig()
 
 
+@pytest.fixture()
+def gconsul_config():
+    from pygluu.containerlib.config import ConsulConfig
+
+    config = ConsulConfig()
+    yield config
+
+
+@pytest.fixture()
+def gk8s_config():
+    from pygluu.containerlib.config import KubernetesConfig
+
+    config = KubernetesConfig()
+    config.settings["GLUU_CONFIG_KUBERNETES_USE_KUBE_CONFIG"] = True
+    yield config
+
+
 # @pytest.fixture
 # def gsecret():
 #     from pygluu.containerlib.secret.base_secret import BaseSecret
@@ -20,17 +36,6 @@ def gconfig():
 #     class DummySecret(BaseSecret):
 #         pass
 #     return DummySecret()
-
-
-@pytest.fixture()
-def gconsul_config(tmpdir):
-    from pygluu.containerlib.config import ConsulConfig
-
-    # # consul token
-    # token_file = tmpdir.join("consul_token")
-    # token_file.write("secret")
-    # os.environ["GLUU_CONFIG_CONSUL_TOKEN_FILE"] = str(token_file)
-    yield ConsulConfig()
 
 
 # @pytest.fixture

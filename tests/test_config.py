@@ -1,4 +1,10 @@
+from collections import namedtuple
+
 import pytest
+
+
+KubeResult = namedtuple("KubeResult", ["data"])
+
 
 # ===========
 # base config
@@ -99,10 +105,7 @@ def test_consul_config_all(gconsul_config, monkeypatch):
 def test_consul_config_all_empty(gconsul_config, monkeypatch):
     monkeypatch.setattr(
         "consul.Consul.KV.get",
-        lambda cls, k, recurse: (
-            1,
-            [],
-        ),
+        lambda cls, k, recurse: (1, []),
     )
     assert gconsul_config.all() == {}
 
@@ -110,3 +113,89 @@ def test_consul_config_all_empty(gconsul_config, monkeypatch):
 def test_consul_config_request_warning(gconsul_config, caplog):
     gconsul_config._request_warning("https", False)
     assert "All requests to Consul will be unverified" in caplog.records[0].message
+
+# =================
+# kubernetes config
+# =================
+
+
+def test_k8s_config_prepare_configmap_read(gk8s_config, monkeypatch):
+    monkeypatch.setattr(
+        "kubernetes.client.CoreV1Api.read_namespaced_config_map",
+        lambda cls, n, ns: True,
+    )
+    gk8s_config._prepare_configmap()
+    assert gk8s_config.name_exists is True
+
+
+def test_k8s_config_prepare_configmap_create(gk8s_config, monkeypatch):
+    import kubernetes.client.rest
+
+    def _raise_exc(status):
+        raise kubernetes.client.rest.ApiException(status=status)
+
+    monkeypatch.setattr(
+        "kubernetes.client.CoreV1Api.read_namespaced_config_map",
+        lambda cls, n, ns: _raise_exc(404),
+    )
+
+    monkeypatch.setattr(
+        "kubernetes.client.CoreV1Api.create_namespaced_config_map",
+        lambda cls, n, ns: True,
+    )
+
+    gk8s_config._prepare_configmap()
+    assert gk8s_config.name_exists is True
+
+
+def test_k8s_config_prepare_configmap_not_created(gk8s_config, monkeypatch):
+    import kubernetes.client.rest
+
+    def _raise_exc(status):
+        raise kubernetes.client.rest.ApiException(status=status)
+
+    monkeypatch.setattr(
+        "kubernetes.client.CoreV1Api.read_namespaced_config_map",
+        lambda cls, n, ns: _raise_exc(500),
+    )
+
+    monkeypatch.setattr(
+        "kubernetes.client.CoreV1Api.create_namespaced_config_map",
+        lambda cls, n, ns: True,
+    )
+
+    with pytest.raises(kubernetes.client.rest.ApiException):
+        gk8s_config._prepare_configmap()
+    assert gk8s_config.name_exists is False
+
+
+def test_k8s_config_get(gk8s_config, monkeypatch):
+    monkeypatch.setattr(
+        "kubernetes.client.CoreV1Api.read_namespaced_config_map",
+        lambda cls, n, ns: KubeResult(data={"foo": "bar"})
+    )
+    assert gk8s_config.get("foo") == "bar"
+
+
+def test_k8s_config_set(gk8s_config, monkeypatch):
+    monkeypatch.setattr(
+        "kubernetes.client.CoreV1Api.read_namespaced_config_map",
+        lambda cls, n, ns: KubeResult(data={"foo": "bar"})
+    )
+
+    monkeypatch.setattr(
+        "kubernetes.client.CoreV1Api.patch_namespaced_config_map",
+        lambda cls, n, ns, body: KubeResult(data={"foo": "bar"})
+    )
+
+    assert gk8s_config.set("foo", "bar") == KubeResult(data={"foo": "bar"})
+
+
+def test_k8s_config_incluster():
+    import kubernetes.config.config_exception
+    from pygluu.containerlib.config import KubernetesConfig
+
+    config = KubernetesConfig()
+
+    with pytest.raises(kubernetes.config.config_exception.ConfigException):
+        config.client
