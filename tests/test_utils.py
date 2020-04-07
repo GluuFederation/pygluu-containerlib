@@ -54,27 +54,27 @@ def test_get_sys_random_chars(size):
     assert len(get_sys_random_chars(size)) == size
 
 
-def test_get_quad():
-    from pygluu.containerlib.utils import get_quad
-    assert len(get_quad()) == 4
+# def test_get_quad():
+#     from pygluu.containerlib.utils import get_quad
+#     assert len(get_quad()) == 4
 
 
-def test_join_quad_str():
-    from pygluu.containerlib.utils import join_quad_str
+# def test_join_quad_str():
+#     from pygluu.containerlib.utils import join_quad_str
 
-    # should have dot char
-    assert join_quad_str(2).find(".") != 0
-    assert len(join_quad_str(2)) == 9
+#     # should have dot char
+#     assert join_quad_str(2).find(".") != 0
+#     assert len(join_quad_str(2)) == 9
 
 
-@pytest.mark.parametrize("val, expected", [
-    ("@1234", "1234"),
-    ("!1234", "1234"),
-    (".1234", "1234")
-])
-def test_safe_inum_str(val, expected):
-    from pygluu.containerlib.utils import safe_inum_str
-    assert safe_inum_str(val) == expected
+# @pytest.mark.parametrize("val, expected", [
+#     ("@1234", "1234"),
+#     ("!1234", "1234"),
+#     (".1234", "1234")
+# ])
+# def test_safe_inum_str(val, expected):
+#     from pygluu.containerlib.utils import safe_inum_str
+#     assert safe_inum_str(val) == expected
 
 
 @pytest.mark.parametrize("cmd", ["echo foobar"])

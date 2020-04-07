@@ -7,7 +7,7 @@ import socket
 import ssl
 import string
 import subprocess
-import uuid
+# import uuid
 from typing import (
     Any,
     AnyStr,
@@ -53,17 +53,17 @@ def get_sys_random_chars(size: int = 12, chars: str = _DEFAULT_CHARS) -> str:
     return "".join(random.SystemRandom().choices(chars, k=size))
 
 
-def get_quad() -> str:
-    uid = uuid.uuid4()
-    return uid.hex[:4].upper()
+# def get_quad() -> str:
+#     uid = uuid.uuid4()
+#     return uid.hex[:4].upper()
 
 
-def join_quad_str(num: int) -> str:
-    return ".".join([get_quad() for _ in range(num)])
+# def join_quad_str(num: int) -> str:
+#     return ".".join([get_quad() for _ in range(num)])
 
 
-def safe_inum_str(val: str) -> str:
-    return val.replace("@", "").replace("!", "").replace(".", "")
+# def safe_inum_str(val: str) -> str:
+#     return val.replace("@", "").replace("!", "").replace(".", "")
 
 
 def exec_cmd(cmd: str) -> Tuple[bytes, bytes, int]:
@@ -148,7 +148,7 @@ def str_to_bytes(val):
     return val
 
 
-def bytes_to_str(val):
-    if isinstance(val, bytes):
-        val = val.decode()
-    return val
+# def bytes_to_str(val):
+#     if isinstance(val, bytes):
+#         val = val.decode()
+#     return val
