@@ -70,33 +70,20 @@ class ConsulConfig(BaseConfig):
         )
 
         self.prefix = "gluu/config/"
-        token = None
-        cert = None
-        verify = False
-
-        if os.path.isfile(self.settings["GLUU_CONFIG_CONSUL_TOKEN_FILE"]):
-            with open(self.settings["GLUU_CONFIG_CONSUL_TOKEN_FILE"]) as fr:
-                token = fr.read().strip()
-
-        if self.settings["GLUU_CONFIG_CONSUL_SCHEME"] == "https":
-            verify = as_boolean(self.settings["GLUU_CONFIG_CONSUL_VERIFY"])
-
-            # verify using CA cert (if any)
-            if all([verify,
-                    os.path.isfile(self.settings["GLUU_CONFIG_CONSUL_CACERT_FILE"])]):
-                verify = self.settings["GLUU_CONFIG_CONSUL_CACERT_FILE"]
-
-            if all([os.path.isfile(self.settings["GLUU_CONFIG_CONSUL_CERT_FILE"]),
-                    os.path.isfile(self.settings["GLUU_CONFIG_CONSUL_KEY_FILE"])]):
-                cert = (self.settings["GLUU_CONFIG_CONSUL_CERT_FILE"],
-                        self.settings["GLUU_CONFIG_CONSUL_KEY_FILE"])
+        cert, verify = self._verify_cert(
+            self.settings["GLUU_CONFIG_CONSUL_SCHEME"],
+            self.settings["GLUU_CONFIG_CONSUL_VERIFY"],
+            self.settings["GLUU_CONFIG_CONSUL_CACERT_FILE"],
+            self.settings["GLUU_CONFIG_CONSUL_CERT_FILE"],
+            self.settings["GLUU_CONFIG_CONSUL_KEY_FILE"],
+        )
 
         self._request_warning(self.settings["GLUU_CONFIG_CONSUL_SCHEME"], verify)
 
         self.client = Consul(
             host=self.settings["GLUU_CONFIG_CONSUL_HOST"],
             port=self.settings["GLUU_CONFIG_CONSUL_PORT"],
-            token=token,
+            token=self._token_from_file(self.settings["GLUU_CONFIG_CONSUL_TOKEN_FILE"]),
             scheme=self.settings["GLUU_CONFIG_CONSUL_SCHEME"],
             consistency=self.settings["GLUU_CONFIG_CONSUL_CONSISTENCY"],
             verify=verify,
@@ -124,8 +111,8 @@ class ConsulConfig(BaseConfig):
         return self.client.kv.put(self._merge_path(key),
                                   safe_value(value))
 
-    def find(self, key: str) -> Dict[str, bytes]:
-        _, resultset = self.client.kv.get(self._merge_path(key),
+    def all(self) -> Dict[str, bytes]:
+        _, resultset = self.client.kv.get(self._merge_path(""),
                                           recurse=True)
 
         if not resultset:
@@ -136,15 +123,34 @@ class ConsulConfig(BaseConfig):
             for item in resultset
         }
 
-    def all(self) -> Dict[str, bytes]:
-        return self.find("")
-
     def _request_warning(self, scheme: str, verify: bool) -> None:
         if scheme == "https" and verify is False:
             import urllib3
             urllib3.disable_warnings()
-            logger.warn(
+            logger.warning(
                 "All requests to Consul will be unverified. "
                 "Please adjust GLUU_CONFIG_CONSUL_SCHEME and "
                 "GLUU_CONFIG_CONSUL_VERIFY environment variables."
             )
+
+    def _token_from_file(self, path):
+        if not os.path.isfile(path):
+            return
+
+        with open(path) as fr:
+            token = fr.read().strip()
+        return token
+
+    def _verify_cert(self, scheme, verify, cacert_file, cert_file, key_file):
+        cert = None
+
+        if scheme == "https":
+            verify = as_boolean(verify)
+
+            # verify using CA cert (if any)
+            if all([verify, os.path.isfile(cacert_file)]):
+                verify = cacert_file
+
+            if all([os.path.isfile(cert_file), os.path.isfile(key_file)]):
+                cert = (cert_file, key_file)
+        return cert, verify
