@@ -29,13 +29,30 @@ def gk8s_config():
     yield config
 
 
-# @pytest.fixture
-# def gsecret():
-#     from pygluu.containerlib.secret.base_secret import BaseSecret
+@pytest.fixture
+def gsecret():
+    from pygluu.containerlib.secret.base_secret import BaseSecret
 
-#     class DummySecret(BaseSecret):
-#         pass
-#     return DummySecret()
+    class GSecret(BaseSecret):
+        pass
+    return GSecret()
+
+
+@pytest.fixture()
+def gvault_secret():
+    from pygluu.containerlib.secret import VaultSecret
+
+    secret = VaultSecret()
+    yield secret
+
+
+@pytest.fixture()
+def gk8s_secret():
+    from pygluu.containerlib.secret import KubernetesSecret
+
+    secret = KubernetesSecret()
+    secret.settings["GLUU_SECRET_KUBERNETES_USE_KUBE_CONFIG"] = True
+    yield secret
 
 
 # @pytest.fixture

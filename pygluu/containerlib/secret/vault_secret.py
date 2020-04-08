@@ -57,21 +57,13 @@ class VaultSecret(BaseSecret):
             "/etc/certs/vault_ca.crt",
         )
 
-        cert = None
-        verify = False
-
-        if self.settings["GLUU_SECRET_VAULT_SCHEME"] == "https":
-            verify = as_boolean(self.settings["GLUU_SECRET_VAULT_VERIFY"])
-
-            # verify using CA cert (if any)
-            if all([verify,
-                    os.path.isfile(self.settings["GLUU_SECRET_VAULT_CACERT_FILE"])]):
-                verify = self.settings["GLUU_SECRET_VAULT_CACERT_FILE"]
-
-            if all([os.path.isfile(self.settings["GLUU_SECRET_VAULT_CERT_FILE"]),
-                    os.path.isfile(self.settings["GLUU_SECRET_VAULT_KEY_FILE"])]):
-                cert = (self.settings["GLUU_SECRET_VAULT_CERT_FILE"],
-                        self.settings["GLUU_SECRET_VAULT_KEY_FILE"])
+        cert, verify = self._verify_cert(
+            self.settings["GLUU_SECRET_VAULT_SCHEME"],
+            self.settings["GLUU_SECRET_VAULT_VERIFY"],
+            self.settings["GLUU_SECRET_VAULT_CACERT_FILE"],
+            self.settings["GLUU_SECRET_VAULT_CERT_FILE"],
+            self.settings["GLUU_SECRET_VAULT_KEY_FILE"],
+        )
 
         self._request_warning(self.settings["GLUU_SECRET_VAULT_SCHEME"], verify)
 
@@ -91,7 +83,7 @@ class VaultSecret(BaseSecret):
         try:
             with open(self.settings["GLUU_SECRET_VAULT_ROLE_ID_FILE"]) as f:
                 role_id = f.read()
-        except IOError:
+        except FileNotFoundError:
             role_id = ""
         return role_id
 
@@ -100,7 +92,7 @@ class VaultSecret(BaseSecret):
         try:
             with open(self.settings["GLUU_SECRET_VAULT_SECRET_ID_FILE"]) as f:
                 secret_id = f.read()
-        except IOError:
+        except FileNotFoundError:
             secret_id = ""
         return secret_id
 
@@ -138,8 +130,23 @@ class VaultSecret(BaseSecret):
         if scheme == "https" and verify is False:
             import urllib3
             urllib3.disable_warnings()
-            logger.warn(
+            logger.warning(
                 "All requests to Vault will be unverified. "
                 "Please adjust GLUU_SECRET_VAULT_SCHEME and "
                 "GLUU_SECRET_VAULT_VERIFY environment variables."
             )
+
+    def _verify_cert(self, scheme, verify, cacert_file, cert_file, key_file):
+        cert = None
+
+        if scheme == "https":
+            verify = as_boolean(verify)
+
+            # verify using CA cert (if any)
+            if all([verify, os.path.isfile(cacert_file)]):
+                verify = cacert_file
+
+            if all([os.path.isfile(cert_file),
+                    os.path.isfile(key_file)]):
+                cert = (cert_file, key_file)
+        return cert, verify

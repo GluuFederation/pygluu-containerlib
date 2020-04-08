@@ -34,7 +34,7 @@ class KubernetesSecret(BaseSecret):
     @property
     def client(self):
         if not self._client:
-            if as_boolean(self.settings["GLUU_CONFIG_KUBERNETES_USE_KUBE_CONFIG"]):
+            if as_boolean(self.settings["GLUU_SECRET_KUBERNETES_USE_KUBE_CONFIG"]):
                 kubernetes.config.load_kube_config()
             else:
                 kubernetes.config.load_incluster_config()
@@ -83,7 +83,7 @@ class KubernetesSecret(BaseSecret):
                 "name": self.settings["GLUU_SECRET_KUBERNETES_SECRET"],
             },
             "data": {
-                key: base64.b64encode(value),
+                key: base64.b64encode(value.encode()),
             }
         }
         return self.client.patch_namespaced_secret(
