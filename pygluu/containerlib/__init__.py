@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 __version__ = "2.0.0_dev"
 
 from .manager import get_manager  # noqa

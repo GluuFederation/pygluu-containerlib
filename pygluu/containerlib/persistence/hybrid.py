@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 
 from .couchbase import get_couchbase_mappings
