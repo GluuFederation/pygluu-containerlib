@@ -1,4 +1,9 @@
 import os
+from typing import (
+    Any,
+    Dict,
+    Optional,
+)
 
 import kubernetes.client
 import kubernetes.config
@@ -34,7 +39,7 @@ class KubernetesConfig(BaseConfig):
         self._client = None
         self.name_exists = False
 
-    def get(self, key, default=None):
+    def get(self, key: str, default: Optional[Any] = None) -> str:
         result = self.all()
         return result.get(key, default)
 
@@ -75,7 +80,7 @@ class KubernetesConfig(BaseConfig):
                 else:
                     raise
 
-    def set(self, key, value):
+    def set(self, key: str, value: Any) -> bool:
         self._prepare_configmap()
         body = {
             "kind": "ConfigMap",
@@ -87,12 +92,14 @@ class KubernetesConfig(BaseConfig):
                 key: safe_value(value),
             }
         }
-        return self.client.patch_namespaced_config_map(
+        ret = self.client.patch_namespaced_config_map(
             self.settings["GLUU_CONFIG_KUBERNETES_CONFIGMAP"],
             self.settings["GLUU_CONFIG_KUBERNETES_NAMESPACE"],
-            body=body)
+            body=body,
+        )
+        return bool(ret)
 
-    def all(self):
+    def all(self) -> Dict[str, str]:
         self._prepare_configmap()
         result = self.client.read_namespaced_config_map(
             self.settings["GLUU_CONFIG_KUBERNETES_CONFIGMAP"],

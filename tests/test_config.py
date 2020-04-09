@@ -188,7 +188,7 @@ def test_k8s_config_set(gk8s_config, monkeypatch):
         lambda cls, n, ns, body: KubeResult(data={"foo": "bar"})
     )
 
-    assert gk8s_config.set("foo", "bar") == KubeResult(data={"foo": "bar"})
+    assert gk8s_config.set("foo", "bar") is True
 
 
 def test_k8s_config_incluster():
