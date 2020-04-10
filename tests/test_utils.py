@@ -106,10 +106,10 @@ def test_reindent(text, num_spaces, expected):
 
 
 @pytest.mark.parametrize("text, num_spaces, expected", [
-    ("abcd", 0, b"YWJjZA=="),
-    ("abcd", 1, b" YWJjZA=="),
-    (b"abcd", 0, b"YWJjZA=="),
-    (b"abcd", 1, b" YWJjZA=="),
+    ("abcd", 0, "YWJjZA=="),
+    ("abcd", 1, " YWJjZA=="),
+    (b"abcd", 0, "YWJjZA=="),
+    (b"abcd", 1, " YWJjZA=="),
 ])
 def test_generate_base64_contents(text, num_spaces, expected):
     from pygluu.containerlib.utils import generate_base64_contents

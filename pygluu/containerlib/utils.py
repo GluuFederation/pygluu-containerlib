@@ -107,9 +107,9 @@ def reindent(text: str, num_spaces: int = 1) -> str:
     return text
 
 
-def generate_base64_contents(text: AnyStr, num_spaces: int = 1) -> bytes:
+def generate_base64_contents(text: AnyStr, num_spaces: int = 1) -> str:
     text = base64.b64encode(str_to_bytes(text))
-    return reindent(text.decode(), num_spaces).encode()
+    return reindent(text.decode(), num_spaces)
 
 
 def cert_to_truststore(alias: str, cert_file: str, keystore_file: str,
