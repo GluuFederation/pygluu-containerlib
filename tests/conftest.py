@@ -1,4 +1,4 @@
-# from collections import namedtuple
+from collections import namedtuple
 
 import pytest
 
@@ -61,39 +61,40 @@ def gk8s_secret():
     yield secret
 
 
-# @pytest.fixture
-# def fake_manager():
-#     _FakeManager = namedtuple("FakeManager", ["config", "secret"])
+@pytest.fixture
+def gmanager():
+    GManager = namedtuple("GManager", ["config", "secret"])
 
-#     class FakeConfigManager(object):
-#         ctx = {
-#             "ldap_binddn": "cn=Directory Manager",
-#             "ldapTrustStoreFn": "/etc/certs/opendj.pkcs12",
-#             "couchbase_server_user": "admin",
-#         }
+    class GConfigManager(object):
+        ctx = {
+            "ldap_binddn": "cn=Directory Manager",
+            # "ldapTrustStoreFn": "/etc/certs/opendj.pkcs12",
+            "couchbase_server_user": "admin",
+            # "couchbaseTrustStoreFn": "/etc/certs/coucbase.pkcs12",
+        }
 
-#         def get(self, key, default=None):
-#             return self.ctx[key].encode() or default
+        def get(self, key, default=None):
+            return self.ctx.get(key) or default
 
-#         def set(self, key, value):
-#             self.ctx[key] = value
-#             return value
+        def set(self, key, value):
+            self.ctx[key] = value
+            return True
 
-#     class FakeSecretManager(object):
-#         ctx = {
-#             "encoded_ox_ldap_pw": "Zm9vYmFyCg==",
-#             "encoded_ldapTrustStorePass": "Zm9vYmFyCg==",
-#             "ldap_pkcs12_base64": "Zm9vYmFyCg==",
-#             "encoded_salt": "7MEDWVFAG3DmakHRyjMqp5EE",
-#         }
+    class GSecretManager(object):
+        ctx = {
+            "encoded_ox_ldap_pw": "Zm9vYmFyCg==",
+            "encoded_ldapTrustStorePass": "Zm9vYmFyCg==",
+            "ldap_pkcs12_base64": "Zm9vYmFyCg==",
+            "encoded_salt": "7MEDWVFAG3DmakHRyjMqp5EE",
+        }
 
-#         def get(self, key, default=None):
-#             return self.ctx[key].encode() or default
+        def get(self, key, default=None):
+            return self.ctx[key].encode() or default
 
-#         def to_file(self, key, dest, decode=False, binary_mode=False):
-#             with open(dest, "w") as f:
-#                 val = self.get(key)
-#                 f.write(val.decode())
+        def to_file(self, key, dest, decode=False, binary_mode=False):
+            with open(dest, "w") as f:
+                val = self.get(key)
+                f.write(val.decode())
 
-#     return _FakeManager(config=FakeConfigManager(),
-#                         secret=FakeSecretManager())
+    return GManager(config=GConfigManager(),
+                    secret=GSecretManager())

@@ -65,7 +65,7 @@ def get_couchbase_mappings(persistence_type: str, ldap_mapping: str) -> Dict[str
     return mappings
 
 
-def get_couchbase_conn_timeout():
+def get_couchbase_conn_timeout() -> int:
     default = 10000
 
     try:
@@ -75,7 +75,7 @@ def get_couchbase_conn_timeout():
     return val
 
 
-def get_couchbase_conn_max_wait():
+def get_couchbase_conn_max_wait() -> int:
     default = 20000
 
     try:
@@ -85,7 +85,7 @@ def get_couchbase_conn_max_wait():
     return val
 
 
-def get_couchbase_scan_consistency():
+def get_couchbase_scan_consistency() -> str:
     opts = ("not_bounded", "request_plus", "statement_plus")
     default = "not_bounded"
     opt = os.environ.get("GLUU_COUCHBASE_SCAN_CONSISTENCY", default)
@@ -142,18 +142,19 @@ def render_couchbase_properties(manager, src: str, dest: str) -> None:
             fw.write(rendered_txt)
 
 
-def sync_couchbase_cert(manager) -> None:
+def sync_couchbase_cert(manager=None) -> str:
     cert_file = os.environ.get("GLUU_COUCHBASE_CERT_FILE", "/etc/certs/couchbase.crt")
     with open(cert_file) as f:
         return f.read()
 
 
-def sync_couchbase_truststore(manager):
+def sync_couchbase_truststore(manager, dest: str = "") -> None:
     cert_file = os.environ.get("GLUU_COUCHBASE_CERT_FILE", "/etc/certs/couchbase.crt")
+    dest = dest or manager.config.get("couchbaseTrustStoreFn")
     cert_to_truststore(
         "gluu_couchbase",
         cert_file,
-        manager.config.get("couchbaseTrustStoreFn"),
+        dest,
         GLUU_COUCHBASE_TRUSTSTORE_PASSWORD,
     )
 

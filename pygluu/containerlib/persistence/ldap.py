@@ -10,12 +10,12 @@ def render_ldap_properties(manager, src: str, dest: str) -> None:
 
     with open(dest, "w") as f:
         rendered_txt = txt % {
-            "ldap_binddn": manager.config.get("ldap_binddn").decode(),
-            "encoded_ox_ldap_pw": manager.secret.get("encoded_ox_ldap_pw").decode(),
+            "ldap_binddn": manager.config.get("ldap_binddn"),
+            "encoded_ox_ldap_pw": manager.secret.get("encoded_ox_ldap_pw"),
             "ldap_hostname": ldap_hostname,
             "ldaps_port": ldaps_port,
-            "ldapTrustStoreFn": manager.config.get("ldapTrustStoreFn").decode(),
-            "encoded_ldapTrustStorePass": manager.secret.get("encoded_ldapTrustStorePass").decode(),
+            "ldapTrustStoreFn": manager.config.get("ldapTrustStoreFn"),
+            "encoded_ldapTrustStorePass": manager.secret.get("encoded_ldapTrustStorePass"),
         }
         f.write(rendered_txt)
 

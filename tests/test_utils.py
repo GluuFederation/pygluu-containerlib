@@ -117,10 +117,10 @@ def test_generate_base64_contents(text, num_spaces, expected):
 
 
 @pytest.mark.parametrize("text, key, expected", [
-    ("abcd", "a" * 16, b"YgH8NDxhxmA="),
-    ("abcd", b"a" * 16, b"YgH8NDxhxmA="),
-    (b"abcd", "a" * 16, b"YgH8NDxhxmA="),
-    (b"abcd", b"a" * 16, b"YgH8NDxhxmA="),
+    ("abcd", "a" * 16, "YgH8NDxhxmA="),
+    ("abcd", b"a" * 16, "YgH8NDxhxmA="),
+    (b"abcd", "a" * 16, "YgH8NDxhxmA="),
+    (b"abcd", b"a" * 16, "YgH8NDxhxmA="),
 ])
 def test_encode_text(text, key, expected):
     from pygluu.containerlib.utils import encode_text

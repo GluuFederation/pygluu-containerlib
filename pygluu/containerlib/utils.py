@@ -82,7 +82,7 @@ def exec_cmd(cmd: str) -> Tuple[bytes, bytes, int]:
 def encode_text(text: AnyStr, key: AnyStr) -> bytes:
     cipher = pyDes.triple_des(key, pyDes.ECB, padmode=pyDes.PAD_PKCS5)
     encrypted_text = cipher.encrypt(text)
-    return base64.b64encode(encrypted_text)
+    return base64.b64encode(encrypted_text).decode()
 
 
 def decode_text(encoded_text: AnyStr, key: AnyStr) -> str:
