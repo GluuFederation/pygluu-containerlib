@@ -85,10 +85,10 @@ def encode_text(text: AnyStr, key: AnyStr) -> bytes:
     return base64.b64encode(encrypted_text)
 
 
-def decode_text(encoded_text: AnyStr, key: AnyStr) -> bytes:
+def decode_text(encoded_text: AnyStr, key: AnyStr) -> str:
     text = base64.b64decode(encoded_text)
     cipher = pyDes.triple_des(key, pyDes.ECB, padmode=pyDes.PAD_PKCS5)
-    return cipher.decrypt(text)
+    return cipher.decrypt(text).decode()
 
 
 def safe_render(text: str, ctx: dict) -> str:

@@ -128,10 +128,10 @@ def test_encode_text(text, key, expected):
 
 
 @pytest.mark.parametrize("encoded_text, key, expected", [
-    ("YgH8NDxhxmA=", "a" * 16, b"abcd"),
-    ("YgH8NDxhxmA=", b"a" * 16, b"abcd"),
-    (b"YgH8NDxhxmA=", "a" * 16, b"abcd"),
-    (b"YgH8NDxhxmA=", b"a" * 16, b"abcd"),
+    ("YgH8NDxhxmA=", "a" * 16, "abcd"),
+    ("YgH8NDxhxmA=", b"a" * 16, "abcd"),
+    (b"YgH8NDxhxmA=", "a" * 16, "abcd"),
+    (b"YgH8NDxhxmA=", b"a" * 16, "abcd"),
 ])
 def test_decode_text(encoded_text, key, expected):
     from pygluu.containerlib.utils import decode_text
