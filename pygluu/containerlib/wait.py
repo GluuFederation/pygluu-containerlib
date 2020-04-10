@@ -43,8 +43,8 @@ def get_wait_interval():
 def on_backoff(details):
     details["error"] = sys.exc_info()[1]
     details["kwargs"]["label"] = details["kwargs"].pop("label", "Service")
-    logger.warn("{kwargs[label]} is not ready; reason={error}; "
-                "retrying in {wait:0.1f} seconds".format(**details))
+    logger.warning("{kwargs[label]} is not ready; reason={error}; "
+                   "retrying in {wait:0.1f} seconds".format(**details))
 
 
 def on_success(details):
