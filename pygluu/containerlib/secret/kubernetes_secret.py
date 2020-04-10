@@ -1,11 +1,17 @@
 import base64
 import os
+from typing import (
+    Any,
+)
 
 import kubernetes.client
 import kubernetes.config
 
 from .base_secret import BaseSecret
-from ..utils import as_boolean
+from ..utils import (
+    as_boolean,
+    safe_value,
+)
 
 
 class KubernetesSecret(BaseSecret):
@@ -42,11 +48,9 @@ class KubernetesSecret(BaseSecret):
 
     def get(self, key, default=None):
         result = self.all()
-        if key in result:
-            return base64.b64decode(result[key])
-        return default
+        return result.get(key) or default
 
-    def _prepare_secret(self):
+    def _prepare_secret(self) -> None:
         # create a secret name if not exist
         if not self.name_exists:
             try:
@@ -73,7 +77,7 @@ class KubernetesSecret(BaseSecret):
                 else:
                     raise
 
-    def set(self, key, value):
+    def set(self, key: str, value: Any) -> bool:
         self._prepare_secret()
         body = {
             "kind": "Secret",
@@ -82,17 +86,21 @@ class KubernetesSecret(BaseSecret):
                 "name": self.settings["GLUU_SECRET_KUBERNETES_SECRET"],
             },
             "data": {
-                key: base64.b64encode(value.encode()),
+                key: base64.b64encode(safe_value(value).encode()).decode(),
             }
         }
-        return self.client.patch_namespaced_secret(
+        ret = self.client.patch_namespaced_secret(
             self.settings["GLUU_SECRET_KUBERNETES_SECRET"],
             self.settings["GLUU_SECRET_KUBERNETES_NAMESPACE"],
-            body=body)
+            body=body,
+        )
+        return bool(ret)
 
     def all(self):
         self._prepare_secret()
         result = self.client.read_namespaced_secret(
             self.settings["GLUU_SECRET_KUBERNETES_SECRET"],
             self.settings["GLUU_SECRET_KUBERNETES_NAMESPACE"])
-        return result.data or {}
+        return {
+            k: base64.b64decode(v).decode() for k, v in result.data.items()
+        }

@@ -103,13 +103,12 @@ class VaultSecret(BaseSecret):
         creds = self.client.auth_approle(self.role_id, self.secret_id, use_token=False)
         self.client.token = creds["auth"]["client_token"]
 
-    def get(self, key: str, default: Optional[Any] = None) -> Any:
+    def get(self, key: str, default: Optional[Any] = None) -> str:
         self._authenticate()
         sc = self.client.read("{}/{}".format(self.prefix, key))
         if not sc:
             return default
-        # this is a bytes
-        return sc["data"]["value"].encode()
+        return sc["data"]["value"]
 
     def set(self, key: str, value: Any) -> bool:
         self._authenticate()

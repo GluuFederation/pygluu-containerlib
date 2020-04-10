@@ -109,8 +109,7 @@ def test_vault_secret_get(gvault_secret, monkeypatch):
         "hvac.Client.read",
         lambda cls, key: {"data": {"value": "bar"}},
     )
-
-    assert gvault_secret.get("foo") == "bar".encode()
+    assert gvault_secret.get("foo") == "bar"
 
 
 def test_vault_secret_get_default(gvault_secret, monkeypatch):
@@ -123,7 +122,6 @@ def test_vault_secret_get_default(gvault_secret, monkeypatch):
         "hvac.Client.read",
         lambda cls, key: {},
     )
-
     assert gvault_secret.get("foo", "default") == "default"
 
 
@@ -157,8 +155,7 @@ def test_vault_secret_all(gvault_secret, monkeypatch):
         "hvac.Client.read",
         lambda cls, key: {"data": {"value": "bar"}},
     )
-
-    assert gvault_secret.all() == {"foo": "bar".encode()}
+    assert gvault_secret.all() == {"foo": "bar"}
 
 
 def test_vault_secret_request_warning(gvault_secret, caplog):
@@ -174,7 +171,7 @@ def test_vault_secret_request_warning(gvault_secret, caplog):
 def test_k8s_secret_prepare_secret_read(gk8s_secret, monkeypatch):
     monkeypatch.setattr(
         "kubernetes.client.CoreV1Api.read_namespaced_secret",
-        lambda cls, n, ns: True,
+        lambda cls, n, ns: KubeResult(data={"foo": base64.b64encode(b"bar")}),
     )
     gk8s_secret._prepare_secret()
     assert gk8s_secret.name_exists is True
@@ -193,7 +190,7 @@ def test_k8s_config_prepare_secret_create(gk8s_secret, monkeypatch):
 
     monkeypatch.setattr(
         "kubernetes.client.CoreV1Api.create_namespaced_secret",
-        lambda cls, n, ns: True,
+        lambda cls, n, ns: KubeResult(data={"foo": base64.b64encode(b"bar")}),
     )
 
     gk8s_secret._prepare_secret()
@@ -213,7 +210,7 @@ def test_k8s_config_prepare_secret_not_created(gk8s_secret, monkeypatch):
 
     monkeypatch.setattr(
         "kubernetes.client.CoreV1Api.create_namespaced_secret",
-        lambda cls, n, ns: True,
+        lambda cls, n, ns: KubeResult(data={"foo": base64.b64encode(b"bar")}),
     )
 
     with pytest.raises(kubernetes.client.rest.ApiException):
@@ -224,9 +221,9 @@ def test_k8s_config_prepare_secret_not_created(gk8s_secret, monkeypatch):
 def test_k8s_config_get(gk8s_secret, monkeypatch):
     monkeypatch.setattr(
         "kubernetes.client.CoreV1Api.read_namespaced_secret",
-        lambda cls, n, ns: KubeResult(data={"foo": base64.b64encode("bar".encode())})
+        lambda cls, n, ns: KubeResult(data={"foo": base64.b64encode(b"bar")}),
     )
-    assert gk8s_secret.get("foo") == "bar".encode()
+    assert gk8s_secret.get("foo") == "bar"
 
 
 def test_k8s_config_get_default(gk8s_secret, monkeypatch):
@@ -238,17 +235,13 @@ def test_k8s_config_get_default(gk8s_secret, monkeypatch):
 
 
 def test_k8s_config_set(gk8s_secret, monkeypatch):
-    monkeypatch.setattr(
-        "kubernetes.client.CoreV1Api.read_namespaced_secret",
-        lambda cls, n, ns: KubeResult(data={"foo": base64.b64encode("bar".encode())})
-    )
+    gk8s_secret.name_exists = True
 
     monkeypatch.setattr(
         "kubernetes.client.CoreV1Api.patch_namespaced_secret",
-        lambda cls, n, ns, body: KubeResult(data={"foo": base64.b64encode("bar".encode())})
+        lambda cls, n, ns, body: KubeResult(data={})
     )
-
-    assert gk8s_secret.set("foo", "bar") is not None
+    assert gk8s_secret.set("foo", "bar") is True
 
 
 def test_k8s_config_incluster():
