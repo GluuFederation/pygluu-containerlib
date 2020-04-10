@@ -9,7 +9,7 @@ def gconfig():
 
     class GConfig(BaseConfig):
         pass
-    return GConfig()
+    yield GConfig()
 
 
 @pytest.fixture()
@@ -17,6 +17,7 @@ def gconsul_config():
     from pygluu.containerlib.config import ConsulConfig
 
     config = ConsulConfig()
+    config.prefix = "testing/config/"
     yield config
 
 
@@ -26,6 +27,8 @@ def gk8s_config():
 
     config = KubernetesConfig()
     config.settings["GLUU_CONFIG_KUBERNETES_USE_KUBE_CONFIG"] = True
+    config.settings["GLUU_CONFIG_KUBERNETES_NAMESPACE"] = "testing"
+    config.settings["GLUU_CONFIG_KUBERNETES_CONFIGMAP"] = "testing"
     yield config
 
 
@@ -35,7 +38,7 @@ def gsecret():
 
     class GSecret(BaseSecret):
         pass
-    return GSecret()
+    yield GSecret()
 
 
 @pytest.fixture()
@@ -43,6 +46,7 @@ def gvault_secret():
     from pygluu.containerlib.secret import VaultSecret
 
     secret = VaultSecret()
+    secret.prefix = "secret/testing"
     yield secret
 
 
@@ -52,6 +56,8 @@ def gk8s_secret():
 
     secret = KubernetesSecret()
     secret.settings["GLUU_SECRET_KUBERNETES_USE_KUBE_CONFIG"] = True
+    secret.settings["GLUU_SECRET_KUBERNETES_NAMESPACE"] = "testing"
+    secret.settings["GLUU_SECRET_KUBERNETES_SECRET"] = "testing"
     yield secret
 
 

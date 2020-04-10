@@ -53,7 +53,7 @@ class KubernetesConfig(BaseConfig):
             self._client = kubernetes.client.CoreV1Api()
         return self._client
 
-    def _prepare_configmap(self):
+    def _prepare_configmap(self) -> None:
         # create a configmap name if not exist
         if not self.name_exists:
             try:

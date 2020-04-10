@@ -100,18 +100,18 @@ class ConsulConfig(BaseConfig):
         """
         return key[len(self.prefix):]
 
-    def get(self, key: str, default: Optional[Any] = None) -> Any:
+    def get(self, key: str, default: Optional[Any] = None) -> str:
         _, result = self.client.kv.get(self._merge_path(key))
         if not result:
             return default
         # this is a bytes
-        return result["Value"]
+        return result["Value"].decode()
 
     def set(self, key: str, value: Any) -> bool:
         return self.client.kv.put(self._merge_path(key),
                                   safe_value(value))
 
-    def all(self) -> Dict[str, bytes]:
+    def all(self) -> Dict[str, str]:
         _, resultset = self.client.kv.get(self._merge_path(""),
                                           recurse=True)
 
@@ -119,7 +119,7 @@ class ConsulConfig(BaseConfig):
             return {}
 
         return {
-            self._unmerge_path(item["Key"]): item["Value"]
+            self._unmerge_path(item["Key"]): item["Value"].decode()
             for item in resultset
         }
 

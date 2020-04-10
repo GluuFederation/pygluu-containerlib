@@ -57,17 +57,17 @@ def test_consul_config_verify_cert(gconsul_config, tmpdir):
 
 
 def test_consul_config_merge_path(gconsul_config):
-    assert gconsul_config._merge_path("foo") == "gluu/config/foo"
+    assert gconsul_config._merge_path("foo") == gconsul_config.prefix + "foo"
 
 
 def test_consul_config_unmerge_path(gconsul_config):
-    assert gconsul_config._unmerge_path("gluu/config/foo") == "foo"
+    assert gconsul_config._unmerge_path(gconsul_config.prefix + "foo") == "foo"
 
 
 def test_consul_config_get(gconsul_config, monkeypatch):
     monkeypatch.setattr(
         "consul.Consul.KV.get",
-        lambda cls, k: (1, {"Value": "bar"}),
+        lambda cls, k: (1, {"Value": b"bar"}),
     )
     assert gconsul_config.get("foo") == "bar"
 
@@ -94,8 +94,8 @@ def test_consul_config_all(gconsul_config, monkeypatch):
         lambda cls, k, recurse: (
             1,
             [
-                {"Key": gconsul_config.prefix + "foo", "Value": "bar"},
-                {"Key": gconsul_config.prefix + "lorem", "Value": "ipsum"},
+                {"Key": gconsul_config.prefix + "foo", "Value": b"bar"},
+                {"Key": gconsul_config.prefix + "lorem", "Value": b"ipsum"},
             ],
         ),
     )
@@ -122,7 +122,7 @@ def test_consul_config_request_warning(gconsul_config, caplog):
 def test_k8s_config_prepare_configmap_read(gk8s_config, monkeypatch):
     monkeypatch.setattr(
         "kubernetes.client.CoreV1Api.read_namespaced_config_map",
-        lambda cls, n, ns: True,
+        lambda cls, n, ns: KubeResult(data={"foo": "bar"})
     )
     gk8s_config._prepare_configmap()
     assert gk8s_config.name_exists is True
@@ -138,12 +138,10 @@ def test_k8s_config_prepare_configmap_create(gk8s_config, monkeypatch):
         "kubernetes.client.CoreV1Api.read_namespaced_config_map",
         lambda cls, n, ns: _raise_exc(404),
     )
-
     monkeypatch.setattr(
         "kubernetes.client.CoreV1Api.create_namespaced_config_map",
-        lambda cls, n, ns: True,
+        lambda cls, n, ns: KubeResult(data={"foo": "bar"})
     )
-
     gk8s_config._prepare_configmap()
     assert gk8s_config.name_exists is True
 
@@ -158,10 +156,9 @@ def test_k8s_config_prepare_configmap_not_created(gk8s_config, monkeypatch):
         "kubernetes.client.CoreV1Api.read_namespaced_config_map",
         lambda cls, n, ns: _raise_exc(500),
     )
-
     monkeypatch.setattr(
         "kubernetes.client.CoreV1Api.create_namespaced_config_map",
-        lambda cls, n, ns: True,
+        lambda cls, n, ns: KubeResult(data={"foo": "bar"})
     )
 
     with pytest.raises(kubernetes.client.rest.ApiException):
@@ -182,12 +179,10 @@ def test_k8s_config_set(gk8s_config, monkeypatch):
         "kubernetes.client.CoreV1Api.read_namespaced_config_map",
         lambda cls, n, ns: KubeResult(data={"foo": "bar"})
     )
-
     monkeypatch.setattr(
         "kubernetes.client.CoreV1Api.patch_namespaced_config_map",
         lambda cls, n, ns, body: KubeResult(data={"foo": "bar"})
     )
-
     assert gk8s_config.set("foo", "bar") is True
 
 
