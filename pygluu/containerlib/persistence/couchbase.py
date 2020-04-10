@@ -178,10 +178,10 @@ class BaseClient(object):
                     self.host = _host
                     return self.host
 
-                logger.warn("Unable to connect to {}:{}; reason={}".format(
+                logger.warning("Unable to connect to {}:{}; reason={}".format(
                     _host, self.port, resp.reason))
             except Exception as exc:
-                logger.warn("Unable to connect to {}:{}; reason={}".format(_host, self.port, exc))
+                logger.warning("Unable to connect to {}:{}; reason={}".format(_host, self.port, exc))
 
     def healthcheck(self, host):
         raise NotImplementedError
