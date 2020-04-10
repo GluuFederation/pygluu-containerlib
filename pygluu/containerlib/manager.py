@@ -78,7 +78,7 @@ class SecretManager(object):
         #     mode = "wb"
         with open(dest, mode) as f:
             # write as str
-            f.write(value.decode())
+            f.write(value)
 
     def from_file(self, key: str, src: str, encode: bool = False, binary_mode: bool = False) -> None:
         mode = "r"
