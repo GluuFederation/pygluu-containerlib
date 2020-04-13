@@ -123,6 +123,8 @@ class VaultSecret(BaseSecret):
     def all(self) -> Dict[str, bytes]:
         self._authenticate()
         result = self.client.list(self.prefix)
+        if not result:
+            return {}
         return {key: self.get(key) for key in result["data"]["keys"]}
 
     def _request_warning(self, scheme: str, verify: bool) -> None:
