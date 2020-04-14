@@ -36,7 +36,11 @@ def as_boolean(val: Any) -> bool:
 
 
 def safe_value(value: Any) -> AnyStr:
-    if not isinstance(value, (str, bytes)):
+    """Converts given value as JSON-friendly value
+    """
+    if isinstance(value, bytes):
+        value = value.decode()
+    if not isinstance(value, str):
         value = json.dumps(value)
     return value
 

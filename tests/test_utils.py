@@ -31,7 +31,7 @@ def test_as_boolean(val, expected):
 @pytest.mark.parametrize("value, expected", [
     ("a", "a"),
     (1, "1"),
-    (b"b", b"b"),
+    (b"b", "b"),
     (True, "true"),
     (False, "false"),
     (None, "null"),

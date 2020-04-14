@@ -9,7 +9,10 @@ from typing import (
 import hvac
 
 from .base_secret import BaseSecret
-from ..utils import as_boolean
+from ..utils import (
+    as_boolean,
+    safe_value,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +115,7 @@ class VaultSecret(BaseSecret):
 
     def set(self, key: str, value: Any) -> bool:
         self._authenticate()
-        val = {"value": value}
+        val = {"value": safe_value(value)}
 
         # hvac.v1.Client.write checks for status code 200,
         # but Vault HTTP API returns 205 if request succeeded;
