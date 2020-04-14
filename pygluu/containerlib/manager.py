@@ -1,6 +1,9 @@
 import os
 from collections import namedtuple
-from typing import NamedTuple
+from typing import (
+    AnyStr,
+    NamedTuple,
+)
 
 from .config import (
     ConsulConfig,
@@ -64,7 +67,7 @@ class SecretManager(object):
     def all(self):
         return self.adapter.all()
 
-    def to_file(self, key: str, dest: str, decode: bool = False, binary_mode: bool = False) -> None:
+    def to_file(self, key: str, dest: str, decode: bool = False, binary_mode: bool = False) -> AnyStr:
         """Pull secret and write to a file.
         """
         value = self.adapter.get(key)
@@ -73,25 +76,31 @@ class SecretManager(object):
             value = decode_text(value, salt)
 
         mode = "w"
-        # TODO: is this needed?
-        # if binary_mode:
-        #     mode = "wb"
-        with open(dest, mode) as f:
-            # write as str
-            f.write(value)
+        if binary_mode:
+            mode = "wb"
 
-    def from_file(self, key: str, src: str, encode: bool = False, binary_mode: bool = False) -> None:
+        with open(dest, mode) as f:
+            if binary_mode:
+                value = value.encode("ISO-8859-1")
+            f.write(value)
+        return value
+
+    def from_file(self, key: str, src: str, encode: bool = False, binary_mode: bool = False) -> str:
         mode = "r"
-        # TODO: is this needed?
-        # if binary_mode:
-        #     mode = "rb"
+        if binary_mode:
+            mode = "rb"
+
         with open(src, mode) as f:
             value = f.read()
+
+            if binary_mode:
+                value = value.decode("ISO-8859-1")
 
         if encode:
             salt = self.adapter.get("encoded_salt")
             value = encode_text(value, salt)
         self.adapter.set(key, value)
+        return value
 
 
 def get_manager() -> NamedTuple:

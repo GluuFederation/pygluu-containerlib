@@ -158,6 +158,18 @@ def test_vault_secret_all(gvault_secret, monkeypatch):
     assert gvault_secret.all() == {"foo": "bar"}
 
 
+def test_vault_secret_all_empty(gvault_secret, monkeypatch):
+    monkeypatch.setattr(
+        "hvac.Client.is_authenticated",
+        lambda cls: True,
+    )
+    monkeypatch.setattr(
+        "hvac.Client.list",
+        lambda cls, key: None,
+    )
+    assert gvault_secret.all() == {}
+
+
 def test_vault_secret_request_warning(gvault_secret, caplog):
     gvault_secret._request_warning("https", False)
     assert "All requests to Vault will be unverified" in caplog.records[0].message

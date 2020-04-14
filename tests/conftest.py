@@ -1,4 +1,4 @@
-from collections import namedtuple
+# from collections import namedtuple
 
 import pytest
 
@@ -62,39 +62,31 @@ def gk8s_secret():
 
 
 @pytest.fixture
-def gmanager():
-    GManager = namedtuple("GManager", ["config", "secret"])
+def gmanager(gconsul_config, gvault_secret):
+    from pygluu.containerlib.manager import get_manager
 
-    class GConfigManager(object):
+    def get_config(key, default=None):
         ctx = {
             "ldap_binddn": "cn=Directory Manager",
-            # "ldapTrustStoreFn": "/etc/certs/opendj.pkcs12",
             "couchbase_server_user": "admin",
-            # "couchbaseTrustStoreFn": "/etc/certs/coucbase.pkcs12",
         }
+        return ctx.get(key) or default
 
-        def get(self, key, default=None):
-            return self.ctx.get(key) or default
-
-        def set(self, key, value):
-            self.ctx[key] = value
-            return True
-
-    class GSecretManager(object):
+    def get_secret(key, default=None):
         ctx = {
-            "encoded_ox_ldap_pw": "Zm9vYmFyCg==",
-            "encoded_ldapTrustStorePass": "Zm9vYmFyCg==",
-            "ldap_pkcs12_base64": "Zm9vYmFyCg==",
+            "encoded_ox_ldap_pw": "YgH8NDxhxmA=",
+            "encoded_ldapTrustStorePass": "YgH8NDxhxmA=",
+            "ldap_pkcs12_base64": "YgH8NDxhxmA=",
             "encoded_salt": "7MEDWVFAG3DmakHRyjMqp5EE",
         }
+        return ctx.get(key) or default
 
-        def get(self, key, default=None):
-            return self.ctx[key].encode() or default
+    gmanager = get_manager()
 
-        def to_file(self, key, dest, decode=False, binary_mode=False):
-            with open(dest, "w") as f:
-                val = self.get(key)
-                f.write(val.decode())
+    gconsul_config.get = get_config
+    gmanager.config.adapter = gconsul_config
 
-    return GManager(config=GConfigManager(),
-                    secret=GSecretManager())
+    gvault_secret.get = get_secret
+    gmanager.secret.adapter = gvault_secret
+
+    yield gmanager
