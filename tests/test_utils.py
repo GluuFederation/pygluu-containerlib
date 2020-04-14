@@ -117,10 +117,10 @@ def test_generate_base64_contents(text, num_spaces, expected):
 
 
 @pytest.mark.parametrize("text, key, expected", [
-    ("abcd", "a" * 16, "YgH8NDxhxmA="),
-    ("abcd", b"a" * 16, "YgH8NDxhxmA="),
-    (b"abcd", "a" * 16, "YgH8NDxhxmA="),
-    (b"abcd", b"a" * 16, "YgH8NDxhxmA="),
+    ("abcd", "a" * 16, b"YgH8NDxhxmA="),
+    ("abcd", b"a" * 16, b"YgH8NDxhxmA="),
+    (b"abcd", "a" * 16, b"YgH8NDxhxmA="),
+    (b"abcd", b"a" * 16, b"YgH8NDxhxmA="),
 ])
 def test_encode_text(text, key, expected):
     from pygluu.containerlib.utils import encode_text
@@ -128,10 +128,10 @@ def test_encode_text(text, key, expected):
 
 
 @pytest.mark.parametrize("encoded_text, key, expected", [
-    ("YgH8NDxhxmA=", "a" * 16, "abcd"),
-    ("YgH8NDxhxmA=", b"a" * 16, "abcd"),
-    (b"YgH8NDxhxmA=", "a" * 16, "abcd"),
-    (b"YgH8NDxhxmA=", b"a" * 16, "abcd"),
+    ("YgH8NDxhxmA=", "a" * 16, b"abcd"),
+    ("YgH8NDxhxmA=", b"a" * 16, b"abcd"),
+    (b"YgH8NDxhxmA=", "a" * 16, b"abcd"),
+    (b"YgH8NDxhxmA=", b"a" * 16, b"abcd"),
 ])
 def test_decode_text(encoded_text, key, expected):
     from pygluu.containerlib.utils import decode_text

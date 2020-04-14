@@ -70,37 +70,43 @@ class SecretManager(object):
     def to_file(self, key: str, dest: str, decode: bool = False, binary_mode: bool = False) -> AnyStr:
         """Pull secret and write to a file.
         """
-        value = self.adapter.get(key)
-        if decode:
-            salt = self.adapter.get("encoded_salt")
-            value = decode_text(value, salt)
-
         mode = "w"
         if binary_mode:
             mode = "wb"
+            # always decodes the bytes
+            decode = True
+
+        value = self.adapter.get(key)
+        if decode:
+            salt = self.adapter.get("encoded_salt")
+            try:
+                value = decode_text(value, salt).decode()
+            except UnicodeDecodeError:
+                # likely bytes from a binary
+                value = decode_text(value, salt).decode("ISO-8859-1")
 
         with open(dest, mode) as f:
             if binary_mode:
+                # convert to bytes
                 value = value.encode("ISO-8859-1")
             f.write(value)
-        return value
 
-    def from_file(self, key: str, src: str, encode: bool = False, binary_mode: bool = False) -> str:
+    def from_file(self, key: str, src: str, encode: bool = False, binary_mode: bool = False) -> None:
         mode = "r"
         if binary_mode:
             mode = "rb"
+            encode = True
 
         with open(src, mode) as f:
-            value = f.read()
-
-            if binary_mode:
-                value = value.decode("ISO-8859-1")
+            try:
+                value = f.read()
+            except UnicodeDecodeError:
+                raise ValueError(f"Looks like you're trying to read binary file {src}")
 
         if encode:
             salt = self.adapter.get("encoded_salt")
-            value = encode_text(value, salt)
+            value = encode_text(value, salt).decode()
         self.adapter.set(key, value)
-        return value
 
 
 def get_manager() -> NamedTuple:

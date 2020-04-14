@@ -82,13 +82,13 @@ def exec_cmd(cmd: str) -> Tuple[bytes, bytes, int]:
 def encode_text(text: AnyStr, key: AnyStr) -> bytes:
     cipher = pyDes.triple_des(key, pyDes.ECB, padmode=pyDes.PAD_PKCS5)
     encrypted_text = cipher.encrypt(text)
-    return base64.b64encode(encrypted_text).decode()
+    return base64.b64encode(encrypted_text)  # .decode()
 
 
-def decode_text(encoded_text: AnyStr, key: AnyStr) -> str:
+def decode_text(encoded_text: AnyStr, key: AnyStr) -> bytes:
     text = base64.b64decode(encoded_text)
     cipher = pyDes.triple_des(key, pyDes.ECB, padmode=pyDes.PAD_PKCS5)
-    return cipher.decrypt(text).decode()
+    return cipher.decrypt(text)  # .decode()
 
 
 def safe_render(text: str, ctx: dict) -> str:
