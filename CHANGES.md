@@ -2,6 +2,13 @@
 
 Here you can see an overview of changes between each release.
 
+## Version 1.1.0
+
+Released on May 11th, 2020.
+
+* Removed unused Couchbase config and/or secret.
+* Added environment variables for Couchbase connection timeout, connection max wait, and scan consistency.
+
 ## Version 1.0.0
 
 Released on November 20th, 2019.
