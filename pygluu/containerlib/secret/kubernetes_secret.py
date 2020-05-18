@@ -101,6 +101,8 @@ class KubernetesSecret(BaseSecret):
         result = self.client.read_namespaced_secret(
             self.settings["GLUU_SECRET_KUBERNETES_SECRET"],
             self.settings["GLUU_SECRET_KUBERNETES_NAMESPACE"])
+
+        data = result.data or {}
         return {
-            k: base64.b64decode(v).decode() for k, v in result.data.items()
+            k: base64.b64decode(v).decode() for k, v in data.items()
         }
