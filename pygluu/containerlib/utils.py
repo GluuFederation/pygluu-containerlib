@@ -14,8 +14,11 @@ from typing import (
     Tuple,
 )
 
-import pyDes
+# import pyDes
 from ldap3.utils import hashed
+
+from ._crypto import encode_text  # noqa
+from ._crypto import decode_text  # noqa
 
 # Default charset
 _DEFAULT_CHARS = "".join([string.ascii_letters, string.digits])
@@ -83,16 +86,16 @@ def exec_cmd(cmd: str) -> Tuple[bytes, bytes, int]:
     return stdout.strip(), stderr.strip(), retcode
 
 
-def encode_text(text: AnyStr, key: AnyStr) -> bytes:
-    cipher = pyDes.triple_des(key, pyDes.ECB, padmode=pyDes.PAD_PKCS5)
-    encrypted_text = cipher.encrypt(text)
-    return base64.b64encode(encrypted_text)  # .decode()
+# def encode_text(text: AnyStr, key: AnyStr) -> bytes:
+#     cipher = pyDes.triple_des(key, pyDes.ECB, padmode=pyDes.PAD_PKCS5)
+#     encrypted_text = cipher.encrypt(text)
+#     return base64.b64encode(encrypted_text)  # .decode()
 
 
-def decode_text(encoded_text: AnyStr, key: AnyStr) -> bytes:
-    text = base64.b64decode(encoded_text)
-    cipher = pyDes.triple_des(key, pyDes.ECB, padmode=pyDes.PAD_PKCS5)
-    return cipher.decrypt(text)  # .decode()
+# def decode_text(encoded_text: AnyStr, key: AnyStr) -> bytes:
+#     text = base64.b64decode(encoded_text)
+#     cipher = pyDes.triple_des(key, pyDes.ECB, padmode=pyDes.PAD_PKCS5)
+#     return cipher.decrypt(text)  # .decode()
 
 
 def safe_render(text: str, ctx: dict) -> str:
