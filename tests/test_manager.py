@@ -85,7 +85,7 @@ def test_manager_secret_to_file(
 ):
     def maybe_salt(*args, **kwargs):
         if args[1] == "encoded_salt":
-            return "a" * 16
+            return "a" * 24
         return value
 
     monkeypatch.setattr(
@@ -118,7 +118,7 @@ def test_manager_secret_from_file(
 ):
     def maybe_salt(*args, **kwargs):
         if args[1] == "encoded_salt":
-            return "a" * 16
+            return "a" * 24
         return expected
 
     monkeypatch.setattr(
