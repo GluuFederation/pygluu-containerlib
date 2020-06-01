@@ -224,6 +224,19 @@ def wait_for_oxtrust(manager, **kwargs):
         raise WaitError(req.reason)
 
 
+@retry_on_exception
+def wait_for_oxd(manager, **kwargs):
+    import urllib3
+    urllib3.disable_warnings()
+
+    addr = os.environ.get("GLUU_OXD_SERVER_URL", "localhost:8443")
+    url = f"https://{addr}/health-check"
+    req = requests.get(url, verify=False)
+
+    if not req.ok:
+        raise WaitError(req.reason)
+
+
 def wait_for(manager, deps=None):
     deps = deps or []
     callbacks = {
@@ -266,6 +279,10 @@ def wait_for(manager, deps=None):
         "oxtrust": {
             "func": wait_for_oxtrust,
             "kwargs": {"label": "oxTrust"},
+        },
+        "oxd": {
+            "func": wait_for_oxd,
+            "kwargs": {"label": "oxd"},
         },
     }
 
