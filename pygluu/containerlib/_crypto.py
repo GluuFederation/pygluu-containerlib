@@ -1,4 +1,5 @@
 import base64
+import contextlib
 import logging
 from typing import AnyStr
 
@@ -13,17 +14,13 @@ try:
     from cryptography.hazmat.backends import default_backend
 
     def encode_text(text: AnyStr, key: AnyStr) -> bytes:
-        try:
+        with contextlib.suppress(AttributeError):
             # ``key`` must be a ``bytes``
             key = key.encode()
-        except AttributeError:
-            pass
 
-        try:
+        with contextlib.suppress(AttributeError):
             # ``text`` must be a ``bytes``
             text = text.encode()
-        except AttributeError:
-            pass
 
         cipher = Cipher(
             algorithms.TripleDES(key),
@@ -41,11 +38,9 @@ try:
     def decode_text(encoded_text: AnyStr, key: AnyStr) -> bytes:
         encoded_text = base64.b64decode(encoded_text)
 
-        try:
+        with contextlib.suppress(AttributeError):
             # ``key`` must be a ``bytes``
             key = key.encode()
-        except AttributeError:
-            pass
 
         cipher = Cipher(
             algorithms.TripleDES(key),
