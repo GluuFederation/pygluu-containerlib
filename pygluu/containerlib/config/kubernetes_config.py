@@ -18,23 +18,19 @@ from ..utils import (
 class KubernetesConfig(BaseConfig):
     def __init__(self):
         self.settings = {
-            k: v for k, v in os.environ.items()
+            k: v
+            for k, v in os.environ.items()
             if k.isupper() and k.startswith("GLUU_CONFIG_KUBERNETES_")
         }
         self.settings.setdefault(
-            "GLUU_CONFIG_KUBERNETES_NAMESPACE",
-            "default",
+            "GLUU_CONFIG_KUBERNETES_NAMESPACE", "default",
         )
 
         self.settings.setdefault(
-            "GLUU_CONFIG_KUBERNETES_CONFIGMAP",
-            "gluu",
+            "GLUU_CONFIG_KUBERNETES_CONFIGMAP", "gluu",
         )
 
-        self.settings.setdefault(
-            "GLUU_CONFIG_KUBERNETES_USE_KUBE_CONFIG",
-            False
-        )
+        self.settings.setdefault("GLUU_CONFIG_KUBERNETES_USE_KUBE_CONFIG", False)
 
         self._client = None
         self.name_exists = False
@@ -59,7 +55,8 @@ class KubernetesConfig(BaseConfig):
             try:
                 self.client.read_namespaced_config_map(
                     self.settings["GLUU_CONFIG_KUBERNETES_CONFIGMAP"],
-                    self.settings["GLUU_CONFIG_KUBERNETES_NAMESPACE"])
+                    self.settings["GLUU_CONFIG_KUBERNETES_NAMESPACE"],
+                )
                 self.name_exists = True
             except kubernetes.client.rest.ApiException as exc:
                 if exc.status == 404:
@@ -73,8 +70,8 @@ class KubernetesConfig(BaseConfig):
                         "data": {},
                     }
                     created = self.client.create_namespaced_config_map(
-                        self.settings["GLUU_CONFIG_KUBERNETES_NAMESPACE"],
-                        body)
+                        self.settings["GLUU_CONFIG_KUBERNETES_NAMESPACE"], body
+                    )
                     if created:
                         self.name_exists = True
                 else:
@@ -85,12 +82,8 @@ class KubernetesConfig(BaseConfig):
         body = {
             "kind": "ConfigMap",
             "apiVersion": "v1",
-            "metadata": {
-                "name": self.settings["GLUU_CONFIG_KUBERNETES_CONFIGMAP"],
-            },
-            "data": {
-                key: safe_value(value),
-            }
+            "metadata": {"name": self.settings["GLUU_CONFIG_KUBERNETES_CONFIGMAP"]},
+            "data": {key: safe_value(value)},
         }
         ret = self.client.patch_namespaced_config_map(
             self.settings["GLUU_CONFIG_KUBERNETES_CONFIGMAP"],
@@ -103,5 +96,6 @@ class KubernetesConfig(BaseConfig):
         self._prepare_configmap()
         result = self.client.read_namespaced_config_map(
             self.settings["GLUU_CONFIG_KUBERNETES_CONFIGMAP"],
-            self.settings["GLUU_CONFIG_KUBERNETES_NAMESPACE"])
+            self.settings["GLUU_CONFIG_KUBERNETES_NAMESPACE"],
+        )
         return result.data or {}

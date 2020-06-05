@@ -9,6 +9,7 @@ class BaseConfig(object):
     """Base class for config adapter. Must be sub-classed per
     implementation details.
     """
+
     type = "config"
 
     def get(self, key: str, default: Optional[Any] = None) -> NoReturn:

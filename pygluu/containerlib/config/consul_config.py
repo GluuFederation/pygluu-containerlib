@@ -20,53 +20,45 @@ logger = logging.getLogger(__name__)
 class ConsulConfig(BaseConfig):
     def __init__(self):
         self.settings = {
-            k: v for k, v in os.environ.items()
+            k: v
+            for k, v in os.environ.items()
             if k.isupper() and k.startswith("GLUU_CONFIG_CONSUL_")
         }
 
         self.settings.setdefault(
-            "GLUU_CONFIG_CONSUL_HOST",
-            "localhost",
+            "GLUU_CONFIG_CONSUL_HOST", "localhost",
         )
 
         self.settings.setdefault(
-            "GLUU_CONFIG_CONSUL_PORT",
-            8500,
+            "GLUU_CONFIG_CONSUL_PORT", 8500,
         )
 
         self.settings.setdefault(
-            "GLUU_CONFIG_CONSUL_CONSISTENCY",
-            "stale",
+            "GLUU_CONFIG_CONSUL_CONSISTENCY", "stale",
         )
 
         self.settings.setdefault(
-            "GLUU_CONFIG_CONSUL_SCHEME",
-            "http",
+            "GLUU_CONFIG_CONSUL_SCHEME", "http",
         )
 
         self.settings.setdefault(
-            "GLUU_CONFIG_CONSUL_VERIFY",
-            False,
+            "GLUU_CONFIG_CONSUL_VERIFY", False,
         )
 
         self.settings.setdefault(
-            "GLUU_CONFIG_CONSUL_CACERT_FILE",
-            "/etc/certs/consul_ca.crt",
+            "GLUU_CONFIG_CONSUL_CACERT_FILE", "/etc/certs/consul_ca.crt",
         )
 
         self.settings.setdefault(
-            "GLUU_CONFIG_CONSUL_CERT_FILE",
-            "/etc/certs/consul_client.crt",
+            "GLUU_CONFIG_CONSUL_CERT_FILE", "/etc/certs/consul_client.crt",
         )
 
         self.settings.setdefault(
-            "GLUU_CONFIG_CONSUL_KEY_FILE",
-            "/etc/certs/consul_client.key",
+            "GLUU_CONFIG_CONSUL_KEY_FILE", "/etc/certs/consul_client.key",
         )
 
         self.settings.setdefault(
-            "GLUU_CONFIG_CONSUL_TOKEN_FILE",
-            "/etc/certs/consul_token",
+            "GLUU_CONFIG_CONSUL_TOKEN_FILE", "/etc/certs/consul_token",
         )
 
         self.prefix = "gluu/config/"
@@ -108,12 +100,10 @@ class ConsulConfig(BaseConfig):
         return result["Value"].decode()
 
     def set(self, key: str, value: Any) -> bool:
-        return self.client.kv.put(self._merge_path(key),
-                                  safe_value(value))
+        return self.client.kv.put(self._merge_path(key), safe_value(value))
 
     def all(self) -> Dict[str, str]:
-        _, resultset = self.client.kv.get(self._merge_path(""),
-                                          recurse=True)
+        _, resultset = self.client.kv.get(self._merge_path(""), recurse=True)
 
         if not resultset:
             return {}
@@ -126,6 +116,7 @@ class ConsulConfig(BaseConfig):
     def _request_warning(self, scheme: str, verify: bool) -> None:
         if scheme == "https" and verify is False:
             import urllib3
+
             urllib3.disable_warnings()
             logger.warning(
                 "All requests to Consul will be unverified. "

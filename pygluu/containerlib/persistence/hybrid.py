@@ -15,18 +15,21 @@ def render_hybrid_properties(dest: str) -> None:
         default_storage = "couchbase"
 
     couchbase_mappings = [
-        mapping["mapping"] for name, mapping in _couchbase_mappings.items()
+        mapping["mapping"]
+        for name, mapping in _couchbase_mappings.items()
         if name != ldap_mapping
     ]
 
-    out = "\n".join([
-        "storages: ldap, couchbase",
-        "storage.default: {}".format(default_storage),
-        "storage.ldap.mapping: {}".format(ldap_mapping),
-        "storage.couchbase.mapping: {}".format(
-            ", ".join(filter(None, couchbase_mappings))
-        ),
-    ]).replace("user", "people, groups")
+    out = "\n".join(
+        [
+            "storages: ldap, couchbase",
+            "storage.default: {}".format(default_storage),
+            "storage.ldap.mapping: {}".format(ldap_mapping),
+            "storage.couchbase.mapping: {}".format(
+                ", ".join(filter(None, couchbase_mappings))
+            ),
+        ]
+    ).replace("user", "people, groups")
 
     with open(dest, "w") as fw:
         fw.write(out)

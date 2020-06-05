@@ -15,7 +15,9 @@ def render_ldap_properties(manager, src: str, dest: str) -> None:
             "ldap_hostname": ldap_hostname,
             "ldaps_port": ldaps_port,
             "ldapTrustStoreFn": manager.config.get("ldapTrustStoreFn"),
-            "encoded_ldapTrustStorePass": manager.secret.get("encoded_ldapTrustStorePass"),
+            "encoded_ldapTrustStorePass": manager.secret.get(
+                "encoded_ldapTrustStorePass"
+            ),
         }
         f.write(rendered_txt)
 
@@ -23,8 +25,5 @@ def render_ldap_properties(manager, src: str, dest: str) -> None:
 def sync_ldap_truststore(manager, dest: str = "") -> None:
     dest = dest or manager.config.get("ldapTrustStoreFn")
     manager.secret.to_file(
-        "ldap_pkcs12_base64",
-        dest,
-        decode=True,
-        binary_mode=True,
+        "ldap_pkcs12_base64", dest, decode=True, binary_mode=True,
     )

@@ -24,10 +24,7 @@ _Manager = namedtuple("Manager", ["config", "secret"])
 
 class ConfigManager(object):
     def __init__(self):
-        _adapter = os.environ.get(
-            "GLUU_CONFIG_ADAPTER",
-            "consul",
-        )
+        _adapter = os.environ.get("GLUU_CONFIG_ADAPTER", "consul",)
         if _adapter == "consul":
             self.adapter = ConsulConfig()
         elif _adapter == "kubernetes":
@@ -47,10 +44,7 @@ class ConfigManager(object):
 
 class SecretManager(object):
     def __init__(self):
-        _adapter = os.environ.get(
-            "GLUU_SECRET_ADAPTER",
-            "vault",
-        )
+        _adapter = os.environ.get("GLUU_SECRET_ADAPTER", "vault",)
         if _adapter == "vault":
             self.adapter = VaultSecret()
         elif _adapter == "kubernetes":
@@ -67,7 +61,9 @@ class SecretManager(object):
     def all(self):
         return self.adapter.all()
 
-    def to_file(self, key: str, dest: str, decode: bool = False, binary_mode: bool = False) -> AnyStr:
+    def to_file(
+        self, key: str, dest: str, decode: bool = False, binary_mode: bool = False
+    ) -> AnyStr:
         """Pull secret and write to a file.
         """
         mode = "w"
@@ -91,7 +87,9 @@ class SecretManager(object):
                 value = value.encode("ISO-8859-1")
             f.write(value)
 
-    def from_file(self, key: str, src: str, encode: bool = False, binary_mode: bool = False) -> None:
+    def from_file(
+        self, key: str, src: str, encode: bool = False, binary_mode: bool = False
+    ) -> None:
         mode = "r"
         if binary_mode:
             mode = "rb"

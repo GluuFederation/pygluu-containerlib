@@ -1,8 +1,6 @@
 import base64
 import os
-from typing import (
-    Any,
-)
+from typing import Any
 
 import kubernetes.client
 import kubernetes.config
@@ -17,21 +15,17 @@ from ..utils import (
 class KubernetesSecret(BaseSecret):
     def __init__(self):
         self.settings = {
-            k: v for k, v in os.environ.items()
+            k: v
+            for k, v in os.environ.items()
             if k.isupper() and k.startswith("GLUU_SECRET_KUBERNETES_")
         }
         self.settings.setdefault(
-            "GLUU_SECRET_KUBERNETES_NAMESPACE",
-            "default",
+            "GLUU_SECRET_KUBERNETES_NAMESPACE", "default",
         )
         self.settings.setdefault(
-            "GLUU_SECRET_KUBERNETES_SECRET",
-            "gluu",
+            "GLUU_SECRET_KUBERNETES_SECRET", "gluu",
         )
-        self.settings.setdefault(
-            "GLUU_SECRET_KUBERNETES_USE_KUBE_CONFIG",
-            False
-        )
+        self.settings.setdefault("GLUU_SECRET_KUBERNETES_USE_KUBE_CONFIG", False)
 
         self._client = None
         self.name_exists = False
@@ -56,7 +50,8 @@ class KubernetesSecret(BaseSecret):
             try:
                 self.client.read_namespaced_secret(
                     self.settings["GLUU_SECRET_KUBERNETES_SECRET"],
-                    self.settings["GLUU_SECRET_KUBERNETES_NAMESPACE"])
+                    self.settings["GLUU_SECRET_KUBERNETES_NAMESPACE"],
+                )
                 self.name_exists = True
             except kubernetes.client.rest.ApiException as exc:
                 if exc.status == 404:
@@ -70,8 +65,8 @@ class KubernetesSecret(BaseSecret):
                         "data": {},
                     }
                     created = self.client.create_namespaced_secret(
-                        self.settings["GLUU_SECRET_KUBERNETES_NAMESPACE"],
-                        body)
+                        self.settings["GLUU_SECRET_KUBERNETES_NAMESPACE"], body
+                    )
                     if created:
                         self.name_exists = True
                 else:
@@ -82,12 +77,8 @@ class KubernetesSecret(BaseSecret):
         body = {
             "kind": "Secret",
             "apiVersion": "v1",
-            "metadata": {
-                "name": self.settings["GLUU_SECRET_KUBERNETES_SECRET"],
-            },
-            "data": {
-                key: base64.b64encode(safe_value(value).encode()).decode(),
-            }
+            "metadata": {"name": self.settings["GLUU_SECRET_KUBERNETES_SECRET"]},
+            "data": {key: base64.b64encode(safe_value(value).encode()).decode()},
         }
         ret = self.client.patch_namespaced_secret(
             self.settings["GLUU_SECRET_KUBERNETES_SECRET"],
@@ -100,9 +91,8 @@ class KubernetesSecret(BaseSecret):
         self._prepare_secret()
         result = self.client.read_namespaced_secret(
             self.settings["GLUU_SECRET_KUBERNETES_SECRET"],
-            self.settings["GLUU_SECRET_KUBERNETES_NAMESPACE"])
+            self.settings["GLUU_SECRET_KUBERNETES_NAMESPACE"],
+        )
 
         data = result.data or {}
-        return {
-            k: base64.b64decode(v).decode() for k, v in data.items()
-        }
+        return {k: base64.b64decode(v).decode() for k, v in data.items()}

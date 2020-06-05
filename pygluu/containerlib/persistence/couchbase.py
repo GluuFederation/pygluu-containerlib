@@ -20,7 +20,9 @@ def get_couchbase_user(manager=None) -> str:
 
 
 def get_couchbase_password(manager, plaintext: bool = True) -> str:
-    password_file = os.environ.get("GLUU_COUCHBASE_PASSWORD_FILE", "/etc/gluu/conf/couchbase_password")
+    password_file = os.environ.get(
+        "GLUU_COUCHBASE_PASSWORD_FILE", "/etc/gluu/conf/couchbase_password"
+    )
 
     with open(password_file) as f:
         password = f.read().strip()
@@ -34,32 +36,16 @@ get_encoded_couchbase_password = partial(get_couchbase_password, plaintext=False
 
 def get_couchbase_mappings(persistence_type: str, ldap_mapping: str) -> Dict[str, str]:
     mappings = {
-        "default": {
-            "bucket": "gluu",
-            "mapping": "",
-        },
-        "user": {
-            "bucket": "gluu_user",
-            "mapping": "people, groups, authorizations"
-        },
-        "cache": {
-            "bucket": "gluu_cache",
-            "mapping": "cache",
-        },
-        "site": {
-            "bucket": "gluu_site",
-            "mapping": "cache-refresh",
-        },
-        "token": {
-            "bucket": "gluu_token",
-            "mapping": "tokens",
-        },
+        "default": {"bucket": "gluu", "mapping": ""},
+        "user": {"bucket": "gluu_user", "mapping": "people, groups, authorizations"},
+        "cache": {"bucket": "gluu_cache", "mapping": "cache"},
+        "site": {"bucket": "gluu_site", "mapping": "cache-refresh"},
+        "token": {"bucket": "gluu_token", "mapping": "tokens"},
     }
 
     if persistence_type == "hybrid":
         mappings = {
-            name: mapping for name, mapping in mappings.items()
-            if name != ldap_mapping
+            name: mapping for name, mapping in mappings.items() if name != ldap_mapping
         }
 
     return mappings
@@ -109,9 +95,9 @@ def render_couchbase_properties(manager, src: str, dest: str) -> None:
         if not mapping["mapping"]:
             continue
 
-        couchbase_mappings.append("bucket.{0}.mapping: {1}".format(
-            mapping["bucket"], mapping["mapping"],
-        ))
+        couchbase_mappings.append(
+            "bucket.{0}.mapping: {1}".format(mapping["bucket"], mapping["mapping"],)
+        )
 
     # always have `gluu` as default bucket
     if "gluu" not in couchbase_buckets:
@@ -152,10 +138,7 @@ def sync_couchbase_truststore(manager, dest: str = "") -> None:
     cert_file = os.environ.get("GLUU_COUCHBASE_CERT_FILE", "/etc/certs/couchbase.crt")
     dest = dest or manager.config.get("couchbaseTrustStoreFn")
     cert_to_truststore(
-        "gluu_couchbase",
-        cert_file,
-        dest,
-        GLUU_COUCHBASE_TRUSTSTORE_PASSWORD,
+        "gluu_couchbase", cert_file, dest, GLUU_COUCHBASE_TRUSTSTORE_PASSWORD,
     )
 
 
@@ -167,9 +150,7 @@ class BaseClient(object):
         self.password = password
 
     def resolve_host(self):
-        hosts = filter(None, map(
-            lambda host: host.strip(), self._hosts.split(",")
-        ))
+        hosts = filter(None, map(lambda host: host.strip(), self._hosts.split(",")))
 
         for _host in hosts:
             try:
@@ -178,10 +159,17 @@ class BaseClient(object):
                     self.host = _host
                     return self.host
 
-                logger.warning("Unable to connect to {}:{}; reason={}".format(
-                    _host, self.port, resp.reason))
+                logger.warning(
+                    "Unable to connect to {}:{}; reason={}".format(
+                        _host, self.port, resp.reason
+                    )
+                )
             except Exception as exc:
-                logger.warning("Unable to connect to {}:{}; reason={}".format(_host, self.port, exc))
+                logger.warning(
+                    "Unable to connect to {}:{}; reason={}".format(
+                        _host, self.port, exc
+                    )
+                )
 
     def healthcheck(self, host):
         raise NotImplementedError
@@ -195,6 +183,7 @@ class N1qlClient(BaseClient):
 
     def healthcheck(self, host):
         import urllib3
+
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
         return requests.post(
@@ -223,6 +212,7 @@ class RestClient(BaseClient):
 
     def healthcheck(self, host):
         import urllib3
+
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
         return requests.get(
@@ -258,53 +248,49 @@ class CouchbaseClient(object):
     def __init__(self, hosts, user, password):
         self.rest_client = RestClient(hosts, user, password)
         self.rest_client.resolve_host()
-        assert self.rest_client.host, "Unable to resolve host for data service from {} list".format(hosts)
+        assert (
+            self.rest_client.host
+        ), "Unable to resolve host for data service from {} list".format(hosts)
 
         self.n1ql_client = N1qlClient(hosts, user, password)
         self.n1ql_client.resolve_host()
-        assert self.n1ql_client.host, "Unable to resolve host for query service from {} list".format(hosts)
+        assert (
+            self.n1ql_client.host
+        ), "Unable to resolve host for query service from {} list".format(hosts)
 
     def get_buckets(self):
-        return self.rest_client.exec_api(
-            "pools/default/buckets",
-            method="GET",
-        )
+        return self.rest_client.exec_api("pools/default/buckets", method="GET",)
 
     def add_bucket(self, name, memsize=100, type_="couchbase"):
         return self.rest_client.exec_api(
             "pools/default/buckets",
             data={
-                'name': name,
-                'bucketType': type_,
-                'ramQuotaMB': memsize,
-                'authType': 'sasl',
+                "name": name,
+                "bucketType": type_,
+                "ramQuotaMB": memsize,
+                "authType": "sasl",
             },
             method="POST",
         )
 
     def get_system_info(self):
         sys_info = {}
-        resp = self.rest_client.exec_api(
-            "pools/default",
-            method="GET",
-        )
+        resp = self.rest_client.exec_api("pools/default", method="GET",)
 
         if resp.ok:
             sys_info = resp.json()
         return sys_info
 
     def exec_query(self, query):
-        data = {'statement': query}
+        data = {"statement": query}
         return self.n1ql_client.exec_api("query/service", data=data)
 
     def create_user(self, username, password, fullname, roles):
         data = {
-            'name': fullname,
-            'password': password,
-            'roles': roles,
+            "name": fullname,
+            "password": password,
+            "roles": roles,
         }
         return self.rest_client.exec_api(
-            'settings/rbac/users/local/{}'.format(username),
-            data=data,
-            method="PUT",
+            "settings/rbac/users/local/{}".format(username), data=data, method="PUT",
         )

@@ -9,6 +9,7 @@ class BaseSecret(object):
     """Base class for secret adapter. Must be sub-classed per
     implementation details.
     """
+
     type = "secret"
 
     def get(self, key: str, default: Optional[Any] = None) -> NoReturn:

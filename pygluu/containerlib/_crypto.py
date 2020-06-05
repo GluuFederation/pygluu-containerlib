@@ -27,9 +27,7 @@ try:
                 text = text.encode()
 
             cipher = Cipher(
-                algorithms.TripleDES(key),
-                modes.ECB(),
-                backend=default_backend(),
+                algorithms.TripleDES(key), modes.ECB(), backend=default_backend(),
             )
             encryptor = cipher.encryptor()
 
@@ -48,9 +46,7 @@ try:
                 key = key.encode()
 
             cipher = Cipher(
-                algorithms.TripleDES(key),
-                modes.ECB(),
-                backend=default_backend(),
+                algorithms.TripleDES(key), modes.ECB(), backend=default_backend(),
             )
             decryptor = cipher.decryptor()
 

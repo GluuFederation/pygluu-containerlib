@@ -43,8 +43,10 @@ def get_wait_interval():
 def on_backoff(details):
     details["error"] = sys.exc_info()[1]
     details["kwargs"]["label"] = details["kwargs"].pop("label", "Service")
-    logger.warning("{kwargs[label]} is not ready; reason={error}; "
-                   "retrying in {wait:0.1f} seconds".format(**details))
+    logger.warning(
+        "{kwargs[label]} is not ready; reason={error}; "
+        "retrying in {wait:0.1f} seconds".format(**details)
+    )
 
 
 def on_success(details):
@@ -54,8 +56,9 @@ def on_success(details):
 
 def on_giveup(details):
     details["kwargs"]["label"] = details["kwargs"].pop("label", "Service")
-    logger.error("{kwargs[label]} is not ready after "
-                 "{elapsed:0.1f} seconds".format(**details))
+    logger.error(
+        "{kwargs[label]} is not ready after " "{elapsed:0.1f} seconds".format(**details)
+    )
 
 
 retry_on_exception = backoff.on_exception(
@@ -92,8 +95,9 @@ def wait_for_secret(manager, **kwargs):
 def wait_for_ldap(manager, **kwargs):
     host = os.environ.get("GLUU_LDAP_URL", "localhost:1636")
     user = manager.config.get("ldap_binddn")
-    password = decode_text(manager.secret.get("encoded_ox_ldap_pw"),
-                           manager.secret.get("encoded_salt"))
+    password = decode_text(
+        manager.secret.get("encoded_ox_ldap_pw"), manager.secret.get("encoded_salt")
+    )
 
     persistence_type = os.environ.get("GLUU_PERSISTENCE_TYPE", "ldap")
     ldap_mapping = os.environ.get("GLUU_PERSISTENCE_LDAP_MAPPING", "default")
@@ -101,8 +105,10 @@ def wait_for_ldap(manager, **kwargs):
 
     # a minimum service stack is having oxTrust, hence check whether entry
     # for oxTrust exists in LDAP
-    default_search = ("ou=oxtrust,ou=configuration,o=gluu",
-                      "(objectClass=oxTrustConfiguration)")
+    default_search = (
+        "ou=oxtrust,ou=configuration,o=gluu",
+        "(objectClass=oxTrustConfiguration)",
+    )
 
     if persistence_type == "hybrid":
         # `cache` and `token` mapping only have base entries
@@ -122,7 +128,7 @@ def wait_for_ldap(manager, **kwargs):
             search_base=search[0],
             search_filter=search[1],
             search_scope=ldap3.SUBTREE,
-            attributes=['objectClass'],
+            attributes=["objectClass"],
             size_limit=1,
         )
 
@@ -134,8 +140,9 @@ def wait_for_ldap(manager, **kwargs):
 def wait_for_ldap_conn(manager, **kwargs):
     host = os.environ.get("GLUU_LDAP_URL", "localhost:1636")
     user = manager.config.get("ldap_binddn")
-    password = decode_text(manager.secret.get("encoded_ox_ldap_pw"),
-                           manager.secret.get("encoded_salt"))
+    password = decode_text(
+        manager.secret.get("encoded_ox_ldap_pw"), manager.secret.get("encoded_salt")
+    )
 
     ldap_server = ldap3.Server(host, 1636, use_ssl=True)
     search = ("", "(objectClass=*)")
@@ -227,6 +234,7 @@ def wait_for_oxtrust(manager, **kwargs):
 @retry_on_exception
 def wait_for_oxd(manager, **kwargs):
     import urllib3
+
     urllib3.disable_warnings()
 
     addr = os.environ.get("GLUU_OXD_SERVER_URL", "localhost:8443")
@@ -240,50 +248,26 @@ def wait_for_oxd(manager, **kwargs):
 def wait_for(manager, deps=None):
     deps = deps or []
     callbacks = {
-        "config": {
-            "func": wait_for_config,
-            "kwargs": {"label": "Config"},
-        },
+        "config": {"func": wait_for_config, "kwargs": {"label": "Config"}},
         "config_conn": {
             "func": wait_for_config,
             "kwargs": {"label": "Config", "conn_only": True},
         },
-        "ldap": {
-            "func": wait_for_ldap,
-            "kwargs": {"label": "LDAP"},
-        },
-        "ldap_conn": {
-            "func": wait_for_ldap_conn,
-            "kwargs": {"label": "LDAP"},
-        },
-        "couchbase": {
-            "func": wait_for_couchbase,
-            "kwargs": {"label": "Couchbase"},
-        },
+        "ldap": {"func": wait_for_ldap, "kwargs": {"label": "LDAP"}},
+        "ldap_conn": {"func": wait_for_ldap_conn, "kwargs": {"label": "LDAP"}},
+        "couchbase": {"func": wait_for_couchbase, "kwargs": {"label": "Couchbase"}},
         "couchbase_conn": {
             "func": wait_for_couchbase_conn,
             "kwargs": {"label": "Couchbase"},
         },
-        "secret": {
-            "func": wait_for_secret,
-            "kwargs": {"label": "Secret"},
-        },
+        "secret": {"func": wait_for_secret, "kwargs": {"label": "Secret"}},
         "secret_conn": {
             "func": wait_for_secret,
             "kwargs": {"label": "Secret", "conn_only": True},
         },
-        "oxauth": {
-            "func": wait_for_oxauth,
-            "kwargs": {"label": "oxAuth"},
-        },
-        "oxtrust": {
-            "func": wait_for_oxtrust,
-            "kwargs": {"label": "oxTrust"},
-        },
-        "oxd": {
-            "func": wait_for_oxd,
-            "kwargs": {"label": "oxd"},
-        },
+        "oxauth": {"func": wait_for_oxauth, "kwargs": {"label": "oxAuth"}},
+        "oxtrust": {"func": wait_for_oxtrust, "kwargs": {"label": "oxTrust"}},
+        "oxd": {"func": wait_for_oxd, "kwargs": {"label": "oxd"}},
     }
 
     for dep in deps:
