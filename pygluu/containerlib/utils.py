@@ -1,5 +1,6 @@
 import base64
 import json
+import pathlib
 import random
 import re
 import shlex
@@ -7,14 +8,12 @@ import socket
 import ssl
 import string
 import subprocess
-# import uuid
 from typing import (
     Any,
     AnyStr,
     Tuple,
 )
 
-# import pyDes
 from ldap3.utils import hashed
 
 from ._crypto import encode_text  # noqa
@@ -25,11 +24,16 @@ _DEFAULT_CHARS = "".join([string.ascii_letters, string.digits])
 
 
 def as_boolean(val: Any) -> bool:
-    """Converts value as boolean.
+    """Convert value as boolean.
+
+    If the value cannot be converted as boolean, return ``False`` instead.
+
+    :param val: Given value with any type, though only a subset of types that supported.
+    :return: ``True`` or ``False``.
     """
     default = False
-    truthy = set(('t', 'T', 'true', 'True', 'TRUE', '1', 1, True))
-    falsy = set(('f', 'F', 'false', 'False', 'FALSE', '0', 0, False))
+    truthy = set(("t", "T", "true", "True", "TRUE", "1", 1, True))
+    falsy = set(("f", "F", "false", "False", "FALSE", "0", 0, False))
 
     if val in truthy:
         return True
@@ -38,67 +42,66 @@ def as_boolean(val: Any) -> bool:
     return default
 
 
-def safe_value(value: Any) -> AnyStr:
-    """Converts given value as JSON-friendly value
+def safe_value(value: Any) -> str:
+    """Convert given value as JSON-friendly value.
+
+    :param val: Given value with any type.
+    :return: JSON string.
     """
+    # bytes must be converted to str first, otherwise it will throws ``TypeError``
     if isinstance(value, bytes):
         value = value.decode()
+
+    # other types must be serialized as JSON string
     if not isinstance(value, str):
         value = json.dumps(value)
     return value
 
 
 def get_random_chars(size: int = 12, chars: str = _DEFAULT_CHARS) -> str:
-    """Generates random characters.
+    """Generate random characters.
+
+    :param size: The number of generated character.
+    :param chars: Character set to lookup to.
+    :return: A random string.
     """
     return "".join(random.choices(chars, k=size))
 
 
 def get_sys_random_chars(size: int = 12, chars: str = _DEFAULT_CHARS) -> str:
-    """Generates random characters based on OS.
+    """Generate random characters based on OS.
+
+    :param size: The number of generated character.
+    :param chars: Character set to lookup to.
+    :return: A random string.
     """
     return "".join(random.SystemRandom().choices(chars, k=size))
 
 
-# def get_quad() -> str:
-#     uid = uuid.uuid4()
-#     return uid.hex[:4].upper()
-
-
-# def join_quad_str(num: int) -> str:
-#     return ".".join([get_quad() for _ in range(num)])
-
-
-# def safe_inum_str(val: str) -> str:
-#     return val.replace("@", "").replace("!", "").replace(".", "")
-
-
 def exec_cmd(cmd: str) -> Tuple[bytes, bytes, int]:
+    """Execute shell command.
+
+    :param str: Shell command to be executed.
+    :return: A ``tuple`` consists of stdout, stderr, and return code from executed shell command.
+    """
     args = shlex.split(cmd)
     popen = subprocess.Popen(
-        args,
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
     )
     stdout, stderr = popen.communicate()
     retcode = popen.returncode
     return stdout.strip(), stderr.strip(), retcode
 
 
-# def encode_text(text: AnyStr, key: AnyStr) -> bytes:
-#     cipher = pyDes.triple_des(key, pyDes.ECB, padmode=pyDes.PAD_PKCS5)
-#     encrypted_text = cipher.encrypt(text)
-#     return base64.b64encode(encrypted_text)  # .decode()
-
-
-# def decode_text(encoded_text: AnyStr, key: AnyStr) -> bytes:
-#     text = base64.b64decode(encoded_text)
-#     cipher = pyDes.triple_des(key, pyDes.ECB, padmode=pyDes.PAD_PKCS5)
-#     return cipher.decrypt(text)  # .decode()
-
-
 def safe_render(text: str, ctx: dict) -> str:
+    """Safely render formatted text.
+
+    Common usecase is to escape ``%`` character when using string formatting.
+
+    :param text: A text string.
+    :param ctx: A ``dict`` of context passed to string formatting.
+    :return: Rendered text.
+    """
     text = re.sub(r"%([^\(])", r"%%\1", text)
     # There was a % at the end?
     text = re.sub(r"%$", r"%%", text)
@@ -106,30 +109,59 @@ def safe_render(text: str, ctx: dict) -> str:
 
 
 def reindent(text: str, num_spaces: int = 1) -> str:
+    """Reindent given text with indentation per line.
+
+    :param text: A ``str`` or ``bytes`` of text.
+    :param num_spaces: The size of indentation per line.
+    :return: Reindented string.
+    """
     text = [
-        "{0}{1}".format(num_spaces * " ", line.lstrip())
-        for line in text.splitlines()
+        "{0}{1}".format(num_spaces * " ", line.lstrip()) for line in text.splitlines()
     ]
     text = "\n".join(text)
     return text
 
 
 def generate_base64_contents(text: AnyStr, num_spaces: int = 1) -> str:
-    text = base64.b64encode(str_to_bytes(text))
+    """Generate base64 string.
+
+    :param text: A ``str`` or ``bytes`` of text.
+    :param num_spaces: The size of indentation per line.
+    :return: base64 string.
+    """
+    text = base64.b64encode(anystr_to_bytes(text))
     return reindent(text.decode(), num_spaces)
 
 
-def cert_to_truststore(alias: str, cert_file: str, keystore_file: str,
-                       store_pass: str) -> Tuple[bytes, bytes, int]:
-    cmd = "keytool -importcert -trustcacerts -alias {0} " \
-          "-file {1} -keystore {2} -storepass {3} " \
-          "-noprompt".format(alias, cert_file, keystore_file, store_pass)
+def cert_to_truststore(
+    alias: str, cert_file: str, keystore_file: str, store_pass: str
+) -> Tuple[bytes, bytes, int]:
+    """Import certificate into a Java Truststore using ``keytool`` executable.
+
+    :param alias: Alias name.
+    :param cert_file: Path to certificate file.
+    :param keystore_file: Path to Java Keystore/Truststore file.
+    :param store_pass: Password of the Java Keystore/Truststore file.
+    :return: A ``tuple`` consists of stdout, stderr, and return code from executed shell command.
+    """
+    cmd = (
+        "keytool -importcert -trustcacerts -alias {0} "
+        "-file {1} -keystore {2} -storepass {3} "
+        "-noprompt".format(alias, cert_file, keystore_file, store_pass)
+    )
     return exec_cmd(cmd)
 
 
-def get_server_certificate(host: str, port: int, filepath: str,
-                           server_hostname: str = "") -> str:
-    """Gets PEM-formatted certificate of a given address.
+def get_server_certificate(
+    host: str, port: int, filepath: str, server_hostname: str = ""
+) -> str:
+    """Get PEM-formatted certificate of a given address.
+
+    :param host: Hostname of a server.
+    :param port: Port of SSL-secured server.
+    :param filepath: Path to save the downloaded certificate.
+    :param server_hostname: Optional hostname of the server.
+    :return: Certificate text.
     """
     server_hostname = server_hostname or host
 
@@ -139,23 +171,27 @@ def get_server_certificate(host: str, port: int, filepath: str,
         with context.wrap_socket(conn, server_hostname=server_hostname) as sock:
             der = sock.getpeercert(True)
             cert = ssl.DER_cert_to_PEM_cert(der)
-
-            with open(filepath, "w") as f:
-                f.write(cert)
+            pathlib.Path(filepath).write_text(cert)
             return cert
 
 
-def ldap_encode(password):
+def ldap_encode(password: AnyStr) -> str:
+    """Encode the password string to comply to LDAP specification.
+
+    :param password: A password with ``str`` or ``bytes`` type.
+    :return: A string of encoded password.
+    """
     return hashed.hashed(hashed.HASHED_SALTED_SHA, password)
 
 
-def str_to_bytes(val):
+def anystr_to_bytes(val: AnyStr) -> bytes:
+    """Convert ``str`` or ``bytes`` as ``bytes``.
+
+    If given value is a ``str``, encode it into ``bytes``.
+
+    :param val: A ``str`` or ``bytes`` that need to be converted (if necessary).
+    :return: A ``bytes`` type of given value.
+    """
     if isinstance(val, str):
         val = val.encode()
     return val
-
-
-# def bytes_to_str(val):
-#     if isinstance(val, bytes):
-#         val = val.decode()
-#     return val
