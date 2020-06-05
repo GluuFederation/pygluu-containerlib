@@ -36,6 +36,7 @@ setup(
         "pyDes>=2.0.1",
         "ldap3>=2.5",
         "backoff>=1.8.0",
+        "vintage>=0.4.1",
     ],
     classifiers=[
         "Intended Audience :: Developers",
