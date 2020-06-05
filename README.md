@@ -1,6 +1,6 @@
 # pygluu.containerlib
 
-Utilities for Gluu Server Docker container deployment.
+Utilities for Gluu Server Cloud Native containers.
 
 ## Developer Guide
 
