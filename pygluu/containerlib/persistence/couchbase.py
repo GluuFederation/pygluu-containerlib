@@ -27,7 +27,7 @@ def get_couchbase_password(manager, plaintext: bool = True) -> str:
     with open(password_file) as f:
         password = f.read().strip()
         if not plaintext:
-            password = encode_text(password, manager.secret.get("encoded_salt"))
+            password = encode_text(password, manager.secret.get("encoded_salt")).decode()
         return password
 
 
@@ -120,7 +120,7 @@ def render_couchbase_properties(manager, src: str, dest: str) -> None:
                 "encoded_couchbaseTrustStorePass": encode_text(
                     GLUU_COUCHBASE_TRUSTSTORE_PASSWORD,
                     manager.secret.get("encoded_salt"),
-                ),
+                ).decode(),
                 "couchbase_conn_timeout": get_couchbase_conn_timeout(),
                 "couchbase_conn_max_wait": get_couchbase_conn_max_wait(),
                 "couchbase_scan_consistency": get_couchbase_scan_consistency(),
