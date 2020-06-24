@@ -37,6 +37,7 @@ setup(
         "ldap3>=2.5",
         "backoff>=1.8.0",
         "vintage>=0.4.1",
+        "docker>=3.7.2",
     ],
     classifiers=[
         "Intended Audience :: Developers",
