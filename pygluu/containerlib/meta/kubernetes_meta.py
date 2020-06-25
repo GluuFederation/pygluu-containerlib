@@ -55,9 +55,16 @@ class KubernetesMeta(BaseMeta):
         )
 
         # copy file implementation
-        resp = self.exec_cmd(
-            container,
-            ["tar", "xvf", "-", "-C", "/"],
+        resp = stream(
+            self.client.connect_get_namespaced_pod_exec,
+            container.metadata.name,
+            container.metadata.namespace,
+            command=["tar", "xvf", "-", "-C", "/"],
+            stderr=True,
+            stdin=True,
+            stdout=True,
+            tty=False,
+            _preload_content=False,
         )
 
         with TemporaryFile() as tar_buffer:
