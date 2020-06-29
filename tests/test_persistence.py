@@ -1,7 +1,7 @@
 import os
 # import shutil
 
-# import pytest
+import pytest
 
 
 DUMMY_COUCHBASE_CERT = """-----BEGIN CERTIFICATE-----
@@ -110,34 +110,34 @@ ssl.trustStorePin: {gmanager.secret.get("encoded_ldapTrustStorePass")}
 # =========
 
 
-# def test_get_couchbase_user(gmanager):
-#     from pygluu.containerlib.persistence.couchbase import get_couchbase_user
+def test_get_couchbase_user(gmanager):
+    from pygluu.containerlib.persistence.couchbase import get_couchbase_user
 
-#     os.environ["GLUU_COUCHBASE_USER"] = "root"
-#     assert get_couchbase_user(gmanager) == "root"
-#     os.environ.pop("GLUU_COUCHBASE_USER", None)
-
-
-# def test_get_couchbase_password(tmpdir, gmanager):
-#     from pygluu.containerlib.persistence.couchbase import get_couchbase_password
-
-#     passwd_file = tmpdir.join("couchbase_password")
-#     passwd_file.write("secret")
-
-#     os.environ["GLUU_COUCHBASE_PASSWORD_FILE"] = str(passwd_file)
-#     assert get_couchbase_password(gmanager) == "secret"
-#     os.environ.pop("GLUU_COUCHBASE_PASSWORD_FILE", None)
+    os.environ["GLUU_COUCHBASE_USER"] = "root"
+    assert get_couchbase_user(gmanager) == "root"
+    os.environ.pop("GLUU_COUCHBASE_USER", None)
 
 
-# def test_get_encoded_couchbase_password(tmpdir, gmanager):
-#     from pygluu.containerlib.persistence.couchbase import get_encoded_couchbase_password
+def test_get_couchbase_password(tmpdir, gmanager):
+    from pygluu.containerlib.persistence.couchbase import get_couchbase_password
 
-#     passwd_file = tmpdir.join("couchbase_password")
-#     passwd_file.write("secret")
+    passwd_file = tmpdir.join("couchbase_password")
+    passwd_file.write("secret")
 
-#     os.environ["GLUU_COUCHBASE_PASSWORD_FILE"] = str(passwd_file)
-#     assert get_encoded_couchbase_password(gmanager) != "secret"
-#     os.environ.pop("GLUU_COUCHBASE_PASSWORD_FILE", None)
+    os.environ["GLUU_COUCHBASE_PASSWORD_FILE"] = str(passwd_file)
+    assert get_couchbase_password(gmanager) == "secret"
+    os.environ.pop("GLUU_COUCHBASE_PASSWORD_FILE", None)
+
+
+def test_get_encoded_couchbase_password(tmpdir, gmanager):
+    from pygluu.containerlib.persistence.couchbase import get_encoded_couchbase_password
+
+    passwd_file = tmpdir.join("couchbase_password")
+    passwd_file.write("secret")
+
+    os.environ["GLUU_COUCHBASE_PASSWORD_FILE"] = str(passwd_file)
+    assert get_encoded_couchbase_password(gmanager) != "secret"
+    os.environ.pop("GLUU_COUCHBASE_PASSWORD_FILE", None)
 
 
 # @pytest.mark.skipif(
@@ -154,94 +154,94 @@ ssl.trustStorePin: {gmanager.secret.get("encoded_ldapTrustStorePass")}
 #     cert_file.write(DUMMY_COUCHBASE_CERT)
 
 #     os.environ["GLUU_COUCHBASE_CERT_FILE"] = str(cert_file)
-#     gmanager.config.set("couchbaseTrustStoreFn", str(keystore_file))
+#     # gmanager.config.set("couchbaseTrustStoreFn", str(keystore_file))
 #     sync_couchbase_truststore(gmanager)
 #     assert os.path.exists(str(keystore_file))
 #     os.environ.pop("GLUU_COUCHBASE_CERT_FILE", None)
 
 
-# @pytest.mark.parametrize("timeout, expected", [
-#     (5000, 5000),
-#     ("random", 10000),
-# ])
-# def test_get_couchbase_conn_timeout(timeout, expected):
-#     from pygluu.containerlib.persistence.couchbase import get_couchbase_conn_timeout
+@pytest.mark.parametrize("timeout, expected", [
+    (5000, 5000),
+    ("random", 10000),
+])
+def test_get_couchbase_conn_timeout(timeout, expected):
+    from pygluu.containerlib.persistence.couchbase import get_couchbase_conn_timeout
 
-#     os.environ["GLUU_COUCHBASE_CONN_TIMEOUT"] = str(timeout)
-#     assert get_couchbase_conn_timeout() == expected
-
-
-# @pytest.mark.parametrize("max_wait, expected", [
-#     (5000, 5000),
-#     ("random", 20000),
-# ])
-# def test_get_couchbase_conn_max_wait(max_wait, expected):
-#     from pygluu.containerlib.persistence.couchbase import get_couchbase_conn_max_wait
-
-#     os.environ["GLUU_COUCHBASE_CONN_MAX_WAIT"] = str(max_wait)
-#     assert get_couchbase_conn_max_wait() == expected
+    os.environ["GLUU_COUCHBASE_CONN_TIMEOUT"] = str(timeout)
+    assert get_couchbase_conn_timeout() == expected
 
 
-# @pytest.mark.parametrize("scan, expected", [
-#     ("not_bounded", "not_bounded"),
-#     ("request_plus", "request_plus"),
-#     ("statement_plus", "statement_plus"),
-#     ("random", "not_bounded"),
-# ])
-# def test_get_couchbase_scan_consistency(scan, expected):
-#     from pygluu.containerlib.persistence.couchbase import get_couchbase_scan_consistency
+@pytest.mark.parametrize("max_wait, expected", [
+    (5000, 5000),
+    ("random", 20000),
+])
+def test_get_couchbase_conn_max_wait(max_wait, expected):
+    from pygluu.containerlib.persistence.couchbase import get_couchbase_conn_max_wait
 
-#     os.environ["GLUU_COUCHBASE_SCAN_CONSISTENCY"] = scan
-#     assert get_couchbase_scan_consistency() == expected
+    os.environ["GLUU_COUCHBASE_CONN_MAX_WAIT"] = str(max_wait)
+    assert get_couchbase_conn_max_wait() == expected
 
 
-# def test_sync_couchbase_cert(tmpdir):
-#     from pygluu.containerlib.persistence.couchbase import sync_couchbase_cert
+@pytest.mark.parametrize("scan, expected", [
+    ("not_bounded", "not_bounded"),
+    ("request_plus", "request_plus"),
+    ("statement_plus", "statement_plus"),
+    ("random", "not_bounded"),
+])
+def test_get_couchbase_scan_consistency(scan, expected):
+    from pygluu.containerlib.persistence.couchbase import get_couchbase_scan_consistency
 
-#     cert_file = tmpdir.join("couchbase.crt")
-#     cert_file.write(DUMMY_COUCHBASE_CERT)
-#     os.environ["GLUU_COUCHBASE_CERT_FILE"] = str(cert_file)
-#     assert sync_couchbase_cert() == DUMMY_COUCHBASE_CERT
-
-# # ======
-# # Hybrid
-# # ======
-
-
-# def test_render_hybrid_properties(tmpdir):
-#     from pygluu.containerlib.persistence.hybrid import render_hybrid_properties
-
-#     os.environ["GLUU_PERSISTENCE_TYPE"] = "hybrid"
-
-#     expected = """
-# storages: ldap, couchbase
-# storage.default: ldap
-# storage.ldap.mapping: default
-# storage.couchbase.mapping: people, groups, authorizations, cache, cache-refresh, tokens
-# """.strip()
-
-#     dest = tmpdir.join("gluu-hybrid.properties")
-#     render_hybrid_properties(str(dest))
-#     assert dest.read() == expected
-#     os.environ.pop("GLUU_PERSISTENCE_TYPE", None)
+    os.environ["GLUU_COUCHBASE_SCAN_CONSISTENCY"] = scan
+    assert get_couchbase_scan_consistency() == expected
 
 
-# def test_render_hybrid_properties_couchbase(tmpdir):
-#     from pygluu.containerlib.persistence.hybrid import render_hybrid_properties
+def test_sync_couchbase_cert(tmpdir):
+    from pygluu.containerlib.persistence.couchbase import sync_couchbase_cert
 
-#     os.environ["GLUU_PERSISTENCE_TYPE"] = "hybrid"
-#     os.environ["GLUU_PERSISTENCE_LDAP_MAPPING"] = "user"
+    cert_file = tmpdir.join("couchbase.crt")
+    cert_file.write(DUMMY_COUCHBASE_CERT)
+    os.environ["GLUU_COUCHBASE_CERT_FILE"] = str(cert_file)
+    assert sync_couchbase_cert() == DUMMY_COUCHBASE_CERT
 
-#     expected = """
-# storages: ldap, couchbase
-# storage.default: couchbase
-# storage.ldap.mapping: people, groups
-# storage.couchbase.mapping: cache, cache-refresh, tokens
-# """.strip()
+# ======
+# Hybrid
+# ======
 
-#     dest = tmpdir.join("gluu-hybrid.properties")
-#     render_hybrid_properties(str(dest))
-#     assert dest.read() == expected
 
-#     os.environ.pop("GLUU_PERSISTENCE_TYPE", None)
-#     os.environ.pop("GLUU_PERSISTENCE_LDAP_MAPPING", None)
+def test_render_hybrid_properties(tmpdir):
+    from pygluu.containerlib.persistence.hybrid import render_hybrid_properties
+
+    os.environ["GLUU_PERSISTENCE_TYPE"] = "hybrid"
+
+    expected = """
+storages: ldap, couchbase
+storage.default: ldap
+storage.ldap.mapping: default
+storage.couchbase.mapping: people, groups, authorizations, cache, cache-refresh, tokens
+""".strip()
+
+    dest = tmpdir.join("gluu-hybrid.properties")
+    render_hybrid_properties(str(dest))
+    assert dest.read() == expected
+    os.environ.pop("GLUU_PERSISTENCE_TYPE", None)
+
+
+def test_render_hybrid_properties_couchbase(tmpdir):
+    from pygluu.containerlib.persistence.hybrid import render_hybrid_properties
+
+    os.environ["GLUU_PERSISTENCE_TYPE"] = "hybrid"
+    os.environ["GLUU_PERSISTENCE_LDAP_MAPPING"] = "user"
+
+    expected = """
+storages: ldap, couchbase
+storage.default: couchbase
+storage.ldap.mapping: people, groups
+storage.couchbase.mapping: cache, cache-refresh, tokens
+""".strip()
+
+    dest = tmpdir.join("gluu-hybrid.properties")
+    render_hybrid_properties(str(dest))
+    assert dest.read() == expected
+
+    os.environ.pop("GLUU_PERSISTENCE_TYPE", None)
+    os.environ.pop("GLUU_PERSISTENCE_LDAP_MAPPING", None)
