@@ -8,7 +8,7 @@ KubeResult = namedtuple("KubeResult", ["data"])
 
 
 # ===========
-# base config
+# base secret
 # ===========
 
 
@@ -189,7 +189,7 @@ def test_k8s_secret_prepare_secret_read(gk8s_secret, monkeypatch):
     assert gk8s_secret.name_exists is True
 
 
-def test_k8s_config_prepare_secret_create(gk8s_secret, monkeypatch):
+def test_k8s_secret_prepare_secret_create(gk8s_secret, monkeypatch):
     import kubernetes.client.rest
 
     def _raise_exc(status):
@@ -209,7 +209,7 @@ def test_k8s_config_prepare_secret_create(gk8s_secret, monkeypatch):
     assert gk8s_secret.name_exists is True
 
 
-def test_k8s_config_prepare_secret_not_created(gk8s_secret, monkeypatch):
+def test_k8s_secret_prepare_secret_not_created(gk8s_secret, monkeypatch):
     import kubernetes.client.rest
 
     def _raise_exc(status):
@@ -230,7 +230,7 @@ def test_k8s_config_prepare_secret_not_created(gk8s_secret, monkeypatch):
     assert gk8s_secret.name_exists is False
 
 
-def test_k8s_config_get(gk8s_secret, monkeypatch):
+def test_k8s_secret_get(gk8s_secret, monkeypatch):
     monkeypatch.setattr(
         "kubernetes.client.CoreV1Api.read_namespaced_secret",
         lambda cls, n, ns: KubeResult(data={"foo": base64.b64encode(b"bar")}),
@@ -238,7 +238,7 @@ def test_k8s_config_get(gk8s_secret, monkeypatch):
     assert gk8s_secret.get("foo") == "bar"
 
 
-def test_k8s_config_get_default(gk8s_secret, monkeypatch):
+def test_k8s_secret_get_default(gk8s_secret, monkeypatch):
     monkeypatch.setattr(
         "kubernetes.client.CoreV1Api.read_namespaced_secret",
         lambda cls, n, ns: KubeResult(data={}),
@@ -246,7 +246,7 @@ def test_k8s_config_get_default(gk8s_secret, monkeypatch):
     assert gk8s_secret.get("foo", "default") == "default"
 
 
-def test_k8s_config_set(gk8s_secret, monkeypatch):
+def test_k8s_secret_set(gk8s_secret, monkeypatch):
     gk8s_secret.name_exists = True
 
     monkeypatch.setattr(
@@ -256,7 +256,7 @@ def test_k8s_config_set(gk8s_secret, monkeypatch):
     assert gk8s_secret.set("foo", "bar") is True
 
 
-def test_k8s_config_incluster():
+def test_k8s_secret_incluster():
     import kubernetes.config.config_exception
     from pygluu.containerlib.secret import KubernetesSecret
 

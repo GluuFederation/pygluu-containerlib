@@ -34,6 +34,7 @@ class KubernetesConfig(BaseConfig):
 
         self._client = None
         self.name_exists = False
+        self.kubeconfig_file = os.path.expanduser("~/.kube/config")
 
     def get(self, key: str, default: Optional[Any] = None) -> str:
         result = self.all()
@@ -43,7 +44,7 @@ class KubernetesConfig(BaseConfig):
     def client(self):
         if not self._client:
             if as_boolean(self.settings["GLUU_CONFIG_KUBERNETES_USE_KUBE_CONFIG"]):
-                kubernetes.config.load_kube_config()
+                kubernetes.config.load_kube_config(self.kubeconfig_file)
             else:
                 kubernetes.config.load_incluster_config()
             self._client = kubernetes.client.CoreV1Api()

@@ -1,5 +1,3 @@
-# from collections import namedtuple
-
 import pytest
 
 
@@ -29,6 +27,7 @@ def gk8s_config():
     config.settings["GLUU_CONFIG_KUBERNETES_USE_KUBE_CONFIG"] = True
     config.settings["GLUU_CONFIG_KUBERNETES_NAMESPACE"] = "testing"
     config.settings["GLUU_CONFIG_KUBERNETES_CONFIGMAP"] = "testing"
+    config.kubeconfig_file = "tests/kubeconfig"
     yield config
 
 
@@ -58,6 +57,7 @@ def gk8s_secret():
     secret.settings["GLUU_SECRET_KUBERNETES_USE_KUBE_CONFIG"] = True
     secret.settings["GLUU_SECRET_KUBERNETES_NAMESPACE"] = "testing"
     secret.settings["GLUU_SECRET_KUBERNETES_SECRET"] = "testing"
+    secret.kubeconfig_file = "tests/kubeconfig"
     yield secret
 
 
