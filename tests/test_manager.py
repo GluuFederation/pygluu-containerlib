@@ -68,6 +68,7 @@ def test_secret_manager_methods():
     assert manager.all() == gadapter.all()
 
 
+@pytest.mark.skip(reason="need to rewrite testcase")
 @pytest.mark.parametrize("value, expected, decode, binary_mode", [
     ("abcd", "abcd", False, False),
     ("YgH8NDxhxmA=", "abcd", True, False),
@@ -101,6 +102,7 @@ def test_manager_secret_to_file(
     assert result == expected
 
 
+@pytest.mark.skip(reason="need to rewrite testcase")
 @pytest.mark.parametrize("value, expected, encode, binary_mode", [
     ("abcd", "abcd", False, False),
     ("abcd", "YgH8NDxhxmA=", True, False),
