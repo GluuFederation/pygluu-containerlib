@@ -1,4 +1,4 @@
-name: pygluu-containerlib testcases
+name: testcases
 
 on: [push]
 
