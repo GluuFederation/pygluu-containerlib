@@ -4,6 +4,7 @@ class BaseMeta:
 
         Subclass __MUST__ implement this method.
         """
+        raise NotImplementedError
 
     def get_container_ip(self, container):
         """Get container's IP address.

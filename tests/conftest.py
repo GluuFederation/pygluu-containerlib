@@ -90,3 +90,12 @@ def gmanager(gconsul_config, gvault_secret):
     gmanager.secret.adapter = gvault_secret
 
     yield gmanager
+
+
+@pytest.fixture
+def gmeta():
+    from pygluu.containerlib.meta.base_meta import BaseMeta
+
+    class GMeta(BaseMeta):
+        pass
+    yield GMeta()
