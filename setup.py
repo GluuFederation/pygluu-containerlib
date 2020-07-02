@@ -31,7 +31,7 @@ setup(
         "requests>=2.22.0",
         "python-consul>=1.0.1",
         "hvac>=0.7.0",
-        "kubernetes>=6.0.0,<11.0",
+        "kubernetes",
         "urllib3<1.25,>=1.21.1",
         "pyDes>=2.0.1",
         "ldap3>=2.5",

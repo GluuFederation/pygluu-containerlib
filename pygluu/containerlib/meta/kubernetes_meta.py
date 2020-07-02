@@ -1,5 +1,6 @@
 import logging
 import os
+import shlex
 import sys
 import tarfile
 from tempfile import TemporaryFile
@@ -49,10 +50,7 @@ class KubernetesMeta(BaseMeta):
 
     def copy_to_container(self, container, path):
         # make sure parent directory is created first
-        self.exec_cmd(
-            container,
-            ["mkdir -p {}".format(os.path.dirname(path))],
-        )
+        self.exec_cmd(container, "mkdir -p {}".format(os.path.dirname(path)))
 
         # copy file implementation
         resp = stream(
@@ -72,24 +70,27 @@ class KubernetesMeta(BaseMeta):
                 tar.add(path)
 
             tar_buffer.seek(0)
-            commands = []
-            commands.append(tar_buffer.read())
+            commands = [tar_buffer.read()]
 
             while resp.is_open():
                 resp.update(timeout=1)
+
                 if resp.peek_stdout():
-                    # logger.info("STDOUT: %s" % resp.read_stdout())
+                    # logger.warning("STDOUT: %s" % resp.read_stdout())
                     pass
+
                 if resp.peek_stderr():
-                    # logger.info("STDERR: %s" % resp.read_stderr())
+                    # logger.warning("STDERR: %s" % resp.read_stderr())
                     pass
+
                 if commands:
                     c = commands.pop(0)
-                    try:
-                        resp.write_stdin(c.decode())
-                    except UnicodeDecodeError:
-                        # likely bytes from a binary
-                        resp.write_stdin(c.decode("ISO-8859-1"))
+                    # try:
+                    # resp.write_stdin(c.decode())
+                    resp.write_stdin(c)
+                    # except UnicodeDecodeError:
+                    #     # likely bytes from a binary
+                    #     # resp.write_stdin(c.decode("ISO-8859-1"))
                 else:
                     break
             resp.close()
@@ -99,7 +100,7 @@ class KubernetesMeta(BaseMeta):
             self.client.connect_get_namespaced_pod_exec,
             container.metadata.name,
             container.metadata.namespace,
-            command=[cmd],
+            command=shlex.split(cmd),
             stderr=True,
             stdin=True,
             stdout=True,
