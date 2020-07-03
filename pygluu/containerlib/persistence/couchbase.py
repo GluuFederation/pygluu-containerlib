@@ -40,7 +40,7 @@ def get_couchbase_mappings(persistence_type: str, ldap_mapping: str) -> Dict[str
         "user": {"bucket": "gluu_user", "mapping": "people, groups, authorizations"},
         "cache": {"bucket": "gluu_cache", "mapping": "cache"},
         "site": {"bucket": "gluu_site", "mapping": "cache-refresh"},
-        "token": {"bucket": "gluu_token", "mapping": "tokens"},
+        "token": {"bucket": "gluu_token", "mapping": "tokens, sessions"},
     }
 
     if persistence_type == "hybrid":
