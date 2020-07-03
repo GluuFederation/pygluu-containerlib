@@ -208,7 +208,7 @@ def test_sync_couchbase_cert(tmpdir):
 # ======
 
 
-def test_render_hybrid_properties(tmpdir):
+def test_render_hybrid_properties_default(tmpdir):
     from pygluu.containerlib.persistence.hybrid import render_hybrid_properties
 
     os.environ["GLUU_PERSISTENCE_TYPE"] = "hybrid"
@@ -226,7 +226,7 @@ storage.couchbase.mapping: people, groups, authorizations, cache, cache-refresh,
     os.environ.pop("GLUU_PERSISTENCE_TYPE", None)
 
 
-def test_render_hybrid_properties_couchbase(tmpdir):
+def test_render_hybrid_properties_user(tmpdir):
     from pygluu.containerlib.persistence.hybrid import render_hybrid_properties
 
     os.environ["GLUU_PERSISTENCE_TYPE"] = "hybrid"
@@ -235,8 +235,29 @@ def test_render_hybrid_properties_couchbase(tmpdir):
     expected = """
 storages: ldap, couchbase
 storage.default: couchbase
-storage.ldap.mapping: people, groups
+storage.ldap.mapping: people, groups, authorizations
 storage.couchbase.mapping: cache, cache-refresh, tokens, sessions
+""".strip()
+
+    dest = tmpdir.join("gluu-hybrid.properties")
+    render_hybrid_properties(str(dest))
+    assert dest.read() == expected
+
+    os.environ.pop("GLUU_PERSISTENCE_TYPE", None)
+    os.environ.pop("GLUU_PERSISTENCE_LDAP_MAPPING", None)
+
+
+def test_render_hybrid_properties_token(tmpdir):
+    from pygluu.containerlib.persistence.hybrid import render_hybrid_properties
+
+    os.environ["GLUU_PERSISTENCE_TYPE"] = "hybrid"
+    os.environ["GLUU_PERSISTENCE_LDAP_MAPPING"] = "token"
+
+    expected = """
+storages: ldap, couchbase
+storage.default: couchbase
+storage.ldap.mapping: tokens, sessions
+storage.couchbase.mapping: people, groups, authorizations, cache, cache-refresh
 """.strip()
 
     dest = tmpdir.join("gluu-hybrid.properties")

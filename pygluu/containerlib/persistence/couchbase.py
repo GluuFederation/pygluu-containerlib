@@ -9,6 +9,7 @@ from ..utils import (
     encode_text,
     cert_to_truststore,
 )
+from ..constants import COUCHBASE_MAPPINGS
 
 GLUU_COUCHBASE_TRUSTSTORE_PASSWORD = "newsecret"
 
@@ -35,20 +36,13 @@ get_encoded_couchbase_password = partial(get_couchbase_password, plaintext=False
 
 
 def get_couchbase_mappings(persistence_type: str, ldap_mapping: str) -> Dict[str, str]:
-    mappings = {
-        "default": {"bucket": "gluu", "mapping": ""},
-        "user": {"bucket": "gluu_user", "mapping": "people, groups, authorizations"},
-        "cache": {"bucket": "gluu_cache", "mapping": "cache"},
-        "site": {"bucket": "gluu_site", "mapping": "cache-refresh"},
-        "token": {"bucket": "gluu_token", "mapping": "tokens, sessions"},
-    }
-
     if persistence_type == "hybrid":
-        mappings = {
-            name: mapping for name, mapping in mappings.items() if name != ldap_mapping
+        return {
+            name: mapping
+            for name, mapping in COUCHBASE_MAPPINGS.items()
+            if name != ldap_mapping
         }
-
-    return mappings
+    return COUCHBASE_MAPPINGS
 
 
 def get_couchbase_conn_timeout() -> int:
