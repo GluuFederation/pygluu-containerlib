@@ -1,43 +1,34 @@
 import logging
 import os
 import shlex
-import sys
 import tarfile
 from tempfile import TemporaryFile
 
-from kubernetes import (
-    client,
-    config,
-)
+import kubernetes.client
+import kubernetes.config
 from kubernetes.stream import stream
 
-from .base_meta import BaseMeta  # noqa: F401
+from .base_meta import BaseMeta
 
 logger = logging.getLogger(__name__)
 
 
 class KubernetesMeta(BaseMeta):
     def __init__(self):
-        config_loaded = False
+        self._client = None
+        self.kubeconfig_file = os.path.expanduser("~/.kube/config")
 
-        try:
-            config.load_incluster_config()
-            config_loaded = True
-        except config.config_exception.ConfigException:
-            logger.warn("Unable to load in-cluster configuration; trying to load from Kube config file")
+    @property
+    def client(self):
+        if not self._client:
+            # config loading priority
             try:
-                config.load_kube_config()
-                config_loaded = True
-            except (IOError, config.config_exception.ConfigException) as exc:
-                logger.warn("Unable to load Kube config; reason={}".format(exc))
-
-        if not config_loaded:
-            logger.error("Unable to load in-cluster or Kube config")
-            sys.exit(1)
-
-        cli = client.CoreV1Api()
-        cli.api_client.configuration.assert_hostname = False
-        self.client = cli
+                kubernetes.config.load_incluster_config()
+            except kubernetes.config.config_exception.ConfigException:
+                kubernetes.config.load_kube_config(self.kubeconfig_file)
+            self._client = kubernetes.client.CoreV1Api()
+            self._client.api_client.configuration.assert_hostname = False
+        return self._client
 
     def get_containers(self, label):
         return self.client.list_pod_for_all_namespaces(label_selector=label).items
@@ -76,21 +67,14 @@ class KubernetesMeta(BaseMeta):
                 resp.update(timeout=1)
 
                 if resp.peek_stdout():
-                    # logger.warning("STDOUT: %s" % resp.read_stdout())
-                    pass
+                    logger.debug(f"STDOUT: {resp.read_stdout()}")
 
                 if resp.peek_stderr():
-                    # logger.warning("STDERR: %s" % resp.read_stderr())
-                    pass
+                    logger.debug(f"STDERR: {resp.read_stderr()}")
 
                 if commands:
                     c = commands.pop(0)
-                    # try:
-                    # resp.write_stdin(c.decode())
                     resp.write_stdin(c)
-                    # except UnicodeDecodeError:
-                    #     # likely bytes from a binary
-                    #     # resp.write_stdin(c.decode("ISO-8859-1"))
                 else:
                     break
             resp.close()

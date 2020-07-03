@@ -99,3 +99,12 @@ def gmeta():
     class GMeta(BaseMeta):
         pass
     yield GMeta()
+
+
+@pytest.fixture
+def gk8s_meta():
+    from pygluu.containerlib.meta import KubernetesMeta
+
+    meta = KubernetesMeta()
+    meta.kubeconfig_file = "tests/kubeconfig"
+    yield meta
