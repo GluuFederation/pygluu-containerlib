@@ -1,3 +1,11 @@
+"""
+pygluu.containerlib.secret.kubernetes_secret
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This module contains secret adapter class to interact with
+Kubernetes Secret.
+"""
+
 import base64
 import os
 from typing import Any

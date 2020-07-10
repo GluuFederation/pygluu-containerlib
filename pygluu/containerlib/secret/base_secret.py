@@ -1,3 +1,10 @@
+"""
+pygluu.containerlib.secret.base_secret
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This module contains base class for secret adapter.
+"""
+
 from typing import (
     Any,
     NoReturn,

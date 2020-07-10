@@ -1,3 +1,10 @@
+"""
+pygluu.containerlib.config.consul_config
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This module contains config adapter class to interact with Consul.
+"""
+
 import logging
 import os
 from typing import (
@@ -18,6 +25,9 @@ logger = logging.getLogger(__name__)
 
 
 class ConsulConfig(BaseConfig):
+    """This class interacts with Consul backend.
+    """
+
     def __init__(self):
         self.settings = {
             k: v
@@ -93,6 +103,12 @@ class ConsulConfig(BaseConfig):
         return key[len(self.prefix):]
 
     def get(self, key: str, default: Optional[Any] = None) -> str:
+        """Get value based on given key.
+
+        :params key: Key name.
+        :params default: Default value if key is not exist.
+        :returns: String of value based on given key or default value.
+        """
         _, result = self.client.kv.get(self._merge_path(key))
         if not result:
             return default
@@ -100,9 +116,13 @@ class ConsulConfig(BaseConfig):
         return result["Value"].decode()
 
     def set(self, key: str, value: Any) -> bool:
+        """Set key with given value.
+        """
         return self.client.kv.put(self._merge_path(key), safe_value(value))
 
     def all(self) -> Dict[str, str]:
+        """Get all key-value pairs.
+        """
         _, resultset = self.client.kv.get(self._merge_path(""), recurse=True)
 
         if not resultset:

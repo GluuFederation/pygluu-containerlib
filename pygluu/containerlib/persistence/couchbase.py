@@ -238,7 +238,7 @@ class RestClient(BaseClient):
         return resp
 
 
-class CouchbaseClient(object):
+class CouchbaseClient:
     def __init__(self, hosts, user, password):
         self.rest_client = RestClient(hosts, user, password)
         self.rest_client.resolve_host()

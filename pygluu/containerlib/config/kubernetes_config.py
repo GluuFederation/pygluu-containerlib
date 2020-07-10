@@ -1,3 +1,11 @@
+"""
+pygluu.containerlib.config.kubernetes_config
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This module contains config adapter class to interact with
+Kubernetes ConfigMap.
+"""
+
 import os
 from typing import (
     Any,
@@ -42,6 +50,8 @@ class KubernetesConfig(BaseConfig):
 
     @property
     def client(self):
+        """Lazy-loaded client to interact with Kubernetes API.
+        """
         if not self._client:
             if as_boolean(self.settings["GLUU_CONFIG_KUBERNETES_USE_KUBE_CONFIG"]):
                 kubernetes.config.load_kube_config(self.kubeconfig_file)

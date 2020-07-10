@@ -1,3 +1,10 @@
+"""
+pygluu.containerlib.config.base_config
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This module contains base class for config adapter.
+"""
+
 from typing import (
     Any,
     NoReturn,
@@ -5,7 +12,7 @@ from typing import (
 )
 
 
-class BaseConfig(object):
+class BaseConfig:
     """Base class for config adapter. Must be sub-classed per
     implementation details.
     """

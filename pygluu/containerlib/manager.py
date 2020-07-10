@@ -18,11 +18,20 @@ from .utils import (
     encode_text,
 )
 
-#: Object as a placeholder of config and secret manager
-_Manager = namedtuple("Manager", ["config", "secret"])
+#: Object as a placeholder of config and secret manager.
+#: This object is not intended for direct use, use ``get_manager``
+#: function instead.
+Manager = namedtuple("Manager", ["config", "secret"])
 
 
 class ConfigManager(object):
+    """This class acts as a proxy to specific config adapter class.
+
+    Supported config adapter class:
+
+    - ConsulConfig
+    - KubernetesConfig
+    """
     def __init__(self):
         _adapter = os.environ.get("GLUU_CONFIG_ADAPTER", "consul",)
         if _adapter == "consul":
@@ -43,6 +52,14 @@ class ConfigManager(object):
 
 
 class SecretManager(object):
+    """This class acts as a proxy to specific secret adapter class.
+
+    Supported secret adapter class:
+
+    - VaultSecret
+    - KubernetesSecret
+    """
+
     def __init__(self):
         _adapter = os.environ.get("GLUU_SECRET_ADAPTER", "vault",)
         if _adapter == "vault":
@@ -90,6 +107,8 @@ class SecretManager(object):
     def from_file(
         self, key: str, src: str, encode: bool = False, binary_mode: bool = False
     ) -> None:
+        """Put secret from a file.
+        """
         mode = "r"
         if binary_mode:
             mode = "rb"
@@ -112,4 +131,4 @@ def get_manager() -> NamedTuple:
     """
     config_mgr = ConfigManager()
     secret_mgr = SecretManager()
-    return _Manager(config=config_mgr, secret=secret_mgr)
+    return Manager(config=config_mgr, secret=secret_mgr)

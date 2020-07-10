@@ -1,11 +1,11 @@
 import os
 
-from .couchbase import (  # noqa
+from .couchbase import (  # noqa: F401
     render_couchbase_properties,
     sync_couchbase_truststore,
 )
-from .hybrid import render_hybrid_properties  # noqa
-from .ldap import (  # noqa
+from .hybrid import render_hybrid_properties  # noqa: F401
+from .ldap import (  # noqa: F401
     render_ldap_properties,
     sync_ldap_truststore,
 )

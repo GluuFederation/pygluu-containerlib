@@ -1,11 +1,8 @@
 import base64
 import contextlib
-import logging
 from typing import AnyStr
 
 import vintage
-
-logger = logging.getLogger(__name__)
 
 try:
     # try with faster implementation

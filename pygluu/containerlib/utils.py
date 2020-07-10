@@ -16,8 +16,8 @@ from typing import (
 
 from ldap3.utils import hashed
 
-from ._crypto import encode_text  # noqa
-from ._crypto import decode_text  # noqa
+from ._crypto import encode_text  # noqa: F401
+from ._crypto import decode_text  # noqa: F401
 
 # Default charset
 _DEFAULT_CHARS = "".join([string.ascii_letters, string.digits])
@@ -58,23 +58,40 @@ def safe_value(value: Any) -> str:
     return value
 
 
-def get_random_chars(size: int = 12, chars: str = _DEFAULT_CHARS) -> str:
+def get_random_chars(size: int = 12, chars: str = "") -> str:
     """Generate random characters.
+
+    If character set is not provided, the default set (consists of digits and ASCII letters)
+    will be used instead.
+
+    Example:
+
+    .. code-block:: python
+
+        from pygluu.containerlib.utils import get_random_chars
+
+        get_random_chars()
+
+        get_random_chars(5)
+
+        get_random_chars(5, chars="abcde12345")
 
     :param size: The number of generated character.
     :param chars: Character set to lookup to.
     :return: A random string.
     """
+    chars = chars or _DEFAULT_CHARS
     return "".join(random.choices(chars, k=size))
 
 
-def get_sys_random_chars(size: int = 12, chars: str = _DEFAULT_CHARS) -> str:
+def get_sys_random_chars(size: int = 12, chars: str = "") -> str:
     """Generate random characters based on OS.
 
     :param size: The number of generated character.
     :param chars: Character set to lookup to.
     :return: A random string.
     """
+    chars = chars or _DEFAULT_CHARS
     return "".join(random.SystemRandom().choices(chars, k=size))
 
 

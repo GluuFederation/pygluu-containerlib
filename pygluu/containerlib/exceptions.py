@@ -1,2 +1,0 @@
-class WaitError(Exception):
-    pass
