@@ -11,9 +11,13 @@ Vault
 
 .. autoclass:: pygluu.containerlib.secret.vault_secret.VaultSecret
     :members:
+    :private-members:
+    :undoc-members:
 
 Kubernetes
 ==========
 
 .. autoclass:: pygluu.containerlib.secret.kubernetes_secret.KubernetesSecret
     :members:
+    :private-members:
+    :undoc-members:

@@ -1,3 +1,10 @@
+"""
+pygluu.containerlib.utils
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This module contains various helpers.
+"""
+
 import base64
 import json
 import pathlib
@@ -15,9 +22,6 @@ from typing import (
 )
 
 from ldap3.utils import hashed
-
-from ._crypto import encode_text  # noqa: F401
-from ._crypto import decode_text  # noqa: F401
 
 # Default charset
 _DEFAULT_CHARS = "".join([string.ascii_letters, string.digits])
@@ -67,12 +71,6 @@ def get_random_chars(size: int = 12, chars: str = "") -> str:
     Example:
 
     .. code-block:: python
-
-        from pygluu.containerlib.utils import get_random_chars
-
-        get_random_chars()
-
-        get_random_chars(5)
 
         get_random_chars(5, chars="abcde12345")
 
@@ -212,3 +210,55 @@ def anystr_to_bytes(val: AnyStr) -> bytes:
     if isinstance(val, str):
         val = val.encode()
     return val
+
+
+def encode_text(text: AnyStr, key: AnyStr) -> bytes:
+    """Encode text using triple DES and ECB mode.
+
+    There are 2 underlying libraries used behind the scene:
+
+    1. pyDes (deprecated implementation -- preserved as fallback)
+    2. cryptography (faster implementation -- recommended)
+
+    To use the latter, ``cryptography`` package must be installed first.
+
+    .. code-block:: python
+
+        # output: b'OdiOLVWUv7f8OzfNsuB5Fg=='
+        encode_text("secret text", "a" * 24)
+
+    :params text: Plain text (``str`` or ``bytes``) need to be encoded.
+    :params key: Key used for encoding salt.
+    :returns: Encoded ``bytes`` text.
+    """
+    try:
+        from ._crypto import CryptographyHelper as helper
+    except ImportError:
+        from ._crypto import PydesHelper as helper
+    return helper.encode_text(text, key)
+
+
+def decode_text(text: AnyStr, key: AnyStr) -> bytes:
+    """Decode text using triple DES and ECB mode.
+
+    There are 2 underlying libraries used behind the scene:
+
+    1. pyDes (deprecated implementation -- preserved as fallback)
+    2. cryptography (faster implementation -- recommended)
+
+    To use the latter, ``cryptography`` package must be installed first.
+
+    .. code-block:: python
+
+        # output: b'secret text'
+        decode_text(b'OdiOLVWUv7f8OzfNsuB5Fg==', "a" * 24)
+
+    :params text: Encoded text (``str`` or ``bytes``) need to be decoded.
+    :params key: Key used for decoding salt.
+    :returns: Decoded ``bytes`` text.
+    """
+    try:
+        from ._crypto import CryptographyHelper as helper
+    except ImportError:
+        from ._crypto import PydesHelper as helper
+    return helper.decode_text(text, key)

@@ -8,7 +8,9 @@ Kubernetes Secret.
 
 import base64
 import os
-from typing import Any
+from typing import (
+    Any,
+)
 
 import kubernetes.client
 import kubernetes.config
@@ -21,6 +23,15 @@ from ..utils import (
 
 
 class KubernetesSecret(BaseSecret):
+    """This class interacts with Kubernetes Secret backend.
+
+    The following environment variables are used to instantiate the client:
+
+    - ``GLUU_SECRET_KUBERNETES_NAMESPACE``
+    - ``GLUU_SECRET_KUBERNETES_SECRET``
+    - ``GLUU_SECRET_KUBERNETES_USE_KUBE_CONFIG``
+    """
+
     def __init__(self):
         self.settings = {
             k: v
@@ -41,6 +52,8 @@ class KubernetesSecret(BaseSecret):
 
     @property
     def client(self):
+        """Lazy-loaded client to interact with Kubernetes API.
+        """
         if not self._client:
             if as_boolean(self.settings["GLUU_SECRET_KUBERNETES_USE_KUBE_CONFIG"]):
                 kubernetes.config.load_kube_config(self.kubeconfig_file)
@@ -49,12 +62,19 @@ class KubernetesSecret(BaseSecret):
             self._client = kubernetes.client.CoreV1Api()
         return self._client
 
-    def get(self, key, default=None):
+    def get(self, key, default: Any = None) -> Any:
+        """Get value based on given key.
+
+        :params key: Key name.
+        :params default: Default value if key is not exist.
+        :returns: Value based on given key or default one.
+        """
         result = self.all()
         return result.get(key) or default
 
     def _prepare_secret(self) -> None:
-        # create a secret name if not exist
+        """Create a secret name if not exist.
+        """
         if not self.name_exists:
             try:
                 self.client.read_namespaced_secret(
@@ -82,6 +102,12 @@ class KubernetesSecret(BaseSecret):
                     raise
 
     def set(self, key: str, value: Any) -> bool:
+        """Set key with given value.
+
+        :params key: Key name.
+        :params value: Value of the key.
+        :returns: A ``bool`` to mark whether config is set or not.
+        """
         self._prepare_secret()
         body = {
             "kind": "Secret",
@@ -97,6 +123,10 @@ class KubernetesSecret(BaseSecret):
         return bool(ret)
 
     def all(self):
+        """Get all key-value pairs.
+
+        :returns: A ``dict`` of key-value pairs (if any).
+        """
         self._prepare_secret()
         result = self.client.read_namespaced_secret(
             self.settings["GLUU_SECRET_KUBERNETES_SECRET"],

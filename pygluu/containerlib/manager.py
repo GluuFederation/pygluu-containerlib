@@ -1,6 +1,14 @@
+"""
+pygluu.containerlib.manager
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This module contains config and secret helpers.
+"""
+
 import os
 from collections import namedtuple
 from typing import (
+    Any,
     AnyStr,
     NamedTuple,
 )
@@ -18,19 +26,14 @@ from .utils import (
     encode_text,
 )
 
-#: Object as a placeholder of config and secret manager.
-#: This object is not intended for direct use, use ``get_manager``
-#: function instead.
-Manager = namedtuple("Manager", ["config", "secret"])
 
-
-class ConfigManager(object):
+class ConfigManager:
     """This class acts as a proxy to specific config adapter class.
 
     Supported config adapter class:
 
-    - ConsulConfig
-    - KubernetesConfig
+    - :class:`~pygluu.containerlib.config.consul_config.ConsulConfig`
+    - :class:`~pygluu.containerlib.config.kubernetes_config.KubernetesConfig`
     """
     def __init__(self):
         _adapter = os.environ.get("GLUU_CONFIG_ADAPTER", "consul",)
@@ -41,23 +44,39 @@ class ConfigManager(object):
         else:
             self.adapter = None
 
-    def get(self, key, default=None):
+    def get(self, key: str, default: Any = None) -> Any:
+        """Get value based on given key.
+
+        :params key: Key name.
+        :params default: Default value if key is not exist.
+        :returns: Value based on given key or default one.
+        """
         return self.adapter.get(key, default)
 
-    def set(self, key, value):
+    def set(self, key: str, value: Any) -> bool:
+        """Set key with given value.
+
+        :params key: Key name.
+        :params value: Value of the key.
+        :returns: A ``bool`` to mark whether config is set or not.
+        """
         return self.adapter.set(key, value)
 
-    def all(self):
+    def all(self) -> dict:
+        """Get all key-value pairs.
+
+        :returns: A ``dict`` of key-value pairs (if any).
+        """
         return {k: v for k, v in self.adapter.all().items()}
 
 
-class SecretManager(object):
+class SecretManager:
     """This class acts as a proxy to specific secret adapter class.
 
     Supported secret adapter class:
 
-    - VaultSecret
-    - KubernetesSecret
+    - :class:`~pygluu.containerlib.secret.vault_secret.VaultSecret`
+    - :class:`~pygluu.containerlib.secret.kubernetes_secret.KubernetesSecret`
     """
 
     def __init__(self):
@@ -69,19 +88,59 @@ class SecretManager(object):
         else:
             self.adapter = None
 
-    def get(self, key, default=None):
+    def get(self, key: str, default: Any = None) -> Any:
+        """Get value based on given key.
+
+        :params key: Key name.
+        :params default: Default value if key is not exist.
+        :returns: Value based on given key or default one.
+        """
         return self.adapter.get(key, default)
 
-    def set(self, key, value):
+    def set(self, key: str, value: Any) -> bool:
+        """Set key with given value.
+
+        :params key: Key name.
+        :params value: Value of the key.
+        :returns: A ``bool`` to mark whether config is set or not.
+        """
         return self.adapter.set(key, value)
 
-    def all(self):
+    def all(self) -> dict:
+        """Get all key-value pairs.
+
+        :returns: A ``dict`` of key-value pairs (if any).
+        """
         return self.adapter.all()
 
     def to_file(
         self, key: str, dest: str, decode: bool = False, binary_mode: bool = False
     ) -> AnyStr:
         """Pull secret and write to a file.
+
+        Example:
+
+        .. code-block:: python
+
+            # assuming there is secret with key ``server_cert`` that stores
+            # server cert needed to be fetched as ``/etc/certs/server.crt``
+            # file.
+            SecretManager().to_file("server_cert", "/etc/certs/server.crt")
+
+            # assuming there is secret with key ``server_jks`` that stores
+            # server keystore needed to be fetched as ``/etc/certs/server.jks``
+            # file.
+            SecretManager().to_file(
+                "server_jks",
+                "/etc/certs/server.jks",
+                decode=True,
+                binary_mode=True,
+            )
+
+        :params key: Key name in secret backend.
+        :params dest: Absolute path to file to write the secret to.
+        :params decode: Decode the content of the secret.
+        :params binary_mode: Write the file as binary.
         """
         mode = "w"
         if binary_mode:
@@ -108,6 +167,28 @@ class SecretManager(object):
         self, key: str, src: str, encode: bool = False, binary_mode: bool = False
     ) -> None:
         """Put secret from a file.
+
+        Example:
+
+        .. code-block:: python
+
+            # assuming there is file ``/etc/certs/server.crt`` need to be save
+            # as ``server_crt`` secret.
+            SecretManager().from_file("server_cert", "/etc/certs/server.crt")
+
+            # assuming there is file ``/etc/certs/server.jks`` need to be save
+            # as ``server_jks`` secret.
+            SecretManager().from_file(
+                "server_jks",
+                "/etc/certs/server.jks",
+                encode=True,
+                binary_mode=True,
+            )
+
+        :params key: Key name in secret backend.
+        :params src: Absolute path to file to read the secret from.
+        :params encode: Encode the content of the file.
+        :params binary_mode: Read the file as binary.
         """
         mode = "r"
         if binary_mode:
@@ -126,9 +207,18 @@ class SecretManager(object):
         self.adapter.set(key, value)
 
 
+#: Object as a placeholder of config and secret manager.
+#: This object is not intended for direct use, use ``get_manager``
+#: function instead.
+_Manager = namedtuple("_Manager", ["config", "secret"])
+
+
 def get_manager() -> NamedTuple:
-    """Convenient function to get manager instances.
+    """Convenient function to get config and secret manager instances.
+
+    :returns: A ``namedtuple`` consists of :class:`~pygluu.containerlib.manager.ConfigManager`
+              and :class:`~pygluu.containerlib.manager.SecretManager` instances.
     """
     config_mgr = ConfigManager()
     secret_mgr = SecretManager()
-    return Manager(config=config_mgr, secret=secret_mgr)
+    return _Manager(config=config_mgr, secret=secret_mgr)

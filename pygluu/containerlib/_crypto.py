@@ -2,7 +2,6 @@ import base64
 import contextlib
 from typing import AnyStr
 
-import vintage
 
 try:
     # try with faster implementation
@@ -53,35 +52,30 @@ try:
             # decrypt the encrypted text
             return unpadder.update(padded_data) + unpadder.finalize()
 
-    # shortcuts
-    encode_text = CryptographyHelper.encode_text
-    decode_text = CryptographyHelper.decode_text
-
 except ImportError:
     # fallback to default implementation
+    import warnings
     import pyDes
 
     class PydesHelper:
-        @vintage.deprecated(
-            "Please install cryptography package "
-            "and use CryptographyHelper.encode_text for faster execution."
-        )
         @classmethod
         def encode_text(cls, text: AnyStr, key: AnyStr) -> bytes:
+            warnings.warn(
+                "Using slow implementation based on pyDes. "
+                "Please install cryptography package and "
+                "use CryptographyHelper.encode_text instead."
+            )
             cipher = pyDes.triple_des(key, pyDes.ECB, padmode=pyDes.PAD_PKCS5)
             encrypted_text = cipher.encrypt(text)
             return base64.b64encode(encrypted_text)
 
-        @vintage.deprecated(
-            "Please install cryptography package "
-            "and use CryptographyHelper.decode_text for faster execution."
-        )
         @classmethod
         def decode_text(cls, encoded_text: AnyStr, key: AnyStr) -> bytes:
+            warnings.warn(
+                "Using slow implementation based on pyDes. "
+                "Please install cryptography package and "
+                "use CryptographyHelper.decode_text instead."
+            )
             text = base64.b64decode(encoded_text)
             cipher = pyDes.triple_des(key, pyDes.ECB, padmode=pyDes.PAD_PKCS5)
             return cipher.decrypt(text)
-
-    # shortcuts
-    encode_text = PydesHelper.encode_text
-    decode_text = PydesHelper.decode_text

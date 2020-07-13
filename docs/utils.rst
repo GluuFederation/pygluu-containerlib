@@ -26,3 +26,7 @@ Utilities
 .. autofunction:: ldap_encode
 
 .. autofunction:: anystr_to_bytes
+
+.. autofunction:: encode_text
+
+.. autofunction:: decode_text

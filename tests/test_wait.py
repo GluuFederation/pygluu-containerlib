@@ -17,9 +17,9 @@ def test_get_wait_max_time(value, expected):
 
 
 @pytest.mark.parametrize("value, expected", [
-    (10, 10),
+    (5, 5),
     (0, 1),
-    ("not_integer", 5),
+    ("not_integer", 10),
 ])
 def test_get_wait_interval(value, expected):
     from pygluu.containerlib.wait import get_wait_interval

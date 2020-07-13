@@ -13,4 +13,6 @@ Manager
     :private-members:
     :undoc-members:
 
+.. autodata:: pygluu.containerlib.manager._Manager
+
 .. autofunction:: get_manager

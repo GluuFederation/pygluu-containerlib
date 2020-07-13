@@ -7,11 +7,7 @@ Kubernetes ConfigMap.
 """
 
 import os
-from typing import (
-    Any,
-    Dict,
-    Optional,
-)
+from typing import Any
 
 import kubernetes.client
 import kubernetes.config
@@ -24,6 +20,15 @@ from ..utils import (
 
 
 class KubernetesConfig(BaseConfig):
+    """This class interacts with Kubernetes ConfigMap backend.
+
+    The following environment variables are used to instantiate the client:
+
+    - ``GLUU_CONFIG_KUBERNETES_NAMESPACE``
+    - ``GLUU_CONFIG_KUBERNETES_CONFIGMAP``
+    - ``GLUU_CONFIG_KUBERNETES_USE_KUBE_CONFIG``
+    """
+
     def __init__(self):
         self.settings = {
             k: v
@@ -44,7 +49,13 @@ class KubernetesConfig(BaseConfig):
         self.name_exists = False
         self.kubeconfig_file = os.path.expanduser("~/.kube/config")
 
-    def get(self, key: str, default: Optional[Any] = None) -> str:
+    def get(self, key: str, default: Any = None) -> Any:
+        """Get value based on given key.
+
+        :params key: Key name.
+        :params default: Default value if key is not exist.
+        :returns: Value based on given key or default one.
+        """
         result = self.all()
         return result.get(key, default)
 
@@ -61,7 +72,8 @@ class KubernetesConfig(BaseConfig):
         return self._client
 
     def _prepare_configmap(self) -> None:
-        # create a configmap name if not exist
+        """Create a configmap name if not exist.
+        """
         if not self.name_exists:
             try:
                 self.client.read_namespaced_config_map(
@@ -89,6 +101,12 @@ class KubernetesConfig(BaseConfig):
                     raise
 
     def set(self, key: str, value: Any) -> bool:
+        """Set key with given value.
+
+        :params key: Key name.
+        :params value: Value of the key.
+        :returns: A ``bool`` to mark whether config is set or not.
+        """
         self._prepare_configmap()
         body = {
             "kind": "ConfigMap",
@@ -103,7 +121,11 @@ class KubernetesConfig(BaseConfig):
         )
         return bool(ret)
 
-    def all(self) -> Dict[str, str]:
+    def all(self) -> dict:
+        """Get all key-value pairs.
+
+        :returns: A ``dict`` of key-value pairs (if any).
+        """
         self._prepare_configmap()
         result = self.client.read_namespaced_config_map(
             self.settings["GLUU_CONFIG_KUBERNETES_CONFIGMAP"],

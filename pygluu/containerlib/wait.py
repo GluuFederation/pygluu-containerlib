@@ -2,14 +2,13 @@
 pygluu.containerlib.wait
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-This module blablabla.
+This module consists of startup order utilities.
 """
 
 import json
 import logging
 import os
 import sys
-from typing import Dict
 
 import backoff
 import ldap3
@@ -30,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 class WaitError(Exception):
-    """Class to mark error while running ``wait_for`` functions.
+    """Class to mark error while running ``wait_for_*`` functions.
     """
     pass
 
@@ -64,7 +63,7 @@ def get_wait_max_time() -> int:
 def get_wait_interval() -> int:
     """Get interval time between each execution of ``wait_for`` function.
 
-    Default interval time is 5 seconds. To change the value, pass
+    Default interval time is 10 seconds. To change the value, pass
     `GLUU_WAIT_SLEEP_DURATION` environment variable.
 
     .. code-block:: python
@@ -80,7 +79,7 @@ def get_wait_interval() -> int:
         wait_for_config(manager)
 
     """
-    default = 5
+    default = 10
     try:
         interval = int(os.environ.get("GLUU_WAIT_SLEEP_DURATION", default))
     except ValueError:
@@ -88,7 +87,7 @@ def get_wait_interval() -> int:
     return max(1, interval)
 
 
-def on_backoff(details: Dict):
+def on_backoff(details: dict):
     details["error"] = sys.exc_info()[1]
     details["kwargs"]["label"] = details["kwargs"].pop("label", "Service")
     logger.warning(
@@ -97,12 +96,12 @@ def on_backoff(details: Dict):
     )
 
 
-def on_success(details: Dict):
+def on_success(details: dict):
     details["kwargs"]["label"] = details["kwargs"].pop("label", "Service")
     logger.info("{kwargs[label]} is ready".format(**details))
 
 
-def on_giveup(details: Dict):
+def on_giveup(details: dict):
     details["kwargs"]["label"] = details["kwargs"].pop("label", "Service")
     logger.error(
         "{kwargs[label]} is not ready after " "{elapsed:0.1f} seconds".format(**details)
@@ -135,7 +134,7 @@ def wait_for_config(manager, **kwargs):
     this function only checks its connection status; if set
     to ``False`` or omitted, this function will check config entry.
 
-    :param manager: An instance of ``pygluu.containerlib.manager.Manager``.
+    :param manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
     """
     conn_only = as_boolean(kwargs.get("conn_only", False))
     hostname = manager.config.get("hostname")
@@ -152,7 +151,7 @@ def wait_for_secret(manager, **kwargs):
     this function only checks its connection status; if set
     to ``False`` or omitted, this function will check config entry.
 
-    :param manager: An instance of ``pygluu.containerlib.manager.Manager``.
+    :param manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
     """
     conn_only = as_boolean(kwargs.get("conn_only", False))
     ssl_cert = manager.secret.get("ssl_cert")
@@ -165,7 +164,7 @@ def wait_for_secret(manager, **kwargs):
 def wait_for_ldap(manager, **kwargs):
     """Wait for readiness/availability of LDAP server based on existing entry.
 
-    :param manager: An instance of ``pygluu.containerlib.manager.Manager``.
+    :param manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
     """
     host = os.environ.get("GLUU_LDAP_URL", "localhost:1636")
     user = manager.config.get("ldap_binddn")
@@ -214,7 +213,7 @@ def wait_for_ldap(manager, **kwargs):
 def wait_for_ldap_conn(manager, **kwargs):
     """Wait for readiness/availability of LDAP server based on connection status.
 
-    :param manager: An instance of ``pygluu.containerlib.manager.Manager``.
+    :param manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
     """
     host = os.environ.get("GLUU_LDAP_URL", "localhost:1636")
     user = manager.config.get("ldap_binddn")
@@ -241,7 +240,7 @@ def wait_for_ldap_conn(manager, **kwargs):
 def wait_for_couchbase(manager, **kwargs):
     """Wait for readiness/availability of Couchbase server based on existing entry.
 
-    :param manager: An instance of ``pygluu.containerlib.manager.Manager``.
+    :param manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
     """
     host = os.environ.get("GLUU_COUCHBASE_URL", "localhost")
     user = get_couchbase_user(manager)
@@ -284,7 +283,7 @@ def wait_for_couchbase(manager, **kwargs):
 def wait_for_couchbase_conn(manager, **kwargs):
     """Wait for readiness/availability of Couchbase server based on connection status.
 
-    :param manager: An instance of ``pygluu.containerlib.manager.Manager``.
+    :param manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
     """
     host = os.environ.get("GLUU_COUCHBASE_URL", "localhost")
     user = get_couchbase_user(manager)
@@ -303,7 +302,7 @@ def wait_for_oxauth(manager, **kwargs):
 
     This function makes a request to specific URL in oxAuth.
 
-    :param manager: An instance of ``pygluu.containerlib.manager.Manager``.
+    :param manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
     """
     addr = os.environ.get("GLUU_OXAUTH_BACKEND", "localhost:8081")
     url = f"http://{addr}/oxauth/.well-known/openid-configuration"
@@ -319,7 +318,7 @@ def wait_for_oxtrust(manager, **kwargs):
 
     This function makes a request to specific URL in oxTrust.
 
-    :param manager: An instance of ``pygluu.containerlib.manager.Manager``.
+    :param manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
     """
     addr = os.environ.get("GLUU_OXTRUST_BACKEND", "localhost:8082")
     url = f"http://{addr}/identity/finishlogout.htm"
@@ -335,7 +334,7 @@ def wait_for_oxd(manager, **kwargs):
 
     This function makes a request to specific URL in oxd.
 
-    :param manager: An instance of ``pygluu.containerlib.manager.Manager``.
+    :param manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
     """
     import urllib3
 
@@ -375,7 +374,7 @@ def wait_for(manager, deps=None):
         deps = ["config", "secret", "ldap"]
         wait_for(manager, deps)
 
-    :param manager: An instance of ``pygluu.containerlib.manager.Manager``.
+    :param manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
     :param deps: An iterable of dependencies to check.
     """
     deps = deps or []

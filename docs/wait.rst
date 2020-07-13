@@ -3,18 +3,10 @@ Wait
 
 .. module:: pygluu.containerlib.wait
 
-Helpers
-=======
-
-Most of the time, users may only need to run ``wait_for`` function to add readiness check. If somehow this function is not sufficient, low-level functions ``wait_for_*`` are available.
-
-High-level Helpers
-------------------
+.. note::
+    Most of the time, users may only need to run ``wait_for`` function to add readiness check. If somehow this function is not sufficient, low-level functions ``wait_for_*`` are available.
 
 .. autofunction:: wait_for
-
-Low-level Helpers
------------------
 
 .. autofunction:: wait_for_config
 
@@ -37,8 +29,5 @@ Low-level Helpers
 .. autofunction:: get_wait_max_time
 
 .. autofunction:: get_wait_interval
-
-Exceptions
-==========
 
 .. autoexception:: WaitError

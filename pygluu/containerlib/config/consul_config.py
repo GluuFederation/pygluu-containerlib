@@ -9,8 +9,8 @@ import logging
 import os
 from typing import (
     Any,
-    Dict,
-    Optional,
+    Tuple,
+    Union,
 )
 
 from consul import Consul
@@ -26,6 +26,19 @@ logger = logging.getLogger(__name__)
 
 class ConsulConfig(BaseConfig):
     """This class interacts with Consul backend.
+
+
+    The following environment variables are used to instantiate the client:
+
+    - ``GLUU_CONFIG_CONSUL_HOST``
+    - ``GLUU_CONFIG_CONSUL_PORT``
+    - ``GLUU_CONFIG_CONSUL_CONSISTENCY``
+    - ``GLUU_CONFIG_CONSUL_SCHEME``
+    - ``GLUU_CONFIG_CONSUL_VERIFY``
+    - ``GLUU_CONFIG_CONSUL_CACERT_FILE``
+    - ``GLUU_CONFIG_CONSUL_CERT_FILE``
+    - ``GLUU_CONFIG_CONSUL_KEY_FILE``
+    - ``GLUU_CONFIG_CONSUL_TOKEN_FILE``
     """
 
     def __init__(self):
@@ -94,20 +107,32 @@ class ConsulConfig(BaseConfig):
 
     def _merge_path(self, key: str) -> str:
         """Add prefix to the key.
+
+        For example, given the prefix is ``gluu/config`` and key ``random``,
+        calling this method returns ``gluu/config/random`` key.
+
+        :params key: Key name as relative path.
+        :returns: Absolute path to prefixed key.
         """
         return "".join([self.prefix, key])
 
     def _unmerge_path(self, key: str) -> str:
         """Remove prefix from the key.
+
+        For example, given the prefix is ``gluu/config`` and an absolute path
+        ``gluu/config/random``, calling this method returns ``random`` key.
+
+        :params key: Key name as relative path.
+        :returns: Relative path to key.
         """
         return key[len(self.prefix):]
 
-    def get(self, key: str, default: Optional[Any] = None) -> str:
+    def get(self, key: str, default: Any = None) -> Any:
         """Get value based on given key.
 
         :params key: Key name.
         :params default: Default value if key is not exist.
-        :returns: String of value based on given key or default value.
+        :returns: Value based on given key or default one.
         """
         _, result = self.client.kv.get(self._merge_path(key))
         if not result:
@@ -117,11 +142,17 @@ class ConsulConfig(BaseConfig):
 
     def set(self, key: str, value: Any) -> bool:
         """Set key with given value.
+
+        :params key: Key name.
+        :params value: Value of the key.
+        :returns: A ``bool`` to mark whether config is set or not.
         """
         return self.client.kv.put(self._merge_path(key), safe_value(value))
 
-    def all(self) -> Dict[str, str]:
+    def all(self) -> dict:
         """Get all key-value pairs.
+
+        :returns: A ``dict`` of key-value pairs (if any).
         """
         _, resultset = self.client.kv.get(self._merge_path(""), recurse=True)
 
@@ -134,6 +165,11 @@ class ConsulConfig(BaseConfig):
         }
 
     def _request_warning(self, scheme: str, verify: bool) -> None:
+        """Emit warning about unverified request to unsecure Consul address.
+
+        :params scheme: Scheme of Consul address.
+        :params verify: Mark whether client needs to verify the address.
+        """
         if scheme == "https" and verify is False:
             import urllib3
 
@@ -144,15 +180,29 @@ class ConsulConfig(BaseConfig):
                 "GLUU_CONFIG_CONSUL_VERIFY environment variables."
             )
 
-    def _token_from_file(self, path):
+    def _token_from_file(self, path) -> str:
+        """Get the token string from a path.
+
+        :params path: Path to file contains token string.
+        :returns: Token string.
+        """
         if not os.path.isfile(path):
-            return
+            return ""
 
         with open(path) as fr:
             token = fr.read().strip()
         return token
 
-    def _verify_cert(self, scheme, verify, cacert_file, cert_file, key_file):
+    def _verify_cert(self, scheme, verify, cacert_file, cert_file, key_file) -> Tuple[Union[None, tuple], Union[bool, str]]:
+        """Verify client cert and key.
+
+        :params scheme: Scheme of Consul address.
+        :params verify: Mark whether client needs to verify the address.
+        :params cacert_file: Path to CA cert file.
+        :params cert_file: Path to client's cert file.
+        :params key_file: Path to client's key file.
+        :returns: A pair of cert key files (if exist) and verification.
+        """
         cert = None
 
         if scheme == "https":

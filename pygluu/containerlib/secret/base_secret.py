@@ -8,7 +8,6 @@ This module contains base class for secret adapter.
 from typing import (
     Any,
     NoReturn,
-    Optional,
 )
 
 
@@ -19,23 +18,23 @@ class BaseSecret(object):
 
     type = "secret"
 
-    def get(self, key: str, default: Optional[Any] = None) -> NoReturn:
+    def get(self, key: str, default: Any = None) -> NoReturn:
         """Get specific secret.
 
-        Subclass __MUST__ implement this method.
+        Subclass **MUST** implement this method.
         """
         raise NotImplementedError
 
     def set(self, key: str, value: Any) -> NoReturn:
         """Set specific secret.
 
-        Subclass __MUST__ implement this method.
+        Subclass **MUST** implement this method.
         """
         raise NotImplementedError
 
     def all(self) -> NoReturn:
-        """Get all secrets as ``dict`` type.
+        """Get all secrets.
 
-        Subclass __MUST__ implement this method.
+        Subclass **MUST** implement this method.
         """
         raise NotImplementedError

@@ -9,8 +9,8 @@ import logging
 import os
 from typing import (
     Any,
-    Dict,
-    Optional,
+    Tuple,
+    Union,
 )
 
 import hvac
@@ -25,6 +25,21 @@ logger = logging.getLogger(__name__)
 
 
 class VaultSecret(BaseSecret):
+    """This class interacts with Vault backend.
+
+    The following environment variables are used to instantiate the client:
+
+    - ``GLUU_SECRET_VAULT_HOST``
+    - ``GLUU_SECRET_VAULT_PORT``
+    - ``GLUU_SECRET_VAULT_SCHEME``
+    - ``GLUU_SECRET_VAULT_VERIFY``
+    - ``GLUU_SECRET_VAULT_ROLE_ID_FILE``
+    - ``GLUU_SECRET_VAULT_SECRET_ID_FILE``
+    - ``GLUU_SECRET_VAULT_CERT_FILE``
+    - ``GLUU_SECRET_VAULT_KEY_FILE``
+    - ``GLUU_SECRET_VAULT_CACERT_FILE``
+    """
+
     def __init__(self):
         self.settings = {
             k: v
@@ -82,6 +97,9 @@ class VaultSecret(BaseSecret):
 
     @property
     def role_id(self):
+        """Get the Role ID from file where location is determined
+        by ``GLUU_SECRET_VAULT_ROLE_ID_FILE`` environment variable.
+        """
         try:
             with open(self.settings["GLUU_SECRET_VAULT_ROLE_ID_FILE"]) as f:
                 role_id = f.read()
@@ -91,6 +109,9 @@ class VaultSecret(BaseSecret):
 
     @property
     def secret_id(self):
+        """Get the Secret ID from file where location is determined
+        by ``GLUU_SECRET_VAULT_SECRET_ID_FILE`` environment variable.
+        """
         try:
             with open(self.settings["GLUU_SECRET_VAULT_SECRET_ID_FILE"]) as f:
                 secret_id = f.read()
@@ -99,13 +120,21 @@ class VaultSecret(BaseSecret):
         return secret_id
 
     def _authenticate(self) -> None:
+        """Authenticate client.
+        """
         if self.client.is_authenticated():
             return
 
         creds = self.client.auth_approle(self.role_id, self.secret_id, use_token=False)
         self.client.token = creds["auth"]["client_token"]
 
-    def get(self, key: str, default: Optional[Any] = None) -> str:
+    def get(self, key: str, default: Any = None) -> Any:
+        """Get value based on given key.
+
+        :params key: Key name.
+        :params default: Default value if key is not exist.
+        :returns: Value based on given key or default one.
+        """
         self._authenticate()
         sc = self.client.read("{}/{}".format(self.prefix, key))
         if not sc:
@@ -113,6 +142,12 @@ class VaultSecret(BaseSecret):
         return sc["data"]["value"]
 
     def set(self, key: str, value: Any) -> bool:
+        """Set key with given value.
+
+        :params key: Key name.
+        :params value: Value of the key.
+        :returns: A ``bool`` to mark whether config is set or not.
+        """
         self._authenticate()
         val = {"value": safe_value(value)}
 
@@ -124,7 +159,11 @@ class VaultSecret(BaseSecret):
         )
         return response.status_code == 204
 
-    def all(self) -> Dict[str, bytes]:
+    def all(self) -> dict:
+        """Get all key-value pairs.
+
+        :returns: A ``dict`` of key-value pairs (if any).
+        """
         self._authenticate()
         result = self.client.list(self.prefix)
         if not result:
@@ -132,6 +171,11 @@ class VaultSecret(BaseSecret):
         return {key: self.get(key) for key in result["data"]["keys"]}
 
     def _request_warning(self, scheme: str, verify: bool) -> None:
+        """Emit warning about unverified request to unsecure Consul address.
+
+        :params scheme: Scheme of Vault address.
+        :params verify: Mark whether client needs to verify the address.
+        """
         if scheme == "https" and verify is False:
             import urllib3
 
@@ -142,7 +186,16 @@ class VaultSecret(BaseSecret):
                 "GLUU_SECRET_VAULT_VERIFY environment variables."
             )
 
-    def _verify_cert(self, scheme, verify, cacert_file, cert_file, key_file):
+    def _verify_cert(self, scheme, verify, cacert_file, cert_file, key_file) -> Tuple[Union[None, tuple], Union[bool, str]]:
+        """Verify client cert and key.
+
+        :params scheme: Scheme of Consul address.
+        :params verify: Mark whether client needs to verify the address.
+        :params cacert_file: Path to CA cert file.
+        :params cert_file: Path to client's cert file.
+        :params key_file: Path to client's key file.
+        :returns: A pair of cert key files (if exist) and verification.
+        """
         cert = None
 
         if scheme == "https":
