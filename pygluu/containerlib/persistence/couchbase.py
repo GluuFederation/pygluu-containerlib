@@ -1,3 +1,10 @@
+"""
+pygluu.containerlib.persistence.couchbase
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This module contains various helpers related to Couchbase persistence.
+"""
+
 import logging
 import os
 from functools import partial

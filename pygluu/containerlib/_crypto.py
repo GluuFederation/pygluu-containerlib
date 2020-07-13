@@ -52,7 +52,7 @@ try:
             # decrypt the encrypted text
             return unpadder.update(padded_data) + unpadder.finalize()
 
-except ImportError:
+except ImportError:  # pragma: no cover
     # fallback to default implementation
     import warnings
     import pyDes

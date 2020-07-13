@@ -2,7 +2,7 @@
 pygluu.containerlib.meta.docker_meta
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This module class to interact with Docker API.
+This module consists of class to interact with Docker API.
 """
 
 import contextlib

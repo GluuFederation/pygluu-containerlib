@@ -1,3 +1,10 @@
+"""
+pygluu.containerlib.persistence.hybrid
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This module contains various helpers related to hybrid (LDAP + Couchbase) persistence.
+"""
+
 import os
 
 from .couchbase import get_couchbase_mappings

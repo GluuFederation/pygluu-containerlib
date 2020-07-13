@@ -1,3 +1,10 @@
+"""
+pygluu.containerlib.persistence.ldap
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This module contains various helpers related to LDAP persistence.
+"""
+
 import os
 
 

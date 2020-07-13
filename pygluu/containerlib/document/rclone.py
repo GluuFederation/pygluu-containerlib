@@ -1,3 +1,10 @@
+"""
+pygluu.containerlib.document.rclone
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This module consists of class to interact with RClone.
+"""
+
 import logging
 import os
 
