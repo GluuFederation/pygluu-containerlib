@@ -8,7 +8,7 @@ This module contains various helpers related to Couchbase persistence.
 import logging
 import os
 from functools import partial
-from typing import Dict
+from typing import NoReturn
 
 import requests
 
@@ -24,10 +24,25 @@ logger = logging.getLogger(__name__)
 
 
 def get_couchbase_user(manager=None) -> str:
+    """Get Couchbase username from ``GLUU_COUCHBASE_USER``
+    environment variable (default to ``admin``).
+
+    :params manager: A no-op argument, preserved for backward compatibility.
+    :returns: Couchbase username.
+    """
     return os.environ.get("GLUU_COUCHBASE_USER", "admin")
 
 
 def get_couchbase_password(manager, plaintext: bool = True) -> str:
+    """Get Couchbase user's password from file (default to
+    ``/etc/gluu/conf/couchbase_password``).
+
+    To change the location, simply pass ``GLUU_COUCHBASE_PASSWORD_FILE`` environment variable.
+
+    :params manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
+    :params plaintext: Whether to return plaintext or encoded password.
+    :returns: Plaintext or encoded password.
+    """
     password_file = os.environ.get(
         "GLUU_COUCHBASE_PASSWORD_FILE", "/etc/gluu/conf/couchbase_password"
     )
@@ -39,10 +54,34 @@ def get_couchbase_password(manager, plaintext: bool = True) -> str:
         return password
 
 
+#: Get Couchbase user's encoded password from file.
+#:
+#: This is a shortcut of :func:`get_couchbase_password` with ``plaintext``
+#: argument set as ``False``.
 get_encoded_couchbase_password = partial(get_couchbase_password, plaintext=False)
 
 
-def get_couchbase_mappings(persistence_type: str, ldap_mapping: str) -> Dict[str, str]:
+def get_couchbase_mappings(persistence_type: str, ldap_mapping: str) -> dict:
+    """Get mappings of Couchbase buckets.
+
+    Supported persistence types:
+
+    - ``ldap``
+    - ``couchbase``
+    - ``hybrid``
+
+    Supported LDAP mappings:
+
+    - ``default``
+    - ``user``
+    - ``token``
+    - ``site``
+    - ``cache``
+
+    :params persistence_type: Type of persistence.
+    :params ldap_mapping: Mapping that stored in LDAP persistence.
+    :returns: A map of Couchbase buckets.
+    """
     if persistence_type == "hybrid":
         return {
             name: mapping
@@ -53,6 +92,13 @@ def get_couchbase_mappings(persistence_type: str, ldap_mapping: str) -> Dict[str
 
 
 def get_couchbase_conn_timeout() -> int:
+    """Get connection timeout to Couchbase server.
+
+    Default connection timeout is 10000  milliseconds. To change the value, pass
+    `GLUU_COUCHBASE_CONN_TIMEOUT` environment variable.
+
+    :returns: Connection timeout (in milliseconds).
+    """
     default = 10000
 
     try:
@@ -63,6 +109,13 @@ def get_couchbase_conn_timeout() -> int:
 
 
 def get_couchbase_conn_max_wait() -> int:
+    """Get connection maximum wait time to Couchbase server.
+
+    Default time is 20000  milliseconds. To change the value, pass
+    `GLUU_COUCHBASE_CONN_MAX_WAIT` environment variable.
+
+    :returns: Connection wait time (in milliseconds).
+    """
     default = 20000
 
     try:
@@ -73,6 +126,16 @@ def get_couchbase_conn_max_wait() -> int:
 
 
 def get_couchbase_scan_consistency() -> str:
+    """Get scan consistency of Couchbase connection.
+
+    Supported types:
+
+    - ``not_bounded`` (default)
+    - ``request_plus``
+    - ``statement_plus``
+
+    :returns: Scan consistency type.
+    """
     opts = ("not_bounded", "request_plus", "statement_plus")
     default = "not_bounded"
     opt = os.environ.get("GLUU_COUCHBASE_SCAN_CONSISTENCY", default)
@@ -82,6 +145,13 @@ def get_couchbase_scan_consistency() -> str:
 
 
 def render_couchbase_properties(manager, src: str, dest: str) -> None:
+    """Render file contains properties to connect to Couchbase server,
+    i.e. ``/etc/gluu/conf/gluu-couchbase.properties``.
+
+    :params manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
+    :params src: Absolute path to the template.
+    :params dest: Absolute path where generated file is located.
+    """
     persistence_type = os.environ.get("GLUU_PERSISTENCE_TYPE", "couchbase")
     ldap_mapping = os.environ.get("GLUU_PERSISTENCE_LDAP_MAPPING", "default")
     hostname = os.environ.get("GLUU_COUCHBASE_URL", "localhost")
@@ -129,6 +199,7 @@ def render_couchbase_properties(manager, src: str, dest: str) -> None:
             fw.write(rendered_txt)
 
 
+# DEPRECATED
 def sync_couchbase_cert(manager=None) -> str:
     cert_file = os.environ.get("GLUU_COUCHBASE_CERT_FILE", "/etc/certs/couchbase.crt")
     with open(cert_file) as f:
@@ -136,6 +207,12 @@ def sync_couchbase_cert(manager=None) -> str:
 
 
 def sync_couchbase_truststore(manager, dest: str = "") -> None:
+    """Pull secret contains base64-string contents of Couchbase truststore,
+    and save it as a JKS file, i.e. ``/etc/certs/couchbase.pkcs12``.
+
+    :params manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
+    :params dest: Absolute path where generated file is located.
+    """
     cert_file = os.environ.get("GLUU_COUCHBASE_CERT_FILE", "/etc/certs/couchbase.crt")
     dest = dest or manager.config.get("couchbaseTrustStoreFn")
     cert_to_truststore(
@@ -143,14 +220,21 @@ def sync_couchbase_truststore(manager, dest: str = "") -> None:
     )
 
 
-class BaseClient(object):
+class BaseClient:
+    """A base class for API client.
+    """
+
     def __init__(self, hosts, user, password):
         self._hosts = hosts
         self.host = None
         self.user = user
         self.password = password
 
-    def resolve_host(self):
+    def resolve_host(self) -> str:
+        """Get active/ready host from a list of servers.
+
+        :returns: Hostname or IP address.
+        """
         hosts = filter(None, map(lambda host: host.strip(), self._hosts.split(",")))
 
         for _host in hosts:
@@ -172,17 +256,34 @@ class BaseClient(object):
                     )
                 )
 
-    def healthcheck(self, host):
+    def healthcheck(self, host) -> NoReturn:
+        """Run healthcheck to a host.
+
+        Subclass **MUST** implement this method.
+        """
         raise NotImplementedError
 
-    def exec_api(self, path, **kwargs):
+    def exec_api(self, path, **kwargs) -> NoReturn:
+        """Execute a request to an API server.
+
+        Subclass **MUST** implement this method.
+        """
         raise NotImplementedError
 
 
 class N1qlClient(BaseClient):
+    """This class interacts with N1QL server (part of Couchbase).
+    """
+
+    #: Port where N1QL server is bind.
     port = 18093
 
     def healthcheck(self, host):
+        """Run healthcheck to a host.
+
+        :params host: Hostname or IP address.
+        :returns: An instance of ``requests.models.Response``.
+        """
         import urllib3
 
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -196,6 +297,12 @@ class N1qlClient(BaseClient):
         )
 
     def exec_api(self, path, **kwargs):
+        """Execute a request to REST server.
+
+        :params path: Path (or sub-URL) of API server.
+        :params kwargs: Keyword-argument passed to ``requests.api.*`` function.
+        :returns: An instance of ``requests.models.Response``.
+        """
         data = kwargs.get("data", {})
         verify = kwargs.get("verify", False)
 
@@ -209,9 +316,18 @@ class N1qlClient(BaseClient):
 
 
 class RestClient(BaseClient):
+    """This class interacts with REST server (part of Couchbase).
+    """
+
+    #: Port where REST server is bind.
     port = 18091
 
     def healthcheck(self, host):
+        """Run healthcheck to a host.
+
+        :params host: Hostname or IP address.
+        :returns: An instance of ``requests.models.Response``.
+        """
         import urllib3
 
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -224,6 +340,12 @@ class RestClient(BaseClient):
         )
 
     def exec_api(self, path, **kwargs):
+        """Execute a request to REST server.
+
+        :params path: Path (or sub-URL) of API server.
+        :params kwargs: Keyword-argument passed to ``requests.api.*`` function.
+        :returns: An instance of ``requests.models.Response``.
+        """
         data = kwargs.get("data", {})
         verify = kwargs.get("verify", False)
         method = kwargs.get("method")
@@ -246,6 +368,9 @@ class RestClient(BaseClient):
 
 
 class CouchbaseClient:
+    """This class interacts with Couchbase server.
+    """
+
     def __init__(self, hosts, user, password):
         self.rest_client = RestClient(hosts, user, password)
         self.rest_client.resolve_host()
@@ -260,9 +385,20 @@ class CouchbaseClient:
         ), "Unable to resolve host for query service from {} list".format(hosts)
 
     def get_buckets(self):
+        """Get all buckets.
+
+        :returns: An instance of ``requests.models.Response``.
+        """
         return self.rest_client.exec_api("pools/default/buckets", method="GET",)
 
-    def add_bucket(self, name, memsize=100, type_="couchbase"):
+    def add_bucket(self, name: str, memsize: int = 100, type_: str = "couchbase"):
+        """Add new bucket.
+
+        :params name: Bucket's name.
+        :params memsize: Desired memory size of the bucket.
+        :params type\\_: Bucket's type.
+        :returns: An instance of ``requests.models.Response``.
+        """
         return self.rest_client.exec_api(
             "pools/default/buckets",
             data={
@@ -274,7 +410,11 @@ class CouchbaseClient:
             method="POST",
         )
 
-    def get_system_info(self):
+    def get_system_info(self) -> dict:
+        """Get system info of Couchbase server.
+
+        :returns: A ``dict`` of system information retrieved from Couchbase server.
+        """
         sys_info = {}
         resp = self.rest_client.exec_api("pools/default", method="GET",)
 
@@ -282,7 +422,12 @@ class CouchbaseClient:
             sys_info = resp.json()
         return sys_info
 
-    def exec_query(self, query):
+    def exec_query(self, query: str):
+        """Execute N1QL query.
+
+        :params query: N1QL query string.
+        :returns: An instance of ``requests.models.Response``.
+        """
         data = {"statement": query}
         return self.n1ql_client.exec_api("query/service", data=data)
 

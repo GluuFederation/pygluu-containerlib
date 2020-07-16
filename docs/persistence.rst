@@ -27,6 +27,8 @@ Couchbase
 
 .. autofunction:: get_couchbase_password
 
+.. autodata:: get_encoded_couchbase_password
+
 .. autofunction:: get_couchbase_mappings
 
 .. autofunction:: get_couchbase_conn_timeout
@@ -35,9 +37,12 @@ Couchbase
 
 .. autofunction:: get_couchbase_scan_consistency
 
-.. autofunction:: sync_couchbase_cert
-
 .. autofunction:: sync_couchbase_truststore
+
+.. autoclass:: BaseClient
+    :members:
+    :private-members:
+    :undoc-members:
 
 .. autoclass:: RestClient
     :members:

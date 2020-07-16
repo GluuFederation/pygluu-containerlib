@@ -51,6 +51,8 @@ def get_wait_max_time() -> int:
 
         manager = get_manager()
         wait_for_config(manager)
+
+    :returns: Wait maximum time (in seconds).
     """
     default = 60 * 5
     try:
@@ -78,6 +80,7 @@ def get_wait_interval() -> int:
         manager = get_manager()
         wait_for_config(manager)
 
+    :returns: Wait interval (in seconds).
     """
     default = 10
     try:
