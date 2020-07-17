@@ -2,6 +2,26 @@
 
 Here you can see an overview of changes between each release.
 
+## Version 2.0.0
+
+Released on July 18th, 2020.
+
+* Support for Python 3.6 and above.
+* Dropped support for Python 2.
+* Added meta clients to interact with Docker and Kubernetes API.
+* Added support for cryptography library as a drop-in replacement for pyDes.
+* Deprecated pyDes-based encode/decode text utilities (preserved as backward-compat only).
+* Added RClone client to interact with Jackrabbit WebDAV.
+* Added support for Gluu Server v4.2.
+* Added internal docs based on sphinx.
+
+## Version 1.1.0
+
+Released on May 11th, 2020.
+
+* Removed unused Couchbase config and/or secret.
+* Added environment variables for Couchbase connection timeout, connection max wait, and scan consistency.
+
 ## Version 1.0.0
 
 Released on November 20th, 2019.
