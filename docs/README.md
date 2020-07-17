@@ -1,6 +1,9 @@
+Building Documentation
+======================
+
 To build the documentation:
 
-    pip3 install sphinx
-    make html
-    cd _build/html
-    python3 -m http.server 8000
+    pip3 install sphinx sphinx-autobuild
+    sphinx-autobuild . _build/html/
+
+Visit `http://localhost:8000` in the browser.
