@@ -42,7 +42,7 @@ class RClone:
         :params remote: Remote path.
         :params local: Local path.
         """
-        cmd = f"rclone copy jackrabbit:{remote} {local} --create-empty-src-dirs"
+        cmd = f"rclone copy jackrabbit:{remote} {local} --create-empty-src-dirs --ignore-size"
         _, err, code = exec_cmd(cmd)
 
         if code != 0:
@@ -57,7 +57,7 @@ class RClone:
         :params remote: Remote path.
         :params local: Local path.
         """
-        cmd = f"rclone copy {local} jackrabbit:{remote} --create-empty-src-dirs"
+        cmd = f"rclone copy {local} jackrabbit:{remote} --create-empty-src-dirs --ignore-size"
         _, err, code = exec_cmd(cmd)
 
         if code != 0:
