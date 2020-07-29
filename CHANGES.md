@@ -2,6 +2,12 @@
 
 Here you can see an overview of changes between each release.
 
+## Version 2.0.1
+
+Released on July 30th, 2020.
+
+* Fixed uploading/downloading files with certain extensions using RClone wrapper. Reference: https://github.com/GluuFederation/pygluu-containerlib/issues/11.
+
 ## Version 2.0.0
 
 Released on July 18th, 2020.
