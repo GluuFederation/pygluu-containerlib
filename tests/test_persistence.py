@@ -217,7 +217,7 @@ def test_render_hybrid_properties_default(tmpdir):
 storages: ldap, couchbase
 storage.default: ldap
 storage.ldap.mapping: default
-storage.couchbase.mapping: people, groups, authorizations, cache, cache-refresh, tokens, sessions
+storage.couchbase.mapping: people, groups, authorizations, cache, sessions, cache-refresh, tokens
 """.strip()
 
     dest = tmpdir.join("gluu-hybrid.properties")
@@ -236,7 +236,7 @@ def test_render_hybrid_properties_user(tmpdir):
 storages: ldap, couchbase
 storage.default: couchbase
 storage.ldap.mapping: people, groups, authorizations
-storage.couchbase.mapping: cache, cache-refresh, tokens, sessions
+storage.couchbase.mapping: cache, sessions, cache-refresh, tokens
 """.strip()
 
     dest = tmpdir.join("gluu-hybrid.properties")
@@ -256,8 +256,8 @@ def test_render_hybrid_properties_token(tmpdir):
     expected = """
 storages: ldap, couchbase
 storage.default: couchbase
-storage.ldap.mapping: tokens, sessions
-storage.couchbase.mapping: people, groups, authorizations, cache, cache-refresh
+storage.ldap.mapping: tokens
+storage.couchbase.mapping: people, groups, authorizations, cache, sessions, cache-refresh
 """.strip()
 
     dest = tmpdir.join("gluu-hybrid.properties")
