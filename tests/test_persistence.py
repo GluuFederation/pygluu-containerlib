@@ -203,6 +203,26 @@ def test_sync_couchbase_cert(tmpdir):
     os.environ["GLUU_COUCHBASE_CERT_FILE"] = str(cert_file)
     assert sync_couchbase_cert() == DUMMY_COUCHBASE_CERT
 
+
+def test_exec_api_unsupported_method():
+    from pygluu.containerlib.persistence.couchbase import RestClient
+
+    client = RestClient("localhost", "admin", "password")
+    with pytest.raises(ValueError):
+        client.exec_api("pools/default/buckets", method="DELETE")
+
+
+@pytest.mark.parametrize("client_prop", [
+    "rest_client",
+    "n1ql_client",
+])
+def test_no_couchbase_hosts(client_prop):
+    from pygluu.containerlib.persistence.couchbase import CouchbaseClient
+
+    client = CouchbaseClient("", "admin", "password")
+    with pytest.raises(ValueError):
+        getattr(client, client_prop)
+
 # ======
 # Hybrid
 # ======

@@ -357,7 +357,8 @@ class RestClient(BaseClient):
         }
 
         req = callbacks.get(method)
-        assert callable(req), "Unsupported method {}".format(method)
+        if not callable(req):
+            raise ValueError(f"Unsupported method {method}")
 
         resp = req(
             "https://{0}:{1}/{2}".format(self.host, self.port, path),
@@ -372,17 +373,37 @@ class CouchbaseClient:
     """
 
     def __init__(self, hosts, user, password):
-        self.rest_client = RestClient(hosts, user, password)
-        self.rest_client.resolve_host()
-        assert (
-            self.rest_client.host
-        ), "Unable to resolve host for data service from {} list".format(hosts)
+        self.hosts = hosts
+        self.user = user
+        self.password = password
+        self._rest_client = None
+        self._n1ql_client = None
 
-        self.n1ql_client = N1qlClient(hosts, user, password)
-        self.n1ql_client.resolve_host()
-        assert (
-            self.n1ql_client.host
-        ), "Unable to resolve host for query service from {} list".format(hosts)
+    @property
+    def rest_client(self):
+        """An instance of :class:`~pygluu.containerlib.persistence.couchbase.RestClient`.
+        """
+        if not self._rest_client:
+            self._rest_client = RestClient(
+                self.hosts, self.user, self.password,
+            )
+            self._rest_client.resolve_host()
+            if not self._rest_client.host:
+                raise ValueError(f"Unable to resolve host for data service from {self.hosts} list")
+        return self._rest_client
+
+    @property
+    def n1ql_client(self):
+        """An instance of :class:`~pygluu.containerlib.persistence.couchbase.N1qlClient`.
+        """
+        if not self._n1ql_client:
+            self._n1ql_client = N1qlClient(
+                self.hosts, self.user, self.password,
+            )
+            self._n1ql_client.resolve_host()
+            if not self._n1ql_client.host:
+                raise ValueError(f"Unable to resolve host for query service from {self.hosts} list")
+        return self._n1ql_client
 
     def get_buckets(self):
         """Get all buckets.
