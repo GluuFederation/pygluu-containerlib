@@ -1,6 +1,13 @@
 name: testcases
 
-on: [push]
+on:
+  push:
+    branches:
+      - v2
+    paths:
+      - "pygluu/**"
+      - "tests/**"
+      - "setup.py"
 
 jobs:
   build:
