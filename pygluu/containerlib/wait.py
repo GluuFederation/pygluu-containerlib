@@ -191,9 +191,10 @@ def wait_for_ldap(manager, **kwargs):
         search_mapping = {
             "default": default_search,
             "user": ("inum=60B7,ou=groups,o=gluu", "(objectClass=gluuGroup)"),
-            "site": ("ou=cache-refresh,o=site", "(ou=people)"),
-            "cache": ("o=gluu", "(objectClass=gluuOrganization)"),
+            "site": ("ou=cache-refresh,o=site", "(ou=cache-refresh)"),
+            "cache": ("ou=cache,o=gluu", "(ou=cache)"),
             "token": ("ou=tokens,o=gluu", "(ou=tokens)"),
+            "session": ("ou=sessions,o=gluu", "(ou=sessions)"),
         }
         search = search_mapping[ldap_mapping]
     else:
