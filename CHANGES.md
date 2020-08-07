@@ -2,6 +2,14 @@
 
 Here you can see an overview of changes between each release.
 
+## Version 2.1.0
+
+Released on August 7th, 2020.
+
+* Added new LDAP mapping `session`.
+* Added new Couchbase bucket mapping `gluu_session`.
+* Added lazy-loaded Couchbase REST and N1QL API clients.
+
 ## Version 2.0.1
 
 Released on July 30th, 2020.
