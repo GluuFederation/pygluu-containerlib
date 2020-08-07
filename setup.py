@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import codecs
 import os
 import re
@@ -32,20 +31,22 @@ setup(
         "requests>=2.22.0",
         "python-consul>=1.0.1",
         "hvac>=0.7.0",
-        "kubernetes>=6.0.0,<11.0",
+        "kubernetes",
         "urllib3<1.25,>=1.21.1",
-        "six>=1.12.0",
         "pyDes>=2.0.1",
         "ldap3>=2.5",
         "backoff>=1.8.0",
+        "docker>=3.7.2",
     ],
     classifiers=[
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
     ],
     include_package_data=True,
 )

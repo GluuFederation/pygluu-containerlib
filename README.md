@@ -1,6 +1,8 @@
+![](https://github.com/GluuFederation/pygluu-containerlib/workflows/testcases/badge.svg?branch=v2)
+
 # pygluu.containerlib
 
-Utilities for Gluu Server Docker container deployment.
+Utilities for Gluu Server Cloud Native containers.
 
 ## Developer Guide
 

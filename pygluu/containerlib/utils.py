@@ -1,37 +1,43 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+"""
+pygluu.containerlib.utils
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This module contains various helpers.
+"""
 
 import base64
-import codecs
 import json
+import pathlib
 import random
 import re
 import shlex
+import socket
 import ssl
 import string
 import subprocess
-import uuid
+from typing import (
+    Any,
+    AnyStr,
+    Tuple,
+)
 
-import pyDes
-import six
-
-if six.PY2:
-    string.ascii_lowercase = string.lowercase  # pragma: no cover
+from ldap3.utils import hashed
 
 # Default charset
-_DEFAULT_CHARS = "".join([string.ascii_uppercase,
-                          string.digits,
-                          string.ascii_lowercase])
+_DEFAULT_CHARS = "".join([string.ascii_letters, string.digits])
 
 
-def as_boolean(val, default=False):
-    """Converts value as boolean.
+def as_boolean(val: Any) -> bool:
+    """Convert value as boolean.
+
+    If the value cannot be converted as boolean, return ``False`` instead.
+
+    :param val: Given value with any type, though only a subset of types that supported.
+    :return: ``True`` or ``False``.
     """
-    truthy = set(('t', 'T', 'true', 'True', 'TRUE', '1', 1, True))
-    falsy = set(('f', 'F', 'false', 'False', 'FALSE', '0', 0, False))
+    default = False
+    truthy = set(("t", "T", "true", "True", "TRUE", "1", 1, True))
+    falsy = set(("f", "F", "false", "False", "FALSE", "0", 0, False))
 
     if val in truthy:
         return True
@@ -40,115 +46,219 @@ def as_boolean(val, default=False):
     return default
 
 
-def safe_value(value):
-    if not isinstance(value, (six.string_types, six.binary_type)):
+def safe_value(value: Any) -> str:
+    """Convert given value as JSON-friendly value.
+
+    :param val: Given value with any type.
+    :return: JSON string.
+    """
+    # bytes must be converted to str first, otherwise it will throws ``TypeError``
+    if isinstance(value, bytes):
+        value = value.decode()
+
+    # other types must be serialized as JSON string
+    if not isinstance(value, str):
         value = json.dumps(value)
     return value
 
 
-def get_random_chars(size=12, chars=_DEFAULT_CHARS):
-    """Generates random characters.
+def get_random_chars(size: int = 12, chars: str = "") -> str:
+    """Generate random characters.
+
+    If character set is not provided, the default set (consists of digits and ASCII letters)
+    will be used instead.
+
+    Example:
+
+    .. code-block:: python
+
+        get_random_chars(5, chars="abcde12345")
+
+    :param size: The number of generated character.
+    :param chars: Character set to lookup to.
+    :return: A random string.
     """
-    return ''.join(random.choice(chars) for _ in range(size))
+    chars = chars or _DEFAULT_CHARS
+    return "".join(random.choices(chars, k=size))
 
 
-def get_sys_random_chars(size=12, chars=_DEFAULT_CHARS):
-    """Generates random characters based on OS.
+def get_sys_random_chars(size: int = 12, chars: str = "") -> str:
+    """Generate random characters based on OS.
+
+    :param size: The number of generated character.
+    :param chars: Character set to lookup to.
+    :return: A random string.
     """
-    return ''.join(random.SystemRandom().choice(chars) for _ in range(size))
+    chars = chars or _DEFAULT_CHARS
+    return "".join(random.SystemRandom().choices(chars, k=size))
 
 
-def get_quad():
-    return "{}".format(uuid.uuid4())[:4].upper()
+def exec_cmd(cmd: str) -> Tuple[bytes, bytes, int]:
+    """Execute shell command.
 
-
-def join_quad_str(num):
-    return ".".join([get_quad() for _ in six.moves.range(num)])
-
-
-def safe_inum_str(val):
-    return val.replace("@", "").replace("!", "").replace(".", "")
-
-
-def exec_cmd(cmd):
+    :param str: Shell command to be executed.
+    :return: A ``tuple`` consists of stdout, stderr, and return code from executed shell command.
+    """
     args = shlex.split(cmd)
-    popen = subprocess.Popen(args,
-                             stdin=subprocess.PIPE,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
+    popen = subprocess.Popen(
+        args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+    )
     stdout, stderr = popen.communicate()
     retcode = popen.returncode
-    return stdout, stderr, retcode
+    return stdout.strip(), stderr.strip(), retcode
 
 
-def encode_text(text, key):
-    if six.PY3:
-        text = codecs.encode(text)
-        key = codecs.encode(key)
-    else:
-        text = b"{}".format(text)
-        key = b"{}".format(key)
+def safe_render(text: str, ctx: dict) -> str:
+    """Safely render formatted text.
 
-    cipher = pyDes.triple_des(key, pyDes.ECB, padmode=pyDes.PAD_PKCS5)
-    encrypted_text = cipher.encrypt(text)
-    return base64.b64encode(encrypted_text).decode()
+    Common usecase is to escape ``%`` character when using string formatting.
 
-
-def decode_text(encoded_text, key):
-    text = base64.b64decode(encoded_text)
-    key = codecs.encode(key)
-
-    if six.PY2:
-        key = b"{}".format(key)
-        text = b"{}".format(text)
-
-    cipher = pyDes.triple_des(key, pyDes.ECB, padmode=pyDes.PAD_PKCS5)
-    decoded_text = cipher.decrypt(text)
-
-    if six.PY3:
-        decoded_text = decoded_text.decode()
-    return decoded_text
-
-
-def safe_render(text, ctx):
+    :param text: A text string.
+    :param ctx: A ``dict`` of context passed to string formatting.
+    :return: Rendered text.
+    """
     text = re.sub(r"%([^\(])", r"%%\1", text)
     # There was a % at the end?
     text = re.sub(r"%$", r"%%", text)
     return text % ctx
 
 
-def reindent(text, num_spaces=1):
+def reindent(text: str, num_spaces: int = 1) -> str:
+    """Reindent given text with indentation per line.
+
+    :param text: A ``str`` or ``bytes`` of text.
+    :param num_spaces: The size of indentation per line.
+    :return: Reindented string.
+    """
     text = [
-        "{0}{1}".format(num_spaces * " ", line.lstrip())
-        for line in text.splitlines()
+        "{0}{1}".format(num_spaces * " ", line.lstrip()) for line in text.splitlines()
     ]
     text = "\n".join(text)
     return text
 
 
-def generate_base64_contents(text, num_spaces=1):
-    if six.PY3:
-        text = codecs.encode(text)
-    text = base64.b64encode(text)
+def generate_base64_contents(text: AnyStr, num_spaces: int = 1) -> str:
+    """Generate base64 string.
+
+    :param text: A ``str`` or ``bytes`` of text.
+    :param num_spaces: The size of indentation per line.
+    :return: base64 string.
+    """
+    text = base64.b64encode(anystr_to_bytes(text))
     return reindent(text.decode(), num_spaces)
 
 
-def cert_to_truststore(alias, cert_file, keystore_file, store_pass):
-    cmd = "keytool -importcert -trustcacerts -alias {0} " \
-          "-file {1} -keystore {2} -storepass {3} " \
-          "-noprompt".format(alias, cert_file, keystore_file, store_pass)
-    out, err, code = exec_cmd(cmd)
-    return out.strip(), err.strip(), code
+def cert_to_truststore(
+    alias: str, cert_file: str, keystore_file: str, store_pass: str
+) -> Tuple[bytes, bytes, int]:
+    """Import certificate into a Java Truststore using ``keytool`` executable.
+
+    :param alias: Alias name.
+    :param cert_file: Path to certificate file.
+    :param keystore_file: Path to Java Keystore/Truststore file.
+    :param store_pass: Password of the Java Keystore/Truststore file.
+    :return: A ``tuple`` consists of stdout, stderr, and return code from executed shell command.
+    """
+    cmd = (
+        "keytool -importcert -trustcacerts -alias {0} "
+        "-file {1} -keystore {2} -storepass {3} "
+        "-noprompt".format(alias, cert_file, keystore_file, store_pass)
+    )
+    return exec_cmd(cmd)
 
 
-def get_server_certificate(host, port, filepath, server_hostname=""):
+def get_server_certificate(
+    host: str, port: int, filepath: str, server_hostname: str = ""
+) -> str:
+    """Get PEM-formatted certificate of a given address.
+
+    :param host: Hostname of a server.
+    :param port: Port of SSL-secured server.
+    :param filepath: Path to save the downloaded certificate.
+    :param server_hostname: Optional hostname of the server.
+    :return: Certificate text.
+    """
     server_hostname = server_hostname or host
 
-    conn = ssl.create_connection((host, port))
-    context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
-    sock = context.wrap_socket(conn, server_hostname=server_hostname)
-    cert = ssl.DER_cert_to_PEM_cert(sock.getpeercert(True))
+    with socket.create_connection((host, port)) as conn:
+        context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
 
-    with open(filepath, "w") as f:
-        f.write(cert)
-    return cert
+        with context.wrap_socket(conn, server_hostname=server_hostname) as sock:
+            der = sock.getpeercert(True)
+            cert = ssl.DER_cert_to_PEM_cert(der)
+            pathlib.Path(filepath).write_text(cert)
+            return cert
+
+
+def ldap_encode(password: AnyStr) -> str:
+    """Encode the password string to comply to LDAP specification.
+
+    :param password: A password with ``str`` or ``bytes`` type.
+    :return: A string of encoded password.
+    """
+    return hashed.hashed(hashed.HASHED_SALTED_SHA, password)
+
+
+def anystr_to_bytes(val: AnyStr) -> bytes:
+    """Convert ``str`` or ``bytes`` as ``bytes``.
+
+    If given value is a ``str``, encode it into ``bytes``.
+
+    :param val: A ``str`` or ``bytes`` that need to be converted (if necessary).
+    :return: A ``bytes`` type of given value.
+    """
+    if isinstance(val, str):
+        val = val.encode()
+    return val
+
+
+def encode_text(text: AnyStr, key: AnyStr) -> bytes:
+    """Encode text using triple DES and ECB mode.
+
+    There are 2 underlying libraries used behind the scene:
+
+    1. pyDes (deprecated implementation -- preserved as fallback)
+    2. cryptography (faster implementation -- recommended)
+
+    To use the latter, ``cryptography`` package must be installed first.
+
+    .. code-block:: python
+
+        # output: b'OdiOLVWUv7f8OzfNsuB5Fg=='
+        encode_text("secret text", "a" * 24)
+
+    :params text: Plain text (``str`` or ``bytes``) need to be encoded.
+    :params key: Key used for encoding salt.
+    :returns: Encoded ``bytes`` text.
+    """
+    try:
+        from ._crypto import CryptographyHelper as helper
+    except ImportError:  # pragma: no cover
+        from ._crypto import PydesHelper as helper
+    return helper.encode_text(text, key)
+
+
+def decode_text(text: AnyStr, key: AnyStr) -> bytes:
+    """Decode text using triple DES and ECB mode.
+
+    There are 2 underlying libraries used behind the scene:
+
+    1. pyDes (deprecated implementation -- preserved as fallback)
+    2. cryptography (faster implementation -- recommended)
+
+    To use the latter, ``cryptography`` package must be installed first.
+
+    .. code-block:: python
+
+        # output: b'secret text'
+        decode_text(b'OdiOLVWUv7f8OzfNsuB5Fg==', "a" * 24)
+
+    :params text: Encoded text (``str`` or ``bytes``) need to be decoded.
+    :params key: Key used for decoding salt.
+    :returns: Decoded ``bytes`` text.
+    """
+    try:
+        from ._crypto import CryptographyHelper as helper
+    except ImportError:  # pragma: no cover
+        from ._crypto import PydesHelper as helper
+    return helper.decode_text(text, key)

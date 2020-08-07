@@ -1,14 +1,29 @@
 import os
 
-from .couchbase import render_couchbase_properties  # noqa
-from .couchbase import sync_couchbase_cert  # noqa
-from .couchbase import sync_couchbase_truststore  # noqa
-from .hybrid import render_hybrid_properties  # noqa
-from .ldap import render_ldap_properties  # noqa
-from .ldap import sync_ldap_truststore  # noqa
+from .couchbase import (  # noqa: F401
+    render_couchbase_properties,
+    sync_couchbase_truststore,
+)
+from .hybrid import render_hybrid_properties  # noqa: F401
+from .ldap import (  # noqa: F401
+    render_ldap_properties,
+    sync_ldap_truststore,
+)
 
 
-def render_salt(manager, src, dest):
+def render_salt(manager, src: str, dest: str) -> None:
+    """Render file contains salt string, i.e. ``/etc/gluu/conf/salt``.
+
+    The generated file has the following contents:
+
+    .. code-block:: text
+
+        encode_salt = random-salt-string
+
+    :params manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
+    :params src: Absolute path to the template.
+    :params dest: Absolute path where generated file is located.
+    """
     encode_salt = manager.secret.get("encoded_salt")
 
     with open(src) as f:
@@ -19,7 +34,13 @@ def render_salt(manager, src, dest):
         f.write(rendered_txt)
 
 
-def render_gluu_properties(src, dest):
+def render_gluu_properties(src: str, dest: str) -> None:
+    """Render file contains properties for Gluu Server,
+    i.e. ``/etc/gluu/conf/gluu.properties``.
+
+    :params src: Absolute path to the template.
+    :params dest: Absolute path where generated file is located.
+    """
     with open(src) as f:
         txt = f.read()
 

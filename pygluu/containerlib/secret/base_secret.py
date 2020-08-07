@@ -1,29 +1,40 @@
-# -*- coding: utf-8 -*-
+"""
+pygluu.containerlib.secret.base_secret
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This module contains base class for secret adapter.
+"""
+
+from typing import (
+    Any,
+    NoReturn,
+)
 
 
 class BaseSecret(object):
     """Base class for secret adapter. Must be sub-classed per
     implementation details.
     """
+
     type = "secret"
 
-    def get(self, key, default=None):
+    def get(self, key: str, default: Any = None) -> NoReturn:
         """Get specific secret.
 
-        Subclass __MUST__ implement this method.
+        Subclass **MUST** implement this method.
         """
         raise NotImplementedError
 
-    def set(self, key, value):
+    def set(self, key: str, value: Any) -> NoReturn:
         """Set specific secret.
 
-        Subclass __MUST__ implement this method.
+        Subclass **MUST** implement this method.
         """
         raise NotImplementedError
 
-    def all(self):
-        """Get all secrets as ``dict`` type.
+    def all(self) -> NoReturn:
+        """Get all secrets.
 
-        Subclass __MUST__ implement this method.
+        Subclass **MUST** implement this method.
         """
         raise NotImplementedError

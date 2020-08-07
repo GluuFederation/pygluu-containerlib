@@ -1,7 +1,21 @@
+"""
+pygluu.containerlib.persistence.ldap
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This module contains various helpers related to LDAP persistence.
+"""
+
 import os
 
 
-def render_ldap_properties(manager, src, dest):
+def render_ldap_properties(manager, src: str, dest: str) -> None:
+    """Render file contains properties to connect to LDAP server,
+    i.e. ``/etc/gluu/conf/gluu-ldap.properties``.
+
+    :params manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
+    :params src: Absolute path to the template.
+    :params dest: Absolute path where generated file is located.
+    """
     ldap_url = os.environ.get("GLUU_LDAP_URL", "localhost:1636")
     ldap_hostname, ldaps_port = ldap_url.split(":")
 
@@ -15,15 +29,21 @@ def render_ldap_properties(manager, src, dest):
             "ldap_hostname": ldap_hostname,
             "ldaps_port": ldaps_port,
             "ldapTrustStoreFn": manager.config.get("ldapTrustStoreFn"),
-            "encoded_ldapTrustStorePass": manager.secret.get("encoded_ldapTrustStorePass"),
+            "encoded_ldapTrustStorePass": manager.secret.get(
+                "encoded_ldapTrustStorePass"
+            ),
         }
         f.write(rendered_txt)
 
 
-def sync_ldap_truststore(manager):
+def sync_ldap_truststore(manager, dest: str = "") -> None:
+    """Pull secret contains base64-string contents of LDAP truststore,
+    and save it as a JKS file, i.e. ``/etc/certs/opendj.pkcs12``.
+
+    :params manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
+    :params dest: Absolute path where generated file is located.
+    """
+    dest = dest or manager.config.get("ldapTrustStoreFn")
     manager.secret.to_file(
-        "ldap_pkcs12_base64",
-        manager.config.get("ldapTrustStoreFn"),
-        decode=True,
-        binary_mode=True,
+        "ldap_pkcs12_base64", dest, decode=True, binary_mode=True,
     )
