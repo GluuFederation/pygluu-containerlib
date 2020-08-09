@@ -2,6 +2,12 @@
 
 Here you can see an overview of changes between each release.
 
+## Version 2.1.1
+
+Released on August 9th, 2020.
+
+* Fix `rclone.conf` where username is always hardcoded. Reference: https://github.com/GluuFederation/pygluu-containerlib/issues/12.
+
 ## Version 2.1.0
 
 Released on August 7th, 2020.

@@ -1,4 +1,4 @@
-__version__ = "2.1.0"
+__version__ = "2.1.1"
 
 from .manager import get_manager  # noqa: F401
 from .wait import wait_for  # noqa: F401
