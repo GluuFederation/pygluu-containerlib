@@ -68,7 +68,8 @@ class KubernetesMeta(BaseMeta):
         :params path: Path to file or directory.
         """
         # make sure parent directory is created first
-        self.exec_cmd(container, "mkdir -p {}".format(os.path.dirname(path)))
+        dirname = os.path.dirname(path)
+        self.exec_cmd(container, f"mkdir -p {dirname}")
 
         # copy file implementation
         resp = stream(

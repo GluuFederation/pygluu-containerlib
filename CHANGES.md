@@ -2,6 +2,24 @@
 
 Here you can see an overview of changes between each release.
 
+## Version 2.2.0
+
+Released on August 30th, 2020.
+
+* Added validators for persistence type and ldap mapping (https://github.com/GluuFederation/pygluu-containerlib/issues/14).
+
+## Version 2.1.2
+
+Released on August 13th, 2020.
+
+* Fixed incorrect RClone config due to special chars and whitespaces in user and/or password value. Reference: https://github.com/GluuFederation/pygluu-containerlib/issues/13.
+
+## Version 2.1.1
+
+Released on August 9th, 2020.
+
+* Fix `rclone.conf` where username is always hardcoded. Reference: https://github.com/GluuFederation/pygluu-containerlib/issues/12.
+
 ## Version 2.1.0
 
 Released on August 7th, 2020.

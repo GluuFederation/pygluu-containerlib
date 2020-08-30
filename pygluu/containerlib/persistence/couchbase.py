@@ -167,7 +167,7 @@ def render_couchbase_properties(manager, src: str, dest: str) -> None:
             continue
 
         couchbase_mappings.append(
-            "bucket.{0}.mapping: {1}".format(mapping["bucket"], mapping["mapping"],)
+            f"bucket.{mapping['bucket']}.mapping: {mapping['mapping']}"
         )
 
     # always have `gluu` as default bucket
@@ -243,18 +243,9 @@ class BaseClient:
                 if resp.ok:
                     self.host = _host
                     return self.host
-
-                logger.warning(
-                    "Unable to connect to {}:{}; reason={}".format(
-                        _host, self.port, resp.reason
-                    )
-                )
+                logger.warning(f"Unable to connect to {_host}:{self.port}; reason={resp.reason}")
             except Exception as exc:
-                logger.warning(
-                    "Unable to connect to {}:{}; reason={}".format(
-                        _host, self.port, exc
-                    )
-                )
+                logger.warning(f"Unable to connect to {_host}:{self.port}; reason={exc}")
 
     def healthcheck(self, host) -> NoReturn:
         """Run healthcheck to a host.
@@ -289,7 +280,7 @@ class N1qlClient(BaseClient):
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
         return requests.post(
-            "https://{0}:{1}/query/service".format(host, self.port),
+            f"https://{host}:{self.port}/query/service",
             data={"statement": "SELECT status FROM system:indexes LIMIT 1"},
             auth=(self.user, self.password),
             verify=False,
@@ -307,7 +298,7 @@ class N1qlClient(BaseClient):
         verify = kwargs.get("verify", False)
 
         resp = requests.post(
-            "https://{0}:{1}/{2}".format(self.host, self.port, path),
+            f"https://{self.host}:{self.port}/{path}",
             data=data,
             auth=(self.user, self.password),
             verify=verify,
@@ -333,7 +324,7 @@ class RestClient(BaseClient):
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
         return requests.get(
-            "https://{0}:{1}/pools/".format(host, self.port),
+            f"https://{host}:{self.port}/pools/",
             auth=(self.user, self.password),
             verify=False,
             timeout=10,
@@ -361,7 +352,7 @@ class RestClient(BaseClient):
             raise ValueError(f"Unsupported method {method}")
 
         resp = req(
-            "https://{0}:{1}/{2}".format(self.host, self.port, path),
+            f"https://{self.host}:{self.port}/{path}",
             auth=(self.user, self.password),
             verify=verify,
         )
@@ -459,5 +450,5 @@ class CouchbaseClient:
             "roles": roles,
         }
         return self.rest_client.exec_api(
-            "settings/rbac/users/local/{}".format(username), data=data, method="PUT",
+            f"settings/rbac/users/local/{username}", data=data, method="PUT",
         )

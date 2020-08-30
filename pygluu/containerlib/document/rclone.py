@@ -29,7 +29,7 @@ class RClone:
         if os.path.isfile(conf_file):
             return
 
-        cmd = f"rclone config create jackrabbit webdav vendor other pass {self.password} user admin url {self.url}"
+        cmd = f"rclone config create jackrabbit webdav vendor other pass '{self.password}' user '{self.username}' url {self.url}"
         _, err, code = exec_cmd(cmd)
 
         if code != 0:
