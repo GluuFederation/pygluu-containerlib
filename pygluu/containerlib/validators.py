@@ -20,7 +20,7 @@ def validate_persistence_type(type_: str) -> NoReturn:
         types = ", ".join(PERSISTENCE_TYPES)
 
         raise ValidationError(
-            f"Unsupported GLUU_PERSISTENCE_TYPE value {type_}; "
+            f"Unsupported persistence type {type_}; "
             f"please choose one of {types}"
         )
 
@@ -30,6 +30,6 @@ def validate_persistence_ldap_mapping(type_: str, ldap_mapping: str) -> NoReturn
         mappings = ", ".join(PERSISTENCE_LDAP_MAPPINGS)
 
         raise ValidationError(
-            f"Unsupported GLUU_PERSISTENCE_LDAP_MAPPING value {ldap_mapping}; "
+            f"Unsupported persistence ldap mapping {ldap_mapping}; "
             f"please choose one of {mappings}"
         )
