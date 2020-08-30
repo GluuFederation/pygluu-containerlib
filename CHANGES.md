@@ -2,6 +2,12 @@
 
 Here you can see an overview of changes between each release.
 
+## Version 2.2.0
+
+Released on August 30th, 2020.
+
+* Added validators for persistence type and ldap mapping (https://github.com/GluuFederation/pygluu-containerlib/issues/14).
+
 ## Version 2.1.2
 
 Released on August 13th, 2020.
