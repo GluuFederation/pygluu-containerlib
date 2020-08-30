@@ -64,7 +64,7 @@ class DockerMeta(BaseMeta):
             payload = f.read()
 
             # create directory first
-            self.exec_cmd(container, "mkdir -p {}".format(dirname))
+            self.exec_cmd(container, f"mkdir -p {dirname}")
 
             # copy file
             container.put_archive(os.path.dirname(path), payload)

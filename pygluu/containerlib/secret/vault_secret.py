@@ -136,7 +136,8 @@ class VaultSecret(BaseSecret):
         :returns: Value based on given key or default one.
         """
         self._authenticate()
-        sc = self.client.read("{}/{}".format(self.prefix, key))
+        sc = self.client.read(f"{self.prefix}/{key}")
+
         if not sc:
             return default
         return sc["data"]["value"]
@@ -155,7 +156,7 @@ class VaultSecret(BaseSecret):
         # but Vault HTTP API returns 205 if request succeeded;
         # hence we're using lower level of `hvac.v1.Client` API to set key-val
         response = self.client._adapter.post(
-            "/v1/{0}/{1}".format(self.prefix, key), json=val
+            f"/v1/{self.prefix}/{key}", json=val
         )
         return response.status_code == 204
 

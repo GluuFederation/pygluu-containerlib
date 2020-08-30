@@ -263,7 +263,7 @@ def wait_for_couchbase(manager, **kwargs):
     if persistence_type == "hybrid" and ldap_mapping == "default":
         bucket, key = "gluu_user", "groups_60B7"
 
-    query = "SELECT objectClass FROM {0} USE KEYS '{1}'".format(bucket, key)
+    query = f"SELECT objectClass FROM {bucket} USE KEYS '{key}'"
 
     cb_client = CouchbaseClient(host, user, password)
 
@@ -280,7 +280,7 @@ def wait_for_couchbase(manager, **kwargs):
     # request is OK, but result is not found
     data = req.json()
     if not data["results"]:
-        raise WaitError("Missing document {!r} in bucket {!r}".format(key, bucket))
+        raise WaitError(f"Missing document {key} in bucket {bucket}")
 
 
 @retry_on_exception
@@ -297,7 +297,7 @@ def wait_for_couchbase_conn(manager, **kwargs):
     req = cb_client.get_buckets()
 
     if not req.ok:
-        raise WaitError("Unable to connect to host in {} list".format(host))
+        raise WaitError(f"Unable to connect to host in {host} list")
 
 
 @retry_on_exception
