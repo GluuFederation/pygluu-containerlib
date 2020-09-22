@@ -94,7 +94,7 @@ def get_couchbase_superuser_password(manager, plaintext: bool = True) -> str:
 
 #: Get Couchbase superuser's encoded password from file.
 #:
-#: This is a shortcut of :func:`get_couchbase_password` with ``plaintext``
+#: This is a shortcut of :func:`get_couchbase_superuser_password` with ``plaintext``
 #: argument set as ``False``.
 get_encoded_couchbase_superuser_password = partial(get_couchbase_superuser_password, plaintext=False)
 
