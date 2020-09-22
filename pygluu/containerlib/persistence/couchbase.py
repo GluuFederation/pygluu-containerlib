@@ -61,6 +61,44 @@ def get_couchbase_password(manager, plaintext: bool = True) -> str:
 get_encoded_couchbase_password = partial(get_couchbase_password, plaintext=False)
 
 
+def get_couchbase_superuser(manager=None) -> str:
+    """Get Couchbase username from ``GLUU_COUCHBASE_SUPERUSER``
+    environment variable (default to empty-string).
+
+    :params manager: A no-op argument, preserved for backward compatibility.
+    :returns: Couchbase username.
+    """
+    return os.environ.get("GLUU_COUCHBASE_SUPERUSER", "")
+
+
+def get_couchbase_superuser_password(manager, plaintext: bool = True) -> str:
+    """Get Couchbase superuser's password from file (default to
+    ``/etc/gluu/conf/couchbase_superuser_password``).
+
+    To change the location, simply pass ``GLUU_COUCHBASE_SUPERUSER_PASSWORD_FILE`` environment variable.
+
+    :params manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
+    :params plaintext: Whether to return plaintext or encoded password.
+    :returns: Plaintext or encoded password.
+    """
+    password_file = os.environ.get(
+        "GLUU_COUCHBASE_SUPERUSER_PASSWORD_FILE", "/etc/gluu/conf/couchbase_superuser_password"
+    )
+
+    with open(password_file) as f:
+        password = f.read().strip()
+        if not plaintext:
+            password = encode_text(password, manager.secret.get("encoded_salt")).decode()
+        return password
+
+
+#: Get Couchbase superuser's encoded password from file.
+#:
+#: This is a shortcut of :func:`get_couchbase_password` with ``plaintext``
+#: argument set as ``False``.
+get_encoded_couchbase_superuser_password = partial(get_couchbase_superuser_password, plaintext=False)
+
+
 def get_couchbase_mappings(persistence_type: str, ldap_mapping: str) -> dict:
     """Get mappings of Couchbase buckets.
 
