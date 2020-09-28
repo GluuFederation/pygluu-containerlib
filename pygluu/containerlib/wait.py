@@ -263,11 +263,12 @@ def wait_for_couchbase(manager, **kwargs):
     if persistence_type == "hybrid" and ldap_mapping == "default":
         bucket, key = "gluu_user", "groups_60B7"
 
-    query = f"SELECT objectClass FROM {bucket} USE KEYS '{key}'"
-
     cb_client = CouchbaseClient(host, user, password)
 
-    req = cb_client.exec_query(query)
+    req = cb_client.exec_query(
+        f"SELECT objectClass FROM {bucket} USE KEYS $key",
+        key=key,
+    )
 
     if not req.ok:
         try:

@@ -5,6 +5,7 @@ pygluu.containerlib.persistence.couchbase
 This module contains various helpers related to Couchbase persistence.
 """
 
+import json
 import logging
 import os
 from functools import partial
@@ -12,11 +13,11 @@ from typing import NoReturn
 
 import requests
 
-from ..utils import (
+from pygluu.containerlib.utils import (
     encode_text,
     cert_to_truststore,
 )
-from ..constants import COUCHBASE_MAPPINGS
+from pygluu.containerlib.constants import COUCHBASE_MAPPINGS
 
 GLUU_COUCHBASE_TRUSTSTORE_PASSWORD = "newsecret"
 
@@ -472,13 +473,19 @@ class CouchbaseClient:
             sys_info = resp.json()
         return sys_info
 
-    def exec_query(self, query: str):
+    def exec_query(self, query: str, *args, **kwargs):
         """Execute N1QL query.
 
         :params query: N1QL query string.
         :returns: An instance of ``requests.models.Response``.
         """
         data = {"statement": query}
+        if args:
+            data["args"] = json.dumps(list(args) or [])
+
+        if kwargs:
+            for k, v in kwargs.items():
+                data[f"${k}"] = json.dumps(v)
         return self.n1ql_client.exec_api("query/service", data=data)
 
     def create_user(self, username, password, fullname, roles):
