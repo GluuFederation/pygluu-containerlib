@@ -2,6 +2,12 @@
 
 Here you can see an overview of changes between each release.
 
+## Version 2.3.0
+
+Released on September 22nd, 2020.
+
+* Added support for Couchbase superuser access (https://github.com/GluuFederation/pygluu-containerlib/issues/15).
+
 ## Version 2.2.0
 
 Released on August 30th, 2020.

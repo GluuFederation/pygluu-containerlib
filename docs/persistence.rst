@@ -29,6 +29,12 @@ Couchbase
 
 .. autodata:: get_encoded_couchbase_password
 
+.. autofunction:: get_couchbase_superuser
+
+.. autofunction:: get_couchbase_superuser_password
+
+.. autodata:: get_encoded_couchbase_superuser_password
+
 .. autofunction:: get_couchbase_mappings
 
 .. autofunction:: get_couchbase_conn_timeout

@@ -140,6 +140,36 @@ def test_get_encoded_couchbase_password(tmpdir, gmanager):
     os.environ.pop("GLUU_COUCHBASE_PASSWORD_FILE", None)
 
 
+def test_get_couchbase_superuser(gmanager):
+    from pygluu.containerlib.persistence.couchbase import get_couchbase_superuser
+
+    os.environ["GLUU_COUCHBASE_SUPERUSER"] = ""
+    assert get_couchbase_superuser(gmanager) == ""
+    os.environ.pop("GLUU_COUCHBASE_SUPERUSER", None)
+
+
+def test_get_couchbase_superuser_password(tmpdir, gmanager):
+    from pygluu.containerlib.persistence.couchbase import get_couchbase_superuser_password
+
+    passwd_file = tmpdir.join("couchbase_superuser_password")
+    passwd_file.write("secret")
+
+    os.environ["GLUU_COUCHBASE_SUPERUSER_PASSWORD_FILE"] = str(passwd_file)
+    assert get_couchbase_superuser_password(gmanager) == "secret"
+    os.environ.pop("GLUU_COUCHBASE_SUPERUSER_PASSWORD_FILE", None)
+
+
+def test_get_encoded_couchbase_superuser_password(tmpdir, gmanager):
+    from pygluu.containerlib.persistence.couchbase import get_encoded_couchbase_superuser_password
+
+    passwd_file = tmpdir.join("couchbase_superuser_password")
+    passwd_file.write("secret")
+
+    os.environ["GLUU_COUCHBASE_SUPERUSER_PASSWORD_FILE"] = str(passwd_file)
+    assert get_encoded_couchbase_superuser_password(gmanager) != "secret"
+    os.environ.pop("GLUU_COUCHBASE_SUPERUSER_PASSWORD_FILE", None)
+
+
 # @pytest.mark.skipif(
 #     shutil.which("keytool") is None,
 #     reason="requires keytool executable"
