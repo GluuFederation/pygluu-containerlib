@@ -345,6 +345,31 @@ class N1qlClient(BaseClient):
         return resp
 
 
+def build_n1ql_request_body(query: str, *args, **kwargs) -> dict:
+    """Build request body for N1QL REST API.
+
+    Request body consists of ``statement`` key, ``args`` key
+    (if using positional parameters), and any key prefixed with ``$``
+    (if using named parameters).
+
+    See https://docs.couchbase.com/server/current/n1ql/n1ql-rest-api/index.html for reference.
+
+    :params query: N1QL query string.
+    :params *args: Positional parameters passed as ``args`` in request body.
+    :params **kwargs: Named parameters passed as ``$``-prefixed
+                      parameter in request body.
+    """
+    body = {"statement": query}
+
+    if args:
+        body["args"] = json.dumps(args or [])
+
+    if kwargs:
+        for k, v in kwargs.items():
+            body[f"${k}"] = json.dumps(v)
+    return body
+
+
 class RestClient(BaseClient):
     """This class interacts with REST server (part of Couchbase).
     """
@@ -479,13 +504,7 @@ class CouchbaseClient:
         :params query: N1QL query string.
         :returns: An instance of ``requests.models.Response``.
         """
-        data = {"statement": query}
-        if args:
-            data["args"] = json.dumps(list(args) or [])
-
-        if kwargs:
-            for k, v in kwargs.items():
-                data[f"${k}"] = json.dumps(v)
+        data = build_n1ql_request_body(query, *args, **kwargs)
         return self.n1ql_client.exec_api("query/service", data=data)
 
     def create_user(self, username, password, fullname, roles):
