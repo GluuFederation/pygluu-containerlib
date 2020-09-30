@@ -12,16 +12,31 @@
 #
 
 import os
+import re
 import sys
 sys.path.insert(0, os.path.abspath('../'))
 
 
+def find_version(*file_paths):
+    here = os.path.abspath(os.path.dirname(__file__))
+    with open(os.path.join(here, *file_paths), 'r') as f:
+        version_file = f.read()
+    version_match = re.search(
+        r"^__version__ = ['\"]([^'\"]*)['\"]", version_file, re.M,
+    )
+    if version_match:
+        return version_match.group(1)
+    raise RuntimeError("Unable to find version string.")
+
 # -- Project information -----------------------------------------------------
 
+
 project = 'pygluu.containerlib'
-copyright = '2020, Gluu'
+copyright = '2020, Gluu'  # noqa: A001
 author = 'Gluu'
 
+# The full version, including alpha/beta/rc tags
+release = find_version("../pygluu/containerlib/__init__.py")
 
 # -- General configuration ---------------------------------------------------
 
