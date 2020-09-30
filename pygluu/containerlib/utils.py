@@ -36,8 +36,8 @@ def as_boolean(val: Any) -> bool:
     :return: ``True`` or ``False``.
     """
     default = False
-    truthy = set(("t", "T", "true", "True", "TRUE", "1", 1, True))
-    falsy = set(("f", "F", "false", "False", "FALSE", "0", 0, False))
+    truthy = {"t", "T", "true", "True", "TRUE", "1", 1, True}
+    falsy = {"f", "F", "false", "False", "FALSE", "0", 0, False}
 
     if val in truthy:
         return True
