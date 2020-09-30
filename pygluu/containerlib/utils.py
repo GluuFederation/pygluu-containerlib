@@ -232,10 +232,10 @@ def encode_text(text: AnyStr, key: AnyStr) -> bytes:
     :returns: Encoded ``bytes`` text.
     """
     try:
-        from ._crypto import CryptographyHelper as helper
+        from ._crypto import CryptographyHelper as Helper
     except ImportError:  # pragma: no cover
-        from ._crypto import PydesHelper as helper
-    return helper.encode_text(text, key)
+        from ._crypto import PydesHelper as Helper
+    return Helper.encode_text(text, key)
 
 
 def decode_text(text: AnyStr, key: AnyStr) -> bytes:
@@ -258,7 +258,7 @@ def decode_text(text: AnyStr, key: AnyStr) -> bytes:
     :returns: Decoded ``bytes`` text.
     """
     try:
-        from ._crypto import CryptographyHelper as helper
+        from ._crypto import CryptographyHelper as Helper
     except ImportError:  # pragma: no cover
-        from ._crypto import PydesHelper as helper
-    return helper.decode_text(text, key)
+        from ._crypto import PydesHelper as Helper
+    return Helper.decode_text(text, key)
