@@ -27,11 +27,11 @@ def render_hybrid_properties(dest: str) -> None:
 
     _couchbase_mappings = get_couchbase_mappings(persistence_type, ldap_mapping)
 
-    couchbase_mappings = ", ".join(filter(None, [
+    couchbase_mappings = ", ".join([
         mapping["mapping"]
         for name, mapping in _couchbase_mappings.items()
-        if name != ldap_mapping
-    ]))
+        if mapping["mapping"] and name != ldap_mapping
+    ])
     ldap_mappings = COUCHBASE_MAPPINGS.get(ldap_mapping, {}).get("mapping") or "default"
 
     out = "\n".join([
