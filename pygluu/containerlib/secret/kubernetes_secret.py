@@ -101,7 +101,7 @@ class KubernetesSecret(BaseSecret):
                 else:
                     raise
 
-    def set(self, key: str, value: Any) -> bool:
+    def set(self, key: str, value: Any) -> bool:  # noqa: A003
         """Set key with given value.
 
         :params key: Key name.
@@ -122,7 +122,7 @@ class KubernetesSecret(BaseSecret):
         )
         return bool(ret)
 
-    def all(self):
+    def all(self) -> dict:  # noqa: A003
         """Get all key-value pairs.
 
         :returns: A ``dict`` of key-value pairs (if any).

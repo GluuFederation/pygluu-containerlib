@@ -140,7 +140,7 @@ class ConsulConfig(BaseConfig):
         # this is a bytes
         return result["Value"].decode()
 
-    def set(self, key: str, value: Any) -> bool:
+    def set(self, key: str, value: Any) -> bool:  # noqa: A003
         """Set key with given value.
 
         :params key: Key name.
@@ -149,7 +149,7 @@ class ConsulConfig(BaseConfig):
         """
         return self.client.kv.put(self._merge_path(key), safe_value(value))
 
-    def all(self) -> dict:
+    def all(self) -> dict:  # noqa: A003
         """Get all key-value pairs.
 
         :returns: A ``dict`` of key-value pairs (if any).

@@ -16,7 +16,7 @@ class BaseSecret(object):
     implementation details.
     """
 
-    type = "secret"
+    type = "secret"  # noqa: A003
 
     def get(self, key: str, default: Any = None) -> NoReturn:
         """Get specific secret.
@@ -25,14 +25,14 @@ class BaseSecret(object):
         """
         raise NotImplementedError
 
-    def set(self, key: str, value: Any) -> NoReturn:
+    def set(self, key: str, value: Any) -> NoReturn:  # noqa: A003
         """Set specific secret.
 
         Subclass **MUST** implement this method.
         """
         raise NotImplementedError
 
-    def all(self) -> NoReturn:
+    def all(self) -> NoReturn:  # noqa: A003
         """Get all secrets.
 
         Subclass **MUST** implement this method.
