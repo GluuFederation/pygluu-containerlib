@@ -100,7 +100,7 @@ class KubernetesConfig(BaseConfig):
                 else:
                     raise
 
-    def set(self, key: str, value: Any) -> bool:  # noqa: A003
+    def set(self, key: str, value: Any) -> bool:
         """Set key with given value.
 
         :params key: Key name.
@@ -121,7 +121,7 @@ class KubernetesConfig(BaseConfig):
         )
         return bool(ret)
 
-    def all(self) -> dict:  # noqa: A003
+    def all(self) -> dict:
         """Get all key-value pairs.
 
         :returns: A ``dict`` of key-value pairs (if any).

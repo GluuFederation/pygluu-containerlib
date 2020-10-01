@@ -16,7 +16,7 @@ class BaseConfig:
     implementation details.
     """
 
-    type = "config"  # noqa: A003
+    type = "config"
 
     def get(self, key: str, default: Any = None) -> NoReturn:
         """Get specific config.
@@ -25,14 +25,14 @@ class BaseConfig:
         """
         raise NotImplementedError
 
-    def set(self, key: str, value: Any) -> NoReturn:  # noqa: A003
+    def set(self, key: str, value: Any) -> NoReturn:
         """Set specific config.
 
         Subclass **MUST** implement this method.
         """
         raise NotImplementedError
 
-    def all(self) -> NoReturn:  # noqa: A003
+    def all(self) -> NoReturn:
         """Get all config.
 
         Subclass **MUST** implement this method.
