@@ -11,10 +11,12 @@ from functools import partial
 from typing import NoReturn
 
 import requests
+from requests_toolbelt.adapters.host_header_ssl import HostHeaderSSLAdapter
 
 from ..utils import (
     encode_text,
     cert_to_truststore,
+    as_boolean,
 )
 from ..constants import COUCHBASE_MAPPINGS
 
@@ -267,6 +269,20 @@ class BaseClient:
         self.host = None
         self.user = user
         self.password = password
+        self._session = None
+
+    @property
+    def session(self):
+        if not self._session:
+            self._session = requests.Session()
+            self._session.verify = False
+
+            verify = as_boolean(os.environ.get("GLUU_COUCHBASE_VERIFY", False))
+            if verify:
+                self._session.mount("https://", HostHeaderSSLAdapter())
+                self._session.verify = os.environ.get("GLUU_COUCHBASE_CERT_FILE", "/etc/certs/couchbase.crt")
+                self._session.headers["HOST"] = os.environ.get("GLUU_COUCHBASE_HOST_HEADER", "127.0.0.1")
+        return self._session
 
     def resolve_host(self) -> str:
         """Get active/ready host from a list of servers.
@@ -313,15 +329,10 @@ class N1qlClient(BaseClient):
         :params host: Hostname or IP address.
         :returns: An instance of ``requests.models.Response``.
         """
-        import urllib3
-
-        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-        return requests.post(
+        return self.session.post(
             f"https://{host}:{self.port}/query/service",
             data={"statement": "SELECT status FROM system:indexes LIMIT 1"},
             auth=(self.user, self.password),
-            verify=False,
             timeout=10,
         )
 
@@ -333,13 +344,11 @@ class N1qlClient(BaseClient):
         :returns: An instance of ``requests.models.Response``.
         """
         data = kwargs.get("data", {})
-        verify = kwargs.get("verify", False)
 
-        resp = requests.post(
+        resp = self.session.post(
             f"https://{self.host}:{self.port}/{path}",
             data=data,
             auth=(self.user, self.password),
-            verify=verify,
         )
         return resp
 
@@ -357,14 +366,9 @@ class RestClient(BaseClient):
         :params host: Hostname or IP address.
         :returns: An instance of ``requests.models.Response``.
         """
-        import urllib3
-
-        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-        return requests.get(
+        return self.session.get(
             f"https://{host}:{self.port}/pools/",
             auth=(self.user, self.password),
-            verify=False,
             timeout=10,
         )
 
@@ -376,13 +380,12 @@ class RestClient(BaseClient):
         :returns: An instance of ``requests.models.Response``.
         """
         data = kwargs.get("data", {})
-        verify = kwargs.get("verify", False)
         method = kwargs.get("method")
 
         callbacks = {
-            "GET": requests.get,
-            "POST": partial(requests.post, data=data),
-            "PUT": partial(requests.put, data=data),
+            "GET": self.session.get,
+            "POST": partial(self.session.post, data=data),
+            "PUT": partial(self.session.put, data=data),
         }
 
         req = callbacks.get(method)
@@ -392,7 +395,6 @@ class RestClient(BaseClient):
         resp = req(
             f"https://{self.host}:{self.port}/{path}",
             auth=(self.user, self.password),
-            verify=verify,
         )
         return resp
 
