@@ -280,8 +280,8 @@ class BaseClient:
             verify = as_boolean(os.environ.get("GLUU_COUCHBASE_VERIFY", False))
             if verify:
                 self._session.mount("https://", HostHeaderSSLAdapter())
-                self._session.verify = os.environ.get("GLUU_COUCHBASE_CERT_FILE", "/etc/certs/couchbase.crt")
-                self._session.headers["HOST"] = os.environ.get("GLUU_COUCHBASE_HOST_HEADER", "localhost")
+                self._session.verify = os.environ.get("GLUU_COUCHBASE_CERT_FILE") or "/etc/certs/couchbase.crt"
+                self._session.headers["Host"] = os.environ.get("GLUU_COUCHBASE_HOST_HEADER") or "localhost"
         return self._session
 
     def resolve_host(self) -> str:
