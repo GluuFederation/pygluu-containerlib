@@ -232,6 +232,7 @@ def test_sync_couchbase_cert(tmpdir):
     cert_file.write(DUMMY_COUCHBASE_CERT)
     os.environ["GLUU_COUCHBASE_CERT_FILE"] = str(cert_file)
     assert sync_couchbase_cert() == DUMMY_COUCHBASE_CERT
+    os.environ.clear()
 
 
 def test_exec_api_unsupported_method():
@@ -252,6 +253,42 @@ def test_no_couchbase_hosts(client_prop):
     client = CouchbaseClient("", "admin", "password")
     with pytest.raises(ValueError):
         getattr(client, client_prop)
+
+
+def test_client_session_unverified():
+    from pygluu.containerlib.persistence.couchbase import BaseClient
+
+    client = BaseClient("localhost", "admin", "password")
+    assert client.session.verify is False
+
+
+@pytest.mark.parametrize("given, expected", [
+    ("", "/etc/certs/couchbase.crt"),  # default
+    ("/etc/certs/custom-cb.crt", "/etc/certs/custom-cb.crt"),
+])
+def test_client_session_verified(given, expected):
+    from pygluu.containerlib.persistence.couchbase import BaseClient
+
+    os.environ["GLUU_COUCHBASE_VERIFY"] = "true"
+    os.environ["GLUU_COUCHBASE_CERT_FILE"] = given
+    client = BaseClient("localhost", "admin", "password")
+    assert client.session.verify == expected
+    os.environ.clear()
+
+
+@pytest.mark.parametrize("given, expected", [
+    ("", "localhost"),  # default
+    ("127.0.0.1", "127.0.0.1"),
+])
+def test_client_session_verified_host(given, expected):
+    from pygluu.containerlib.persistence.couchbase import BaseClient
+
+    os.environ["GLUU_COUCHBASE_VERIFY"] = "true"
+    os.environ["GLUU_COUCHBASE_HOST_HEADER"] = given
+    client = BaseClient("localhost", "admin", "password")
+    assert client.session.headers["Host"] == expected
+    os.environ.clear()
+
 
 # ======
 # Hybrid
