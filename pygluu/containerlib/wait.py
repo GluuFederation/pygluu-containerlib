@@ -14,12 +14,12 @@ import backoff
 import ldap3
 import requests
 
-from .persistence.couchbase import (
+from pygluu.containerlib.persistence.couchbase import (
     get_couchbase_user,
     get_couchbase_password,
     CouchbaseClient,
 )
-from .utils import (
+from pygluu.containerlib.utils import (
     as_boolean,
     decode_text,
 )

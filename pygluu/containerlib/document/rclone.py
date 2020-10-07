@@ -8,7 +8,7 @@ This module consists of class to interact with RClone.
 import logging
 import os
 
-from ..utils import exec_cmd
+from pygluu.containerlib.utils import exec_cmd
 
 logger = logging.getLogger(__name__)
 

@@ -11,7 +11,7 @@ import tarfile
 
 import docker
 
-from .base_meta import BaseMeta
+from pygluu.containerlib.meta.base_meta import BaseMeta
 
 
 class DockerMeta(BaseMeta):

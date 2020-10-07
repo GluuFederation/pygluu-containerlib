@@ -1,11 +1,11 @@
 import os
 
-from .couchbase import (  # noqa: F401
+from pygluu.containerlib.persistence.couchbase import (  # noqa: F401
     render_couchbase_properties,
     sync_couchbase_truststore,
 )
-from .hybrid import render_hybrid_properties  # noqa: F401
-from .ldap import (  # noqa: F401
+from pygluu.containerlib.persistence.hybrid import render_hybrid_properties  # noqa: F401
+from pygluu.containerlib.persistence.ldap import (  # noqa: F401
     render_ldap_properties,
     sync_ldap_truststore,
 )

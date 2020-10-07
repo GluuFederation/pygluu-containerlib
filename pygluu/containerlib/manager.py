@@ -13,15 +13,15 @@ from typing import (
     NamedTuple,
 )
 
-from .config import (
+from pygluu.containerlib.config import (
     ConsulConfig,
     KubernetesConfig,
 )
-from .secret import (
+from pygluu.containerlib.secret import (
     KubernetesSecret,
     VaultSecret,
 )
-from .utils import (
+from pygluu.containerlib.utils import (
     decode_text,
     encode_text,
 )

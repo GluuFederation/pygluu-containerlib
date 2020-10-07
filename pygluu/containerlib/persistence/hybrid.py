@@ -7,8 +7,8 @@ This module contains various helpers related to hybrid (LDAP + Couchbase) persis
 
 import os
 
-from .couchbase import get_couchbase_mappings
-from ..constants import COUCHBASE_MAPPINGS
+from pygluu.containerlib.persistence.couchbase import get_couchbase_mappings
+from pygluu.containerlib.constants import COUCHBASE_MAPPINGS
 
 
 def render_hybrid_properties(dest: str) -> None:

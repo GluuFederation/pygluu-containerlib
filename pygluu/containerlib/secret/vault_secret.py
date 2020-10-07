@@ -15,8 +15,8 @@ from typing import (
 
 import hvac
 
-from .base_secret import BaseSecret
-from ..utils import (
+from pygluu.containerlib.secret.base_secret import BaseSecret
+from pygluu.containerlib.utils import (
     as_boolean,
     safe_value,
 )

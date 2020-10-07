@@ -15,8 +15,8 @@ from typing import (
 
 from consul import Consul
 
-from .base_config import BaseConfig
-from ..utils import (
+from pygluu.containerlib.config.base_config import BaseConfig
+from pygluu.containerlib.utils import (
     as_boolean,
     safe_value,
 )

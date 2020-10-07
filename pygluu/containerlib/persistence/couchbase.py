@@ -13,12 +13,12 @@ from typing import NoReturn
 import requests
 from requests_toolbelt.adapters.host_header_ssl import HostHeaderSSLAdapter
 
-from ..utils import (
+from pygluu.containerlib.utils import (
     encode_text,
     cert_to_truststore,
     as_boolean,
 )
-from ..constants import COUCHBASE_MAPPINGS
+from pygluu.containerlib.constants import COUCHBASE_MAPPINGS
 
 GLUU_COUCHBASE_TRUSTSTORE_PASSWORD = "newsecret"
 

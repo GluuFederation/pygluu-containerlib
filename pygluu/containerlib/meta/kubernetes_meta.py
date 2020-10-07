@@ -15,7 +15,7 @@ import kubernetes.client
 import kubernetes.config
 from kubernetes.stream import stream
 
-from .base_meta import BaseMeta
+from pygluu.containerlib.meta.base_meta import BaseMeta
 
 logger = logging.getLogger(__name__)
 
