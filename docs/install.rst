@@ -19,6 +19,7 @@ These distributions will be installed automatically when installing pygluu-conta
 - `ldap3 <https://ldap3.readthedocs.io>`_ provides utilities to interact with LDAP server.
 - `backoff <https://github.com/trendmicro/backoff-python>`_ provides utilities to implement *backoff/retries* when running a callable.
 - `docker <https://docker-py.readthedocs.io>`_ acts as client to interact with Docker API.
+- `requests-toolbelt <https://toolbelt.readthedocs.io/en/latest/>`_ provides utilities to modify Host header to interact with CouchBase server.
 
 The following optional distributions will not be installed automatically:
 

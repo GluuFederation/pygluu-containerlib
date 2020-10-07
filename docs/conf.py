@@ -57,6 +57,7 @@ autodoc_mock_imports = [
     "backoff",
     "docker",
     "cryptography",
+    "requests_toolbelt",
 ]
 
 # Add any paths that contain templates here, relative to this directory.

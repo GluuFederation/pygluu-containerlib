@@ -117,6 +117,7 @@ def get_couchbase_mappings(persistence_type: str, ldap_mapping: str) -> dict:
     - ``token``
     - ``site``
     - ``cache``
+    - ``session``
 
     :params persistence_type: Type of persistence.
     :params ldap_mapping: Mapping that stored in LDAP persistence.
@@ -273,6 +274,18 @@ class BaseClient:
 
     @property
     def session(self):
+        """Get an instance of ``requests.Session``.
+
+        By default, the session will not use certificate verification.
+
+        To enable certificate verification:
+
+        - set ``GLUU_COUCHBASE_VERIFY`` environment variable to ``true`` (default to ``false``)
+        - ensure ``GLUU_COUCHBASE_CERT_FILE`` pointed to valid Couchbase cluster
+          certificate (default to ``/etc/certs/couchbase.crt``)
+        - optionally, set ``GLUU_COUCHBASE_HOST_HEADER`` to match Common Name
+          or any of SubjectAltName defined in certificate (default to ``localhost``)
+        """
         if not self._session:
             self._session = requests.Session()
             self._session.verify = False
