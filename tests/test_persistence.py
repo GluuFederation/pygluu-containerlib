@@ -290,6 +290,29 @@ def test_client_session_verified_host(given, expected):
     os.environ.clear()
 
 
+def test_n1ql_request_body_positional_params():
+    from pygluu.containerlib.persistence.couchbase import build_n1ql_request_body
+
+    body = build_n1ql_request_body(
+        "SELECT * FROM gluu WHERE del = $1 and active = $2",
+        False,
+        True,
+    )
+    assert body["args"] == "[false, true]"
+
+
+def test_n1ql_request_body_named_params():
+    from pygluu.containerlib.persistence.couchbase import build_n1ql_request_body
+
+    body = build_n1ql_request_body(
+        "SELECT * FROM gluu WHERE del = $deleted and active = $active",
+        deleted=False,
+        active=True,
+    )
+    assert body["$deleted"] == "false"
+    assert body["$active"] == "true"
+
+
 # ======
 # Hybrid
 # ======
