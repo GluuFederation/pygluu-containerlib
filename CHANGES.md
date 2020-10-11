@@ -2,6 +2,14 @@
 
 Here you can see an overview of changes between each release.
 
+## Version 2.4.0 (dev)
+
+Unreleased.
+
+* Added support for Couchbase cluster certificate verification (disabled by default).
+* Added support for generating safe N1QL query.
+* Removed `pyDes` wrapper in favor of `cryptography` (https://github.com/GluuFederation/pygluu-containerlib/issues/16).
+
 ## Version 2.3.0
 
 Released on September 22nd, 2020.
