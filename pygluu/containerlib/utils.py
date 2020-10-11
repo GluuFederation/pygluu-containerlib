@@ -6,6 +6,7 @@ This module contains various helpers.
 """
 
 import base64
+import contextlib
 import json
 import pathlib
 import random
@@ -21,6 +22,11 @@ from typing import (
     Tuple,
 )
 
+from cryptography.hazmat.primitives.ciphers import Cipher
+from cryptography.hazmat.primitives.ciphers import algorithms
+from cryptography.hazmat.primitives.ciphers import modes
+from cryptography.hazmat.primitives import padding
+from cryptography.hazmat.backends import default_backend
 from ldap3.utils import hashed
 
 # Default charset
@@ -215,13 +221,6 @@ def anystr_to_bytes(val: AnyStr) -> bytes:
 def encode_text(text: AnyStr, key: AnyStr) -> bytes:
     """Encode text using triple DES and ECB mode.
 
-    There are 2 underlying libraries used behind the scene:
-
-    1. pyDes (deprecated implementation -- preserved as fallback)
-    2. cryptography (faster implementation -- recommended)
-
-    To use the latter, ``cryptography`` package must be installed first.
-
     .. code-block:: python
 
         # output: b'OdiOLVWUv7f8OzfNsuB5Fg=='
@@ -231,22 +230,28 @@ def encode_text(text: AnyStr, key: AnyStr) -> bytes:
     :params key: Key used for encoding salt.
     :returns: Encoded ``bytes`` text.
     """
-    try:
-        from ._crypto import CryptographyHelper as Helper
-    except ImportError:  # pragma: no cover
-        from ._crypto import PydesHelper as Helper
-    return Helper.encode_text(text, key)
+    with contextlib.suppress(AttributeError):
+        # ``key`` must be a ``bytes``
+        key = key.encode()
+
+    with contextlib.suppress(AttributeError):
+        # ``text`` must be a ``bytes``
+        text = text.encode()
+
+    cipher = Cipher(
+        algorithms.TripleDES(key), modes.ECB(), backend=default_backend(),
+    )
+    encryptor = cipher.encryptor()
+
+    padder = padding.PKCS7(algorithms.TripleDES.block_size).padder()
+    padded_data = padder.update(text) + padder.finalize()
+
+    encrypted_text = encryptor.update(padded_data) + encryptor.finalize()
+    return base64.b64encode(encrypted_text)
 
 
 def decode_text(text: AnyStr, key: AnyStr) -> bytes:
     """Decode text using triple DES and ECB mode.
-
-    There are 2 underlying libraries used behind the scene:
-
-    1. pyDes (deprecated implementation -- preserved as fallback)
-    2. cryptography (faster implementation -- recommended)
-
-    To use the latter, ``cryptography`` package must be installed first.
 
     .. code-block:: python
 
@@ -257,8 +262,19 @@ def decode_text(text: AnyStr, key: AnyStr) -> bytes:
     :params key: Key used for decoding salt.
     :returns: Decoded ``bytes`` text.
     """
-    try:
-        from ._crypto import CryptographyHelper as Helper
-    except ImportError:  # pragma: no cover
-        from ._crypto import PydesHelper as Helper
-    return Helper.decode_text(text, key)
+    encoded_text = base64.b64decode(text)
+
+    with contextlib.suppress(AttributeError):
+        # ``key`` must be a ``bytes``
+        key = key.encode()
+
+    cipher = Cipher(
+        algorithms.TripleDES(key), modes.ECB(), backend=default_backend(),
+    )
+    decryptor = cipher.decryptor()
+
+    unpadder = padding.PKCS7(algorithms.TripleDES.block_size).unpadder()
+    padded_data = decryptor.update(encoded_text) + decryptor.finalize()
+
+    # decrypt the encrypted text
+    return unpadder.update(padded_data) + unpadder.finalize()

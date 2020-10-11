@@ -50,8 +50,6 @@ extensions = [
 autodoc_mock_imports = [
     "consul",
     "ldap3",
-    "vintage",
-    "pyDes",
     "kubernetes",
     "hvac",
     "backoff",

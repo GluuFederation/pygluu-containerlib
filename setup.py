@@ -33,11 +33,11 @@ setup(
         "hvac>=0.7.0",
         "kubernetes",
         "urllib3<1.25,>=1.21.1",
-        "pyDes>=2.0.1",
         "ldap3>=2.5",
         "backoff>=1.8.0",
         "docker>=3.7.2",
         "requests-toolbelt>=0.9.1",
+        "cryptography>=2.8",
     ],
     classifiers=[
         "Intended Audience :: Developers",
