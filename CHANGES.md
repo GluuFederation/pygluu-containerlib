@@ -2,9 +2,9 @@
 
 Here you can see an overview of changes between each release.
 
-## Version 2.4.0 (dev)
+## Version 2.4.0
 
-Unreleased.
+Released on October 29th, 2020.
 
 * Added support for Couchbase cluster certificate verification (disabled by default).
 * Added support for generating safe N1QL query.
