@@ -287,6 +287,8 @@ class BaseClient:
         - optionally, set ``GLUU_COUCHBASE_HOST_HEADER`` to match Common Name
           or any of SubjectAltName defined in certificate (default to ``localhost``)
         """
+        suppress_verification_warning()
+
         if not self._session:
             self._session = requests.Session()
             self._session.verify = False
@@ -531,3 +533,11 @@ class CouchbaseClient:
         return self.rest_client.exec_api(
             f"settings/rbac/users/local/{username}", data=data, method="PUT",
         )
+
+
+# backward-compat
+def suppress_verification_warning():
+    import urllib3
+
+    if as_boolean(os.environ.get("GLUU_COUCHBASE_SUPPRESS_VERIFICATION", True)):
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
