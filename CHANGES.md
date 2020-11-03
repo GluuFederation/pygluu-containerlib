@@ -2,6 +2,13 @@
 
 Here you can see an overview of changes between each release.
 
+## Version 2.4.1
+
+Released on November 3rd, 2020.
+
+* Added feature to suppress Couchbase cert verification through environment variable (enabled by default).
+* Changed the scope of pod list API (https://github.com/GluuFederation/pygluu-containerlib/issues/17).
+
 ## Version 2.4.0
 
 Released on October 29th, 2020.
