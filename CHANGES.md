@@ -2,6 +2,12 @@
 
 Here you can see an overview of changes between each release.
 
+## Version 2.4.2
+
+Released on November 12th, 2020.
+
+* Fixed remote execution in Kubernetes (https://github.com/GluuFederation/pygluu-containerlib/issues/18).
+
 ## Version 2.4.1
 
 Released on November 3rd, 2020.
