@@ -78,7 +78,7 @@ class KubernetesMeta(BaseMeta):
             container.metadata.name,
             container.metadata.namespace,
             command=["tar", "xvf", "-", "-C", "/"],
-            container=container.spec.containers[0].name,
+            container=self._get_main_container_name(container),
             stderr=True,
             stdin=True,
             stdout=True,
@@ -115,15 +115,30 @@ class KubernetesMeta(BaseMeta):
         :params container: Container object.
         :params cmd: String of command.
         """
-
         return stream(
             self.client.connect_get_namespaced_pod_exec,
             container.metadata.name,
             container.metadata.namespace,
             command=shlex.split(cmd),
-            container=container.spec.containers[0].name,
+            container=self._get_main_container_name(container),
             stderr=True,
             stdin=True,
             stdout=True,
             tty=False,
         )
+
+    def _get_main_container_name(self, container) -> str:
+        """Get the pod's main container name.
+        """
+        name = ""
+        for cntr in container.spec.containers:
+            if not cntr.env:
+                continue
+
+            for env in cntr.env:
+                if env.name == "GLUU_CONTAINER_MAIN_NAME":
+                    name = env.value
+                    break
+
+        # add fallback (if needed)
+        return name or container.spec.containers[0].name
