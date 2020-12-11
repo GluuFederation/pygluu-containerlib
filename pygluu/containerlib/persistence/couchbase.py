@@ -19,7 +19,6 @@ from pygluu.containerlib.utils import (
     cert_to_truststore,
     as_boolean,
 )
-from pygluu.containerlib.constants import COUCHBASE_MAPPINGS
 
 GLUU_COUCHBASE_TRUSTSTORE_PASSWORD = "newsecret"
 
@@ -102,6 +101,19 @@ def get_couchbase_superuser_password(manager, plaintext: bool = True) -> str:
 get_encoded_couchbase_superuser_password = partial(get_couchbase_superuser_password, plaintext=False)
 
 
+def prefixed_couchbase_mappings():
+    prefix = os.environ.get("GLUU_COUCHBASE_BUCKET_PREFIX", "gluu")
+    mappings = {
+        "default": {"bucket": prefix, "mapping": ""},
+        "user": {"bucket": f"{prefix}_user", "mapping": "people, groups, authorizations"},
+        "cache": {"bucket": f"{prefix}_cache", "mapping": "cache"},
+        "site": {"bucket": f"{prefix}_site", "mapping": "cache-refresh"},
+        "token": {"bucket": f"{prefix}_token", "mapping": "tokens"},
+        "session": {"bucket": f"{prefix}_session", "mapping": "sessions"},
+    }
+    return mappings
+
+
 def get_couchbase_mappings(persistence_type: str, ldap_mapping: str) -> dict:
     """Get mappings of Couchbase buckets.
 
@@ -124,13 +136,15 @@ def get_couchbase_mappings(persistence_type: str, ldap_mapping: str) -> dict:
     :params ldap_mapping: Mapping that stored in LDAP persistence.
     :returns: A map of Couchbase buckets.
     """
+    mappings = prefixed_couchbase_mappings()
+
     if persistence_type == "hybrid":
         return {
             name: mapping
-            for name, mapping in COUCHBASE_MAPPINGS.items()
+            for name, mapping in mappings.items()
             if name != ldap_mapping
         }
-    return COUCHBASE_MAPPINGS
+    return mappings
 
 
 def get_couchbase_conn_timeout() -> int:
@@ -197,6 +211,7 @@ def render_couchbase_properties(manager, src: str, dest: str) -> None:
     persistence_type = os.environ.get("GLUU_PERSISTENCE_TYPE", "couchbase")
     ldap_mapping = os.environ.get("GLUU_PERSISTENCE_LDAP_MAPPING", "default")
     hostname = os.environ.get("GLUU_COUCHBASE_URL", "localhost")
+    bucket_prefix = os.environ.get("GLUU_COUCHBASE_BUCKET_PREFIX", "gluu")
 
     _couchbase_mappings = get_couchbase_mappings(persistence_type, ldap_mapping)
     couchbase_buckets = []
@@ -212,9 +227,9 @@ def render_couchbase_properties(manager, src: str, dest: str) -> None:
             f"bucket.{mapping['bucket']}.mapping: {mapping['mapping']}"
         )
 
-    # always have `gluu` as default bucket
-    if "gluu" not in couchbase_buckets:
-        couchbase_buckets.insert(0, "gluu")
+    # always have  _default_ bucket
+    if bucket_prefix not in couchbase_buckets:
+        couchbase_buckets.insert(0, bucket_prefix)
 
     with open(src) as fr:
         txt = fr.read()
@@ -225,7 +240,7 @@ def render_couchbase_properties(manager, src: str, dest: str) -> None:
                 "couchbase_server_user": get_couchbase_user(manager),
                 "encoded_couchbase_server_pw": get_encoded_couchbase_password(manager),
                 "couchbase_buckets": ", ".join(couchbase_buckets),
-                "default_bucket": "gluu",
+                "default_bucket": bucket_prefix,
                 "couchbase_mappings": "\n".join(couchbase_mappings),
                 "encryption_method": "SSHA-256",
                 "ssl_enabled": "true",

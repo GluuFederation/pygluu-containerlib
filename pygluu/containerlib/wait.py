@@ -252,16 +252,17 @@ def wait_for_couchbase(manager, **kwargs):
 
     persistence_type = os.environ.get("GLUU_PERSISTENCE_TYPE", "couchbase")
     ldap_mapping = os.environ.get("GLUU_PERSISTENCE_LDAP_MAPPING", "default")
+    bucket_prefix = os.environ.get("GLUU_COUCHBASE_BUCKET_PREFIX", "gluu")
 
-    # only `gluu` and `gluu_user` buckets that may have initial data;
+    # only _base_ and _user_ buckets that may have initial data;
     # these data also affected by LDAP mapping selection;
-    # by default we will choose the `gluu` bucket
-    bucket, key = "gluu", "configuration_oxtrust"
+    # by default we will choose the _base_ bucket
+    bucket, key = bucket_prefix, "configuration_oxtrust"
 
     # if `hybrid` is selected and default mapping is stored in LDAP,
-    # the `gluu` bucket won't have data, hence we check the `gluu_user` instead
+    # the _base_ bucket won't have data, hence we check the _user_ bucket
     if persistence_type == "hybrid" and ldap_mapping == "default":
-        bucket, key = "gluu_user", "groups_60B7"
+        bucket, key = f"{bucket_prefix}_user", "groups_60B7"
 
     cb_client = CouchbaseClient(host, user, password)
 
