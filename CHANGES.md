@@ -2,6 +2,13 @@
 
 Here you can see an overview of changes between each release.
 
+## Version 2.4.3
+
+Released on December 11th, 2020.
+
+* Added support to execute command in Pod's main container (https://github.com/GluuFederation/pygluu-containerlib/issues/19).
+* Added support for Couchbase prefix (https://github.com/GluuFederation/pygluu-containerlib/issues/20).
+
 ## Version 2.4.2
 
 Released on November 12th, 2020.
