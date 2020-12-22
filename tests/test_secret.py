@@ -78,7 +78,7 @@ def test_vault_secret_secret_id_missing(gvault_secret):
 
 def test_vault_secret_authenticate_authenticated(gvault_secret, monkeypatch):
     monkeypatch.setattr(
-        "hvac.Client.is_authenticated",
+        "hvac.v1.Client.is_authenticated",
         lambda cls: True,
     )
     assert gvault_secret._authenticate() is None
@@ -91,7 +91,7 @@ def test_vault_secret_authenticate_not_authenticated(gvault_secret, monkeypatch)
     )
 
     monkeypatch.setattr(
-        "hvac.Client.auth_approle",
+        "hvac.api.auth_methods.approle.AppRole.login",
         lambda cls, role_id, secret_id, use_token: {"auth": {"client_token": "token"}}
     )
 
