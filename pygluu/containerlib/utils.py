@@ -320,6 +320,9 @@ def generate_ssl_certkey(suffix, email, hostname, org_name, country_code,
     for ip in extra_ips:
         sans.append(x509.IPAddress(IPv4Address(ip)))
 
+    # make SANs unique
+    sans = list(set(sans))
+
     now = datetime.utcnow()
 
     cert = x509.CertificateBuilder().subject_name(
