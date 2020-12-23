@@ -290,8 +290,12 @@ def decode_text(text: AnyStr, key: AnyStr) -> bytes:
 def generate_ssl_certkey(suffix, email, hostname, org_name, country_code,
                          state, city, base_dir="/etc/certs",
                          extra_dns=None, extra_ips=None):
+    backend = default_backend()
+
     # generate key
-    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    key = rsa.generate_private_key(
+        public_exponent=65537, key_size=2048, backend=backend,
+    )
 
     # generate cert
     subject = issuer = x509.Name([
@@ -356,7 +360,7 @@ def generate_ssl_certkey(suffix, email, hostname, org_name, country_code,
             decipher_only=False,
         ),
         critical=False,
-    ).sign(key, hashes.SHA256())
+    ).sign(key, hashes.SHA256(), backend=backend)
 
     # write cert and key to file
     cert_file = os.path.join(base_dir, f"{suffix}.crt")
