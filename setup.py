@@ -19,8 +19,8 @@ def find_version(*file_paths):
 setup(
     name="pygluu-containerlib",
     version=find_version("pygluu", "containerlib", "__init__.py"),
-    url="",
-    license="Gluu Support",
+    url="https://github.com/GluuFederation/pygluu-containerlib",
+    license="Apache License 2.0",
     author="Gluu",
     author_email="isman@gluu.org",
     description="",
@@ -32,7 +32,6 @@ setup(
         "python-consul>=1.0.1",
         "hvac>=0.7.0",
         "kubernetes",
-        "urllib3<1.25,>=1.21.1",
         "ldap3>=2.5",
         "backoff>=1.8.0",
         "docker>=3.7.2",
@@ -41,7 +40,7 @@ setup(
     ],
     classifiers=[
         "Intended Audience :: Developers",
-        "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: Apache License 2.0",
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
