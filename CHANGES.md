@@ -2,6 +2,13 @@
 
 Here you can see an overview of changes between each release.
 
+## Version 2.5.0
+
+Released on January 13th, 2021.
+
+* Changed call to deprecated ``hvac`` auth method.
+* Added feature to generate SSL cert and key with SAN.
+
 ## Version 2.4.3
 
 Released on December 11th, 2020.
