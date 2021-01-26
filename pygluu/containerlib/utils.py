@@ -194,7 +194,7 @@ def get_server_certificate(
     server_hostname = server_hostname or host
 
     with socket.create_connection((host, port)) as conn:
-        context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS)
 
         with context.wrap_socket(conn, server_hostname=server_hostname) as sock:
             der = sock.getpeercert(True)
