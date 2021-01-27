@@ -2,6 +2,13 @@
 
 Here you can see an overview of changes between each release.
 
+## Version 2.6.0
+
+Released on January 27th, 2021.
+
+* Added support to disable truststore file for Couchbase connection (https://github.com/GluuFederation/pygluu-containerlib/issues/22).
+* Changed call to deprecated `ssl.PROTOCOL_SSLv23` in favor of `ssl.PROTOCOL_TLS`.
+
 ## Version 2.5.0
 
 Released on January 13th, 2021.
