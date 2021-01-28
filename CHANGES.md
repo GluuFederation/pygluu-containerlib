@@ -2,6 +2,12 @@
 
 Here you can see an overview of changes between each release.
 
+## Version 1.2.0
+
+Released on January 28th, 2021.
+
+* Added support to disable truststore file for Couchbase connection.
+
 ## Version 1.1.0
 
 Released on May 11th, 2020.
