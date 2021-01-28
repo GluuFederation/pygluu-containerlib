@@ -7,6 +7,7 @@ import six
 
 from ..utils import encode_text
 from ..utils import cert_to_truststore
+from ..utils import as_boolean
 
 GLUU_COUCHBASE_TRUSTSTORE_PASSWORD = "newsecret"
 
@@ -128,7 +129,9 @@ def render_couchbase_properties(manager, src, dest):
                 "default_bucket": "gluu",
                 "couchbase_mappings": "\n".join(couchbase_mappings),
                 "encryption_method": "SSHA-256",
-                "ssl_enabled": "true",
+                "ssl_enabled": str(as_boolean(
+                    os.environ.get("GLUU_COUCHBASE_TRUSTSTORE_ENABLE", True)
+                )).lower(),
                 "couchbaseTrustStoreFn": manager.config.get("couchbaseTrustStoreFn"),
                 "encoded_couchbaseTrustStorePass": encode_text(
                     GLUU_COUCHBASE_TRUSTSTORE_PASSWORD,
