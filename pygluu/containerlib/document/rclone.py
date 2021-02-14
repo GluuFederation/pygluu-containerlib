@@ -3,6 +3,7 @@ pygluu.containerlib.document.rclone
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This module consists of class to interact with RClone.
+Note that this module is deprecated and will be removed in future versions.
 """
 
 import logging
