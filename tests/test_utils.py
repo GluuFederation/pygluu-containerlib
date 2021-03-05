@@ -1,5 +1,6 @@
 import os
 import shutil
+import distro
 
 import pytest
 
@@ -182,6 +183,10 @@ FRnpMhUJ4+bn+h0kxS4agwb2uCSO4Ge7edViq6ZFZnnfOG6zsz3VJRV71Zw2CQAL
     assert code == 0
 
 
+@pytest.mark.skipif(
+    distro.id() == "ubuntu" and distro.version().startswith("20"),
+    reason="need to lower security level on current OS",
+)
 def test_get_server_certificate(tmpdir, httpsserver):
     from pygluu.containerlib.utils import get_server_certificate
 
