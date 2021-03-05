@@ -313,6 +313,34 @@ def test_n1ql_request_body_named_params():
     assert body["$active"] == "true"
 
 
+@pytest.mark.parametrize("enable_ssl, scheme, port", [
+    ("true", "https", 18091),
+    ("false", "http", 8091),
+])
+def test_couchbase_rest_client_conn(monkeypatch, enable_ssl, scheme, port):
+    from pygluu.containerlib.persistence.couchbase import RestClient
+
+    monkeypatch.setenv("GLUU_COUCHBASE_TRUSTSTORE_ENABLE", enable_ssl)
+
+    client = RestClient("localhost", "admin", "password")
+    assert client.port == port
+    assert client.scheme == scheme
+
+
+@pytest.mark.parametrize("enable_ssl, scheme, port", [
+    ("true", "https", 18093),
+    ("false", "http", 8093),
+])
+def test_couchbase_n1ql_client_conn(monkeypatch, enable_ssl, scheme, port):
+    from pygluu.containerlib.persistence.couchbase import N1qlClient
+
+    monkeypatch.setenv("GLUU_COUCHBASE_TRUSTSTORE_ENABLE", enable_ssl)
+
+    client = N1qlClient("localhost", "admin", "password")
+    assert client.port == port
+    assert client.scheme == scheme
+
+
 # ======
 # Hybrid
 # ======
