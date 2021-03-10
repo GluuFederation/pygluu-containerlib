@@ -2,6 +2,15 @@
 
 Here you can see an overview of changes between each release.
 
+## Version 2.7.0
+
+Released on March 10th, 2021.
+
+* Added new environment variable `GLUU_OXD_SERVER_VERIFY` (default to `False`).
+* Removed support for TLSv1 and TLSv1.1 protocols.
+* Added feature to switch Couchbase ports based on enabled/disabled trustore for Couchbase connection.
+* Added support for keep-alive config for Couchbase connection (https://github.com/GluuFederation/pygluu-containerlib/issues/25).
+
 ## Version 2.6.0
 
 Released on January 27th, 2021.
