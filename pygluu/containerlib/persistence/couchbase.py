@@ -582,10 +582,10 @@ def suppress_verification_warning():
 
 
 def get_couchbase_keepalive_interval():
-    """Get keep-alive timeout to Couchbase server.
+    """Get keep-alive interval to Couchbase server.
 
-    Default keepalive timeout is 2500  milliseconds. To change the value, pass
-    `GLUU_COUCHBASE_KEEPALIVE_TIMEOUT` environment variable.
+    Default keep-alive interval is 30000  milliseconds. To change the value, pass
+    `GLUU_COUCHBASE_KEEPALIVE_INTERVAL` environment variable.
 
     :returns: Keep-alive interval (in milliseconds).
     """
