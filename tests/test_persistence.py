@@ -341,6 +341,59 @@ def test_couchbase_n1ql_client_conn(monkeypatch, enable_ssl, scheme, port):
     assert client.scheme == scheme
 
 
+@pytest.mark.parametrize("interval, expected", [
+    (4000, 4000),
+    (None, 30000),
+])
+def test_get_couchbase_keepalive_interval(monkeypatch, interval, expected):
+    from pygluu.containerlib.persistence.couchbase import get_couchbase_keepalive_interval
+
+    monkeypatch.setenv("GLUU_COUCHBASE_KEEPALIVE_INTERVAL", str(interval))
+    assert get_couchbase_keepalive_interval() == expected
+
+
+@pytest.mark.parametrize("timeout, expected", [
+    (5000, 5000),
+    (None, 2500),
+])
+def test_get_couchbase_keepalive_timeout(monkeypatch, timeout, expected):
+    from pygluu.containerlib.persistence.couchbase import get_couchbase_keepalive_timeout
+
+    monkeypatch.setenv("GLUU_COUCHBASE_KEEPALIVE_TIMEOUT", str(timeout))
+    assert get_couchbase_keepalive_timeout() == expected
+
+
+def test_render_couchbase_properties(monkeypatch, tmpdir, gmanager):
+    from pygluu.containerlib.persistence.couchbase import render_couchbase_properties
+
+    passwd = tmpdir.join("couchbase_password")
+    passwd.write("secret")
+    monkeypatch.setenv("GLUU_COUCHBASE_PASSWORD_FILE", str(passwd))
+
+    tmpl = """
+connection.connect-timeout: %(couchbase_conn_timeout)s
+connection.connection-max-wait-time: %(couchbase_conn_max_wait)s
+connection.scan-consistency: %(couchbase_scan_consistency)s
+connection.keep-alive-interval: %(couchbase_keepalive_interval)s
+connection.keep-alive-timeout: %(couchbase_keepalive_timeout)s
+""".strip()
+
+    expected = """
+connection.connect-timeout: 10000
+connection.connection-max-wait-time: 20000
+connection.scan-consistency: not_bounded
+connection.keep-alive-interval: 30000
+connection.keep-alive-timeout: 2500
+""".strip()
+
+    src = tmpdir.join("gluu-couchbase.properties.tmpl")
+    src.write(tmpl)
+    dest = tmpdir.join("gluu-couchbase.properties")
+
+    render_couchbase_properties(gmanager, str(src), str(dest))
+    assert dest.read() == expected
+
+
 # ======
 # Hybrid
 # ======
