@@ -11,7 +11,6 @@ import os
 import sys
 
 import backoff
-import ldap3
 import requests
 
 from pygluu.containerlib.persistence.couchbase import (
@@ -19,10 +18,8 @@ from pygluu.containerlib.persistence.couchbase import (
     get_couchbase_password,
     CouchbaseClient,
 )
-from pygluu.containerlib.utils import (
-    as_boolean,
-    decode_text,
-)
+from pygluu.containerlib.utils import as_boolean
+from pygluu.containerlib.persistence.ldap import LdapClient
 
 
 logger = logging.getLogger(__name__)
@@ -169,15 +166,9 @@ def wait_for_ldap(manager, **kwargs):
 
     :param manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
     """
-    host = os.environ.get("GLUU_LDAP_URL", "localhost:1636")
-    user = manager.config.get("ldap_binddn")
-    password = decode_text(
-        manager.secret.get("encoded_ox_ldap_pw"), manager.secret.get("encoded_salt")
-    )
 
     persistence_type = os.environ.get("GLUU_PERSISTENCE_TYPE", "ldap")
     ldap_mapping = os.environ.get("GLUU_PERSISTENCE_LDAP_MAPPING", "default")
-    ldap_server = ldap3.Server(host, 1636, use_ssl=True)
 
     # a minimum service stack is having oxTrust, hence check whether entry
     # for oxTrust exists in LDAP
@@ -200,17 +191,10 @@ def wait_for_ldap(manager, **kwargs):
     else:
         search = default_search
 
-    with ldap3.Connection(ldap_server, user, password) as conn:
-        conn.search(
-            search_base=search[0],
-            search_filter=search[1],
-            search_scope=ldap3.SUBTREE,
-            attributes=["objectClass"],
-            size_limit=1,
-        )
-
-        if not conn.entries:
-            raise WaitError("LDAP is not fully initialized")
+    client = LdapClient(manager)
+    entries = client.search(search[0], search[1], attributes=["objectClass"], limit=1)
+    if not entries:
+        raise WaitError("LDAP is not fully initialized")
 
 
 @retry_on_exception
@@ -219,25 +203,10 @@ def wait_for_ldap_conn(manager, **kwargs):
 
     :param manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
     """
-    host = os.environ.get("GLUU_LDAP_URL", "localhost:1636")
-    user = manager.config.get("ldap_binddn")
-    password = decode_text(
-        manager.secret.get("encoded_ox_ldap_pw"), manager.secret.get("encoded_salt")
-    )
 
-    ldap_server = ldap3.Server(host, 1636, use_ssl=True)
-    search = ("", "(objectClass=*)")
-
-    with ldap3.Connection(ldap_server, user, password) as conn:
-        conn.search(
-            search_base=search[0],
-            search_filter=search[1],
-            search_scope=ldap3.BASE,
-            attributes=["1.1"],
-            size_limit=1,
-        )
-        if not conn.entries:
-            raise WaitError("LDAP is unreachable")
+    connected = LdapClient(manager).is_connected()
+    if not connected:
+        raise WaitError("LDAP is unreachable")
 
 
 @retry_on_exception
