@@ -135,7 +135,7 @@ class LdapClient:
             return None
         return entries[0]
 
-    def search(self, dn, filter_="(objectClass=*)", attributes=None, limit=None, scope=""):
+    def search(self, dn, filter_="(objectClass=*)", attributes=None, limit=0, scope=""):
         """
         Search for entries.
 
