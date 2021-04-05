@@ -132,7 +132,7 @@ class LdapClient:
 
         entries = self.search(dn, filter_=filter_, attributes=attributes, limit=1, scope=BASE)
         if not entries:
-            return
+            return None
         return entries[0]
 
     def search(self, dn, filter_="(objectClass=*)", attributes=None, limit=None, scope=""):
