@@ -2,6 +2,13 @@
 
 Here you can see an overview of changes between each release.
 
+## Version 2.8.0
+
+Released on April 6th, 2021.
+
+* Added support for unencrypted connection to LDAP server (https://github.com/GluuFederation/pygluu-containerlib/issues/23).
+* Added new environment variable `GLUU_LDAP_USE_SSL` (default to `true`).
+
 ## Version 2.7.0
 
 Released on March 10th, 2021.
