@@ -9,6 +9,7 @@ from pygluu.containerlib.persistence.ldap import (  # noqa: F401
     render_ldap_properties,
     sync_ldap_truststore,
 )
+from pygluu.containerlib.persistence.spanner import render_spanner_properties  # noqa: F401
 
 
 def render_salt(manager, src: str, dest: str) -> None:

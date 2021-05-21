@@ -20,6 +20,7 @@ from pygluu.containerlib.persistence.couchbase import (
 )
 from pygluu.containerlib.utils import as_boolean
 from pygluu.containerlib.persistence.ldap import LdapClient
+from pygluu.containerlib.persistence.spanner import SpannerClient
 
 
 logger = logging.getLogger(__name__)
@@ -324,6 +325,26 @@ def wait_for_oxd(manager, **kwargs):
         raise WaitError(req.reason)
 
 
+@retry_on_exception
+def wait_for_spanner_conn(manager, **kwargs):
+    """Wait for readiness/liveness of an Spanner database connection.
+    """
+    # checking connection
+    init = SpannerClient().connected()
+    if not init:
+        raise WaitError("Spanner backend is unreachable")
+
+
+@retry_on_exception
+def wait_for_spanner(manager, **kwargs):
+    """Wait for readiness/liveness of an Spanner database.
+    """
+    init = SpannerClient().row_exists("oxAuthClient", manager.config.get("oxauth_client_id"))
+
+    if not init:
+        raise WaitError("Spanner is not fully initialized")
+
+
 def wait_for(manager, deps=None):
     """A high-level function to run one or more ``wait_for_*`` function(s).
 
@@ -340,6 +361,8 @@ def wait_for(manager, deps=None):
     - `oxauth`
     - `oxtrust`
     - `oxd`
+    - `spanner`
+    - `spanner_conn`
 
     .. code-block:: python
 
@@ -375,6 +398,8 @@ def wait_for(manager, deps=None):
         "oxauth": {"func": wait_for_oxauth, "kwargs": {"label": "oxAuth"}},
         "oxtrust": {"func": wait_for_oxtrust, "kwargs": {"label": "oxTrust"}},
         "oxd": {"func": wait_for_oxd, "kwargs": {"label": "oxd"}},
+        "spanner_conn": {"func": wait_for_spanner_conn, "kwargs": {"label": "Spanner"}},
+        "spanner": {"func": wait_for_spanner, "kwargs": {"label": "Spanner"}},
     }
 
     for dep in deps:

@@ -542,3 +542,77 @@ storage.couchbase.mapping: people, groups, authorizations, cache, tokens, sessio
 
     os.environ.pop("GLUU_PERSISTENCE_TYPE", None)
     os.environ.pop("GLUU_PERSISTENCE_LDAP_MAPPING", None)
+
+
+# =======
+# SPANNER
+# =======
+
+
+def test_render_spanner_properties(monkeypatch, tmpdir, gmanager):
+    import json
+    from pygluu.containerlib.persistence.spanner import render_spanner_properties
+
+    creds = tmpdir.join("google-credentials.json")
+    creds.write(json.dumps({
+        "client_id": "random-id",
+        "client_secret": "random-secret",
+        "refresh_token": "random-refresh-token",
+        "type": "authorized_user"
+    }))
+
+    monkeypatch.setenv("GOOGLE_APPLICATION_CREDENTIALS", str(creds))
+    monkeypatch.setenv("GOOGLE_PROJECT_ID", "testing-project")
+    monkeypatch.setenv("GLUU_GOOGLE_SPANNER_INSTANCE_ID", "testing-instance")
+    monkeypatch.setenv("GLUU_GOOGLE_SPANNER_DATABASE_ID", "testing-db")
+
+    tmpl = """
+connection.project=%(spanner_project)s
+connection.instance=%(spanner_instance)s
+connection.database=%(spanner_database)s
+%(spanner_creds)s
+""".strip()
+
+    expected = """
+connection.project=testing-project
+connection.instance=testing-instance
+connection.database=testing-db
+connection.credentials-file={}
+""".format(str(creds)).strip()
+
+    src = tmpdir.join("gluu-spanner.properties.tmpl")
+    src.write(tmpl)
+    dest = tmpdir.join("gluu-spanner.properties")
+
+    render_spanner_properties(gmanager, str(src), str(dest))
+    assert dest.read() == expected
+
+
+def test_render_spanner_properties_emulator(monkeypatch, tmpdir, gmanager):
+    from pygluu.containerlib.persistence.spanner import render_spanner_properties
+
+    monkeypatch.setenv("SPANNER_EMULATOR_HOST", "localhost:9010")
+    monkeypatch.setenv("GOOGLE_PROJECT_ID", "testing-project")
+    monkeypatch.setenv("GLUU_GOOGLE_SPANNER_INSTANCE_ID", "testing-instance")
+    monkeypatch.setenv("GLUU_GOOGLE_SPANNER_DATABASE_ID", "testing-db")
+
+    tmpl = """
+connection.project=%(spanner_project)s
+connection.instance=%(spanner_instance)s
+connection.database=%(spanner_database)s
+%(spanner_creds)s
+""".strip()
+
+    expected = """
+connection.project=testing-project
+connection.instance=testing-instance
+connection.database=testing-db
+connection.emulator-host=localhost:9010
+""".strip()
+
+    src = tmpdir.join("gluu-spanner.properties.tmpl")
+    src.write(tmpl)
+    dest = tmpdir.join("gluu-spanner.properties")
+
+    render_spanner_properties(gmanager, str(src), str(dest))
+    assert dest.read() == expected
