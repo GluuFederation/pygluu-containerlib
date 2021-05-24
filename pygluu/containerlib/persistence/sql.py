@@ -1,6 +1,6 @@
 """
 pygluu.containerlib.persistence.sql
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This module contains various helpers related to SQL persistence.
 """
