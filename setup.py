@@ -37,6 +37,7 @@ setup(
         "docker>=3.7.2",
         "requests-toolbelt>=0.9.1",
         "cryptography>=2.8",
+        "google-cloud-spanner>=3.3.0",
     ],
     classifiers=[
         "Intended Audience :: Developers",
