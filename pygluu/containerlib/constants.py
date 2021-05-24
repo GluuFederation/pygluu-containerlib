@@ -9,6 +9,7 @@ PERSISTENCE_TYPES = (
     "ldap",
     "couchbase",
     "hybrid",
+    "sql",
     "spanner",
 )
 
@@ -19,4 +20,10 @@ PERSISTENCE_LDAP_MAPPINGS = (
     "cache",
     "token",
     "session",
+)
+
+# Supported SQL dialects
+PERSISTENCE_SQL_DIALECTS = (
+    "mysql",
+    "pgsql",
 )
