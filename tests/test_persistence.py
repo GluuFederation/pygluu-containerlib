@@ -544,6 +544,86 @@ storage.couchbase.mapping: people, groups, authorizations, cache, tokens, sessio
     os.environ.pop("GLUU_PERSISTENCE_LDAP_MAPPING", None)
 
 
+# ===
+# SQL
+# ===
+
+
+def test_get_sql_password(monkeypatch, tmpdir):
+    from pygluu.containerlib.persistence.sql import get_sql_password
+
+    src = tmpdir.join("sql_password")
+    src.write("secret")
+
+    monkeypatch.setenv("GLUU_SQL_PASSWORD_FILE", str(src))
+
+    assert get_sql_password() == "secret"
+
+
+def test_render_sql_properties(monkeypatch, tmpdir, gmanager):
+    from pygluu.containerlib.persistence.sql import render_sql_properties
+
+    passwd = tmpdir.join("sql_password")
+    passwd.write("secret")
+
+    monkeypatch.setenv("GLUU_SQL_PASSWORD_FILE", str(passwd))
+
+    tmpl = """
+db.schema.name=%(rdbm_db)s
+connection.uri=jdbc:%(rdbm_type)s://%(rdbm_host)s:%(rdbm_port)s/%(rdbm_db)s
+connection.driver-property.serverTimezone=%(server_time_zone)s
+auth.userName=%(rdbm_user)s
+auth.userPassword=%(rdbm_password_enc)s
+""".strip()
+
+    expected = """
+db.schema.name=gluu
+connection.uri=jdbc:mysql://localhost:3306/gluu
+connection.driver-property.serverTimezone=UTC
+auth.userName=gluu
+auth.userPassword=fHL54sT5qHk=
+""".strip()
+
+    src = tmpdir.join("gluu-sql.properties.tmpl")
+    src.write(tmpl)
+    dest = tmpdir.join("gluu-sql.properties")
+
+    render_sql_properties(gmanager, str(src), str(dest))
+    assert dest.read() == expected
+
+
+@pytest.mark.parametrize("dialect", [
+    "mysql",
+    "pgsql",
+])
+def test_sql_client_init(monkeypatch, dialect):
+    from pygluu.containerlib.persistence.sql import SQLClient
+
+    monkeypatch.setenv("GLUU_SQL_DB_DIALECT", dialect)
+
+    client = SQLClient()
+    assert client.adapter.dialect == dialect
+
+
+def test_sql_client_getattr(monkeypatch):
+    from pygluu.containerlib.persistence.sql import SQLClient
+
+    monkeypatch.setenv("GLUU_SQL_DB_DIALECT", "mysql")
+
+    client = SQLClient()
+    assert client.__getattr__("create_table")
+
+
+def test_sql_client_getattr_error(monkeypatch):
+    from pygluu.containerlib.persistence.sql import SQLClient
+
+    monkeypatch.setenv("GLUU_SQL_DB_DIALECT", "mysql")
+
+    client = SQLClient()
+    with pytest.raises(AttributeError):
+        assert client.__getattr__("random_attr")
+
+
 # =======
 # SPANNER
 # =======

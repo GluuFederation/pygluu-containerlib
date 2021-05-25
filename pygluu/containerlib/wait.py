@@ -20,6 +20,7 @@ from pygluu.containerlib.persistence.couchbase import (
 )
 from pygluu.containerlib.utils import as_boolean
 from pygluu.containerlib.persistence.ldap import LdapClient
+from pygluu.containerlib.persistence.sql import SQLClient
 from pygluu.containerlib.persistence.spanner import SpannerClient
 
 
@@ -326,6 +327,26 @@ def wait_for_oxd(manager, **kwargs):
 
 
 @retry_on_exception
+def wait_for_sql_conn(manager, **kwargs):
+    """Wait for readiness/liveness of an SQL database connection.
+    """
+    # checking connection
+    init = SQLClient().connected()
+    if not init:
+        raise WaitError("SQL backend is unreachable")
+
+
+@retry_on_exception
+def wait_for_sql(manager, **kwargs):
+    """Wait for readiness/liveness of an SQL database.
+    """
+    init = SQLClient().row_exists("oxAuthClient", manager.config.get("oxauth_client_id"))
+
+    if not init:
+        raise WaitError("SQL is not fully initialized")
+
+
+@retry_on_exception
 def wait_for_spanner_conn(manager, **kwargs):
     """Wait for readiness/liveness of an Spanner database connection.
     """
@@ -361,6 +382,8 @@ def wait_for(manager, deps=None):
     - `oxauth`
     - `oxtrust`
     - `oxd`
+    - `sql`
+    - `sql_conn`
     - `spanner`
     - `spanner_conn`
 
@@ -398,6 +421,8 @@ def wait_for(manager, deps=None):
         "oxauth": {"func": wait_for_oxauth, "kwargs": {"label": "oxAuth"}},
         "oxtrust": {"func": wait_for_oxtrust, "kwargs": {"label": "oxTrust"}},
         "oxd": {"func": wait_for_oxd, "kwargs": {"label": "oxd"}},
+        "sql_conn": {"func": wait_for_sql_conn, "kwargs": {"label": "SQL"}},
+        "sql": {"func": wait_for_sql, "kwargs": {"label": "SQL"}},
         "spanner_conn": {"func": wait_for_spanner_conn, "kwargs": {"label": "Spanner"}},
         "spanner": {"func": wait_for_spanner, "kwargs": {"label": "Spanner"}},
     }

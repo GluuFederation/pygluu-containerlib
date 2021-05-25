@@ -1,22 +1,56 @@
 import pytest
 
 
-def test_validate_persistence_type():
+@pytest.mark.parametrize("type_", [
+    "ldap",
+    "couchbase",
+    "hybrid",
+    "sql",
+])
+def test_validate_persistence_type(type_):
     from pygluu.containerlib.validators import validate_persistence_type
-    from pygluu.containerlib.validators import ValidationError
-
-    type_ = "random"
-
-    with pytest.raises(ValidationError):
-        validate_persistence_type(type_)
+    assert validate_persistence_type(type_) is None
 
 
-def test_validate_persistence_ldap_mapping():
+def test_validate_persistence_type_invalid():
+    from pygluu.containerlib.validators import validate_persistence_type
+
+    with pytest.raises(ValueError):
+        validate_persistence_type("random")
+
+
+@pytest.mark.parametrize("mapping", [
+    "default",
+    "user",
+    "site",
+    "cache",
+    "token",
+    "session",
+])
+def test_validate_persistence_ldap_mapping(mapping):
     from pygluu.containerlib.validators import validate_persistence_ldap_mapping
-    from pygluu.containerlib.validators import ValidationError
+    assert validate_persistence_ldap_mapping("hybrid", mapping) is None
 
-    type_ = "hybrid"
-    mapping = "random"
 
-    with pytest.raises(ValidationError):
-        validate_persistence_ldap_mapping(type_, mapping)
+def test_validate_persistence_ldap_mapping_invalid():
+    from pygluu.containerlib.validators import validate_persistence_ldap_mapping
+
+    with pytest.raises(ValueError):
+        validate_persistence_ldap_mapping("hybrid", "random")
+
+
+@pytest.mark.parametrize("dialect", [
+    "mysql",
+    "pgsql",
+])
+def test_validate_persistence_sql_dialect(dialect):
+    from pygluu.containerlib.validators import validate_persistence_sql_dialect
+
+    assert validate_persistence_sql_dialect(dialect) is None
+
+
+def test_validate_persistence_sql_dialect_invalid():
+    from pygluu.containerlib.validators import validate_persistence_sql_dialect
+
+    with pytest.raises(ValueError):
+        validate_persistence_sql_dialect("random")

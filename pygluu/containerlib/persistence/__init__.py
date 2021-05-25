@@ -9,6 +9,7 @@ from pygluu.containerlib.persistence.ldap import (  # noqa: F401
     render_ldap_properties,
     sync_ldap_truststore,
 )
+from pygluu.containerlib.persistence.sql import render_sql_properties  # noqa: F401
 from pygluu.containerlib.persistence.spanner import render_spanner_properties  # noqa: F401
 
 
