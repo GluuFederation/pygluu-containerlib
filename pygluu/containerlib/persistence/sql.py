@@ -207,6 +207,23 @@ class BaseClient:
             result = conn.execute(query)
         return bool(result.rowcount)
 
+    def search(self, table_name, column_names=None) -> dict:
+        """Get a row from a table with matching ID."""
+
+        table = self.metadata.tables.get(table_name)
+
+        attrs = column_names or []
+        if attrs:
+            cols = [table.c[attr] for attr in attrs]
+        else:
+            cols = table
+
+        query = select(cols).select_from(table)
+        with self.engine.connect() as conn:
+            result = conn.execute(query)
+            for entry in result:
+                yield dict(entry)
+
 
 class PostgresqlClient(BaseClient):
     """Class for PostgreSQL adapter.
@@ -327,6 +344,7 @@ class SQLClient:
         "insert_into",
         "get",
         "update",
+        "search",
     )
 
     def __init__(self):
