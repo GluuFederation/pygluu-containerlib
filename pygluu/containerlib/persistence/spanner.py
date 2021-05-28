@@ -206,8 +206,9 @@ class SpannerClient:
                 ]),
                 limit=1,
             )
-            row = list(result)[0]
-            entry = dict(zip(column_names, row))
+            with suppress(IndexError, NotFound):
+                row = list(result)[0]
+                entry = dict(zip(column_names, row))
         return entry
 
     def update(self, table_name, id_, column_mapping) -> bool:
