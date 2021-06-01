@@ -216,7 +216,7 @@ class BaseClient:
         if attrs:
             cols = [table.c[attr] for attr in attrs]
         else:
-            cols = table
+            cols = [table]
 
         query = select(cols).select_from(table)
         with self.engine.connect() as conn:
