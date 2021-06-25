@@ -2,6 +2,13 @@
 
 Here you can see an overview of changes between each release.
 
+## Version 2.9.0
+
+Released on June 25th, 2021.
+
+* Added support for SQL persistence.
+* Added support for Spanner persistence.
+
 ## Version 2.8.0
 
 Released on April 6th, 2021.
