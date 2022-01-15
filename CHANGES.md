@@ -2,6 +2,12 @@
 
 Here you can see an overview of changes between each release.
 
+## Version 2.9.1
+
+Released on January 15th, 2022.
+
+* Fixed incorrect timestamp when file extracted from TAR archive (https://github.com/GluuFederation/pygluu-containerlib/issues/32).
+
 ## Version 2.9.0
 
 Released on June 25th, 2021.
