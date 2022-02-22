@@ -2,6 +2,13 @@
 
 Here you can see an overview of changes between each release.
 
+## Version 2.10.0
+
+Released on February 23rd, 2022.
+
+* Improved table mapping for SQL persistence client.
+* Improved table mapping for Spanner persistence client.
+
 ## Version 2.9.1
 
 Released on January 15th, 2022.
