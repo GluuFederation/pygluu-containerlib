@@ -2,6 +2,12 @@
 
 Here you can see an overview of changes between each release.
 
+## Version 2.11.0
+
+Released on April 12th, 2022.
+
+* Added option to specify validity length (in days) for generated certificate (https://github.com/GluuFederation/docker-certmanager/issues/29).
+
 ## Version 2.10.0
 
 Released on February 23rd, 2022.
