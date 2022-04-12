@@ -294,7 +294,7 @@ def decode_text(text: AnyStr, key: AnyStr) -> bytes:
 
 def generate_ssl_certkey(suffix, email, hostname, org_name, country_code,
                          state, city, base_dir="/etc/certs",
-                         extra_dns=None, extra_ips=None):
+                         extra_dns=None, extra_ips=None, valid_to=365):
     backend = default_backend()
 
     # generate key
@@ -332,7 +332,8 @@ def generate_ssl_certkey(suffix, email, hostname, org_name, country_code,
     # make SANs unique
     sans = list(set(sans))
 
-    now = datetime.utcnow()
+    valid_from = datetime.utcnow()
+    valid_to = valid_from + timedelta(days=valid_to)
 
     cert = x509.CertificateBuilder().subject_name(
         subject
@@ -343,9 +344,9 @@ def generate_ssl_certkey(suffix, email, hostname, org_name, country_code,
     ).serial_number(
         x509.random_serial_number()
     ).not_valid_before(
-        now
+        valid_from
     ).not_valid_after(
-        now + timedelta(days=365)
+        valid_to
     ).add_extension(
         x509.BasicConstraints(ca=False, path_length=None),
         critical=False,
