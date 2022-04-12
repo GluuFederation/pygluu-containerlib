@@ -56,29 +56,6 @@ def test_get_sys_random_chars(size):
     assert len(get_sys_random_chars(size)) == size
 
 
-# def test_get_quad():
-#     from pygluu.containerlib.utils import get_quad
-#     assert len(get_quad()) == 4
-
-
-# def test_join_quad_str():
-#     from pygluu.containerlib.utils import join_quad_str
-
-#     # should have dot char
-#     assert join_quad_str(2).find(".") != 0
-#     assert len(join_quad_str(2)) == 9
-
-
-# @pytest.mark.parametrize("val, expected", [
-#     ("@1234", "1234"),
-#     ("!1234", "1234"),
-#     (".1234", "1234")
-# ])
-# def test_safe_inum_str(val, expected):
-#     from pygluu.containerlib.utils import safe_inum_str
-#     assert safe_inum_str(val) == expected
-
-
 @pytest.mark.parametrize("cmd", ["echo foobar"])
 def test_exec_cmd(cmd):
     from pygluu.containerlib.utils import exec_cmd
@@ -207,7 +184,7 @@ def test_generate_ssl_certkey(tmpdir):
     from pygluu.containerlib.utils import generate_ssl_certkey
 
     base_dir = tmpdir.mkdir("certs")
-    cert, key = generate_ssl_certkey(
+    cert, _ = generate_ssl_certkey(
         "my-suffix",
         "email@org.local",
         "my.org.local",
