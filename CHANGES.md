@@ -2,6 +2,13 @@
 
 Here you can see an overview of changes between each release.
 
+## Version 2.12.0
+
+Released on May 24th, 2022.
+
+* Refactored `pygluu.containerlib.persistence.sql` module.
+* Added new method `SQLClient.get_server_version` to get version info as a tuple.
+
 ## Version 2.11.0
 
 Released on April 12th, 2022.
