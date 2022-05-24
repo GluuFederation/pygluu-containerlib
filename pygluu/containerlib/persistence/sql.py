@@ -8,6 +8,7 @@ This module contains various helpers related to SQL persistence.
 import contextlib
 import logging
 import os
+import re
 from collections import defaultdict
 
 from sqlalchemy import create_engine
@@ -18,6 +19,8 @@ from sqlalchemy import select
 from pygluu.containerlib.utils import encode_text
 
 logger = logging.getLogger(__name__)
+
+SERVER_VERSION_RE = re.compile(r"\d+(.\d+)+")
 
 
 def get_sql_password() -> str:
@@ -220,6 +223,16 @@ class SQLClient:
     def server_version(self):
         """Display server version."""
         return self.engine.scalar(self.adapter.server_version_query)
+
+    def get_server_version(self):
+        """Get server version as tuple."""
+        # major and minor format
+        version = [0, 0]
+
+        pattern = SERVER_VERSION_RE.search(self.server_version)
+        if pattern:
+            version = [int(comp) for comp in pattern.group().split(".")]
+        return tuple(version)
 
 
 class PostgresqlAdapter:
