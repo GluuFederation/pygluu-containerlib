@@ -27,24 +27,41 @@ def get_sql_password() -> str:
     """
     password_file = os.environ.get("GLUU_SQL_PASSWORD_FILE", "/etc/gluu/conf/sql_password")
 
-    password = ""
+    password = ""  # nosec: B105
     with contextlib.suppress(FileNotFoundError):
         with open(password_file) as f:
             password = f.read().strip()
     return password
 
 
-class BaseClient:
+class SQLClient:
     """Base class for SQL client adapter.
     """
 
     def __init__(self):
-        self.engine = create_engine(
-            self.engine_url,
-            pool_pre_ping=True,
-            hide_parameters=True,
-        )
         self._metadata = None
+        self._engine = None
+
+        dialect = os.environ.get("GLUU_SQL_DB_DIALECT", "mysql")
+        if dialect in ("pgsql", "postgresql"):
+            self.adapter = PostgresqlAdapter()
+        elif dialect == "mysql":
+            self.adapter = MysqlAdapter()
+
+    @property
+    def engine(self):
+        if not self._engine:
+            self._engine = create_engine(self.engine_url, pool_pre_ping=True, hide_parameters=True)
+        return self._engine
+
+    @property
+    def engine_url(self) -> str:
+        host = os.environ.get("GLUU_SQL_DB_HOST", "localhost")
+        port = os.environ.get("GLUU_SQL_DB_PORT", 3306)
+        database = os.environ.get("GLUU_SQL_DB_NAME", "gluu")
+        user = os.environ.get("GLUU_SQL_DB_USER", "gluu")
+        password = get_sql_password()
+        return f"{self.adapter.connector}://{user}:{password}@{host}:{port}/{database}"
 
     @property
     def metadata(self):
@@ -56,26 +73,11 @@ class BaseClient:
         return self._metadata
 
     @property
-    def dialect(self):
+    def dialect(self) -> str:
         """Dialect name."""
-        raise NotImplementedError
+        return self.adapter.dialect
 
-    @property
-    def connector(self):
-        """Connector name."""
-        raise NotImplementedError
-
-    @property
-    def quote_char(self):
-        """Character used for quoting identifier."""
-        raise NotImplementedError
-
-    @property
-    def engine_url(self):
-        """Engine connection URL."""
-        raise NotImplementedError
-
-    def connected(self):
+    def connected(self) -> bool:
         """Check whether connection is alive by executing simple query.
         """
 
@@ -95,7 +97,7 @@ class BaseClient:
                 table_mapping[table_name][column.name] = str(column.type)
         return dict(table_mapping)
 
-    def row_exists(self, table_name, id_):
+    def row_exists(self, table_name, id_) -> bool:
         """Check whether a row is exist."""
 
         table = self.metadata.tables.get(table_name)
@@ -111,7 +113,7 @@ class BaseClient:
 
     def quoted_id(self, identifier):
         """Get quoted identifier name."""
-        return f"{self.quote_char}{identifier}{self.quote_char}"
+        return f"{self.adapter.quote_char}{identifier}{self.adapter.quote_char}"
 
     def create_table(self, table_name: str, column_mapping: dict, pk_column: str):
         """Create table with its columns."""
@@ -134,11 +136,7 @@ class BaseClient:
                 # refresh metadata as we have newly created table
                 self.metadata.reflect()
             except Exception as exc:  # noqa: B902
-                self.on_create_table_error(exc)
-
-    def on_create_table_error(self, exc):
-        """Callback called when error occured during table creation."""
-        raise NotImplementedError
+                self.adapter.on_create_table_error(exc)
 
     def create_index(self, query):
         """Create index using raw query."""
@@ -147,11 +145,7 @@ class BaseClient:
             try:
                 conn.execute(query)
             except Exception as exc:  # noqa: B902
-                self.on_create_index_error(exc)
-
-    def on_create_index_error(self, exc):
-        """Callback called when error occured during index creation."""
-        raise NotImplementedError
+                self.adapter.on_create_index_error(exc)
 
     def insert_into(self, table_name, column_mapping):
         """Insert a row into a table."""
@@ -160,7 +154,7 @@ class BaseClient:
 
         for column in table.c:
             unmapped = column.name not in column_mapping
-            is_json = column.type.__class__.__name__.lower() == "json"
+            is_json = str(column.type).lower() == "json"
 
             if not all([unmapped, is_json]):
                 continue
@@ -171,11 +165,7 @@ class BaseClient:
             try:
                 conn.execute(query)
             except Exception as exc:  # noqa: B902
-                self.on_insert_into_error(exc)
-
-    def on_insert_into_error(self, exc):
-        """Callback called when error occured during row insertion."""
-        raise NotImplementedError
+                self.adapter.on_insert_into_error(exc)
 
     def get(self, table_name, id_, column_names=None) -> dict:
         """Get a row from a table with matching ID."""
@@ -229,10 +219,10 @@ class BaseClient:
     @property
     def server_version(self):
         """Display server version."""
-        raise NotImplementedError
+        return self.engine.scalar(self.adapter.server_version_query)
 
 
-class PostgresqlClient(BaseClient):
+class PostgresqlAdapter:
     """Class for PostgreSQL adapter.
     """
 
@@ -250,46 +240,31 @@ class PostgresqlClient(BaseClient):
         """Character used for quoting identifier."""
         return '"'
 
-    @property
-    def engine_url(self):
-        host = os.environ.get("GLUU_SQL_DB_HOST", "localhost")
-        port = os.environ.get("GLUU_SQL_DB_PORT", 5432)
-        database = os.environ.get("GLUU_SQL_DB_NAME", "gluu")
-        user = os.environ.get("GLUU_SQL_DB_USER", "gluu")
-        password = get_sql_password()
-        return f"{self.connector}://{user}:{password}@{host}:{port}/{database}"
-
     def on_create_table_error(self, exc):
-        if exc.orig.pgcode in ["42P07"]:
-            # error with following code will be suppressed
-            # - 42P07: relation exists
-            pass
-        else:
+        # errors other than code listed below will be raised
+        # - 42P07: relation exists
+        if exc.orig.pgcode not in ["42P07"]:
             raise exc
 
     def on_create_index_error(self, exc):
-        if exc.orig.pgcode in ["42P07"]:
-            # error with following code will be suppressed
-            # - 42P07: relation exists
-            pass
-        else:
+        # errors other than code listed below will be raised
+        # - 42P07: relation exists
+        if exc.orig.pgcode not in ["42P07"]:
             raise exc
 
     def on_insert_into_error(self, exc):
-        if exc.orig.pgcode in ["23505"]:
-            # error with following code will be suppressed
-            # - 23505: unique violation
-            pass
-        else:
+        # errors other than code listed below will be raised
+        # - 23505: unique violation
+        if exc.orig.pgcode not in ["23505"]:
             raise exc
 
     @property
     def server_version(self):
-        """Display server version."""
-        return self.engine.scalar("SHOW server_version")
+        """Query string to display server version."""
+        return "SHOW server_version"
 
 
-class MysqlClient(BaseClient):
+class MysqlAdapter:
     """Class for MySQL adapter.
     """
 
@@ -307,84 +282,28 @@ class MysqlClient(BaseClient):
         """Character used for quoting identifier."""
         return "`"
 
-    @property
-    def engine_url(self):
-        host = os.environ.get("GLUU_SQL_DB_HOST", "localhost")
-        port = os.environ.get("GLUU_SQL_DB_PORT", 3306)
-        database = os.environ.get("GLUU_SQL_DB_NAME", "gluu")
-        user = os.environ.get("GLUU_SQL_DB_USER", "gluu")
-        password = get_sql_password()
-        return f"{self.connector}://{user}:{password}@{host}:{port}/{database}"
-
     def on_create_table_error(self, exc):
-        if exc.orig.args[0] in [1050]:
-            # error with following code will be suppressed
-            # - 1050: table exists
-            pass
-        else:
+        # errors other than code listed below will be raised
+        # - 1050: table exists
+        if exc.orig.args[0] not in [1050]:
             raise exc
 
     def on_create_index_error(self, exc):
-        if exc.orig.args[0] in [1061]:
-            # error with following code will be suppressed
-            # - 1061: duplicate key name (index)
-            pass
-        else:
+        # errors other than code listed below will be raised
+        # - 1061: duplicate key name (index)
+        if exc.orig.args[0] not in [1061]:
             raise exc
 
     def on_insert_into_error(self, exc):
-        if exc.orig.args[0] in [1062]:
-            # error with following code will be suppressed
-            # - 1062: duplicate entry
-            pass
-        else:
+        # errors other than code listed below will be raised
+        # - 1062: duplicate entry
+        if exc.orig.args[0] not in [1062]:
             raise exc
 
     @property
-    def server_version(self):
-        """Display server version."""
-        return self.engine.scalar("SELECT VERSION()")
-
-
-class SQLClient:
-    """This class interacts with SQL database.
-    """
-
-    #: Methods from adapter
-    _allowed_adapter_methods = (
-        "connected",
-        "create_table",
-        "get_table_mapping",
-        "create_index",
-        "quoted_id",
-        "row_exists",
-        "insert_into",
-        "get",
-        "update",
-        "search",
-        "server_version",
-    )
-
-    def __init__(self):
-        dialect = os.environ.get("GLUU_SQL_DB_DIALECT", "mysql")
-        if dialect in ("pgsql", "postgresql"):
-            self.adapter = PostgresqlClient()
-        elif dialect == "mysql":
-            self.adapter = MysqlClient()
-
-        self._adapter_methods = [
-            method for method in dir(self.adapter)
-            if method in self._allowed_adapter_methods
-        ]
-
-    def __getattr__(self, name):
-        # call adapter method first (if any)
-        if name in self._adapter_methods:
-            return getattr(self.adapter, name)
-
-        raise AttributeError(
-            f"'{self.__class__.__name__}' object has no attribute '{name}'"
-        )
+    def server_version_query(self):
+        """Query string to display server version."""
+        return "SELECT VERSION()"
 
 
 def render_sql_properties(manager, src: str, dest: str) -> None:

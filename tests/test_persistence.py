@@ -605,25 +605,6 @@ def test_sql_client_init(monkeypatch, dialect):
     assert client.adapter.dialect == dialect
 
 
-def test_sql_client_getattr(monkeypatch):
-    from pygluu.containerlib.persistence.sql import SQLClient
-
-    monkeypatch.setenv("GLUU_SQL_DB_DIALECT", "mysql")
-
-    client = SQLClient()
-    assert client.__getattr__("create_table")
-
-
-def test_sql_client_getattr_error(monkeypatch):
-    from pygluu.containerlib.persistence.sql import SQLClient
-
-    monkeypatch.setenv("GLUU_SQL_DB_DIALECT", "mysql")
-
-    client = SQLClient()
-    with pytest.raises(AttributeError):
-        assert client.__getattr__("random_attr")
-
-
 # =======
 # SPANNER
 # =======
