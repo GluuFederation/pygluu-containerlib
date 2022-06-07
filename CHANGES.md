@@ -2,6 +2,12 @@
 
 Here you can see an overview of changes between each release.
 
+## Version 2.12.1
+
+Released on June 7th, 2022.
+
+* Fixed unsupported operand type error when running `wait_for_*` functions (https://github.com/GluuFederation/pygluu-containerlib/issues/33).
+
 ## Version 2.12.0
 
 Released on May 24th, 2022.
