@@ -2,6 +2,12 @@
 
 Here you can see an overview of changes between each release.
 
+## Version 2.13.0
+
+Released on June 8th, 2022.
+
+* Added `doc_id_from_dn` and `id_from_dn` functions to resolve document ID from DN string.
+
 ## Version 2.12.1
 
 Released on June 7th, 2022.
