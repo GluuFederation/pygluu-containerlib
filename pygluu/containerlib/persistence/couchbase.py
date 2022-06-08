@@ -613,3 +613,17 @@ def get_couchbase_keepalive_timeout():
     except ValueError:
         val = default
     return val
+
+
+def id_from_dn(dn: str) -> str:
+    """Resolve document ID from an LDAP DN.
+
+    :param dn: LDAP DN string.
+    """
+    # for example: `"inum=29DA,ou=attributes,o=gluu"`
+    # becomes `["29DA", "attributes"]`
+    dns = [i.split("=")[-1] for i in dn.split(",") if i != "o=gluu"]
+    dns.reverse()
+
+    # the actual key
+    return "_".join(dns) or "_"

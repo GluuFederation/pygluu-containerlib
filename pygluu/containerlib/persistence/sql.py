@@ -15,6 +15,7 @@ from sqlalchemy import create_engine
 from sqlalchemy import MetaData
 from sqlalchemy import func
 from sqlalchemy import select
+from ldap3.utils import dn as dnutils
 
 from pygluu.containerlib.utils import encode_text
 
@@ -344,3 +345,16 @@ def render_sql_properties(manager, src: str, dest: str) -> None:
             "server_time_zone": os.environ.get("GLUU_SQL_DB_TIMEZONE", "UTC"),
         }
         f.write(rendered_txt)
+
+
+def doc_id_from_dn(dn: str) -> str:
+    """Resolve row ID from an LDAP DN.
+
+    :param dn: LDAP DN string.
+    """
+    parsed_dn = dnutils.parse_dn(dn)
+    doc_id = parsed_dn[0][1]
+
+    if doc_id == "gluu":
+        doc_id = "_"
+    return doc_id

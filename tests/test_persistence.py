@@ -677,3 +677,21 @@ connection.emulator-host=localhost:9010
 
     render_spanner_properties(gmanager, str(src), str(dest))
     assert dest.read() == expected
+
+
+@pytest.mark.parametrize("dn, doc_id", [
+    ("o=gluu", "_"),
+    ("ou=oxauth,ou=configuration,o=gluu", "oxauth"),
+])
+def test_doc_id_from_dn(dn, doc_id):
+    from pygluu.containerlib.persistence.sql import doc_id_from_dn
+    assert doc_id_from_dn(dn) == doc_id
+
+
+@pytest.mark.parametrize("dn, id_", [
+    ("o=gluu", "_"),
+    ("ou=oxauth,ou=configuration,o=gluu", "configuration_oxauth"),
+])
+def test_id_from_dn(dn, id_):
+    from pygluu.containerlib.persistence.couchbase import id_from_dn
+    assert id_from_dn(dn) == id_
