@@ -33,11 +33,7 @@ setup(
         "hvac>=0.7.0",
         "kubernetes",
         "ldap3>=2.5",
-
-        # backoff v2 introduces non-compatible code
-        # see https://github.com/GluuFederation/pygluu-containerlib/issues/33
-        "backoff>=1.8.0,<2.0.0",
-
+        "backoff>=2.1.2",
         "docker>=3.7.2",
         "requests-toolbelt>=0.9.1",
         "cryptography>=2.8",
@@ -55,6 +51,8 @@ setup(
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
     ],
     include_package_data=True,
 )
