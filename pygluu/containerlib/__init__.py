@@ -1,4 +1,4 @@
-__version__ = "2.13.0"
+__version__ = "2.14.0-dev"
 
 from pygluu.containerlib.manager import get_manager  # noqa: F401
 from pygluu.containerlib.wait import wait_for  # noqa: F401
