@@ -12,7 +12,6 @@ Consul
 .. autoclass:: pygluu.containerlib.config.consul_config.ConsulConfig
     :members:
     :private-members:
-    :undoc-members:
 
 Kubernetes
 ==========
@@ -20,4 +19,3 @@ Kubernetes
 .. autoclass:: pygluu.containerlib.config.kubernetes_config.KubernetesConfig
     :members:
     :private-members:
-    :undoc-members:

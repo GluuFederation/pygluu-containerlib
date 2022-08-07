@@ -29,7 +29,7 @@ def get_couchbase_user(manager=None) -> str:
     """Get Couchbase username from ``GLUU_COUCHBASE_USER``
     environment variable (default to ``admin``).
 
-    :params manager: A no-op argument, preserved for backward compatibility.
+    :param manager: A no-op argument, preserved for backward compatibility.
     :returns: Couchbase username.
     """
     return os.environ.get("GLUU_COUCHBASE_USER", "admin")
@@ -41,8 +41,8 @@ def get_couchbase_password(manager, plaintext: bool = True) -> str:
 
     To change the location, simply pass ``GLUU_COUCHBASE_PASSWORD_FILE`` environment variable.
 
-    :params manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
-    :params plaintext: Whether to return plaintext or encoded password.
+    :param manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
+    :param plaintext: Whether to return plaintext or encoded password.
     :returns: Plaintext or encoded password.
     """
     password_file = os.environ.get(
@@ -67,7 +67,7 @@ def get_couchbase_superuser(manager=None) -> str:
     """Get Couchbase username from ``GLUU_COUCHBASE_SUPERUSER``
     environment variable (default to empty-string).
 
-    :params manager: A no-op argument, preserved for backward compatibility.
+    :param manager: A no-op argument, preserved for backward compatibility.
     :returns: Couchbase username.
     """
     return os.environ.get("GLUU_COUCHBASE_SUPERUSER", "")
@@ -79,8 +79,8 @@ def get_couchbase_superuser_password(manager, plaintext: bool = True) -> str:
 
     To change the location, simply pass ``GLUU_COUCHBASE_SUPERUSER_PASSWORD_FILE`` environment variable.
 
-    :params manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
-    :params plaintext: Whether to return plaintext or encoded password.
+    :param manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
+    :param plaintext: Whether to return plaintext or encoded password.
     :returns: Plaintext or encoded password.
     """
     password_file = os.environ.get(
@@ -132,8 +132,8 @@ def get_couchbase_mappings(persistence_type: str, ldap_mapping: str) -> dict:
     - ``cache``
     - ``session``
 
-    :params persistence_type: Type of persistence.
-    :params ldap_mapping: Mapping that stored in LDAP persistence.
+    :param persistence_type: Type of persistence.
+    :param ldap_mapping: Mapping that stored in LDAP persistence.
     :returns: A map of Couchbase buckets.
     """
     mappings = prefixed_couchbase_mappings()
@@ -204,9 +204,9 @@ def render_couchbase_properties(manager, src: str, dest: str) -> None:
     """Render file contains properties to connect to Couchbase server,
     i.e. ``/etc/gluu/conf/gluu-couchbase.properties``.
 
-    :params manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
-    :params src: Absolute path to the template.
-    :params dest: Absolute path where generated file is located.
+    :param manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
+    :param src: Absolute path to the template.
+    :param dest: Absolute path where generated file is located.
     """
     persistence_type = os.environ.get("GLUU_PERSISTENCE_TYPE", "couchbase")
     ldap_mapping = os.environ.get("GLUU_PERSISTENCE_LDAP_MAPPING", "default")
@@ -271,8 +271,8 @@ def sync_couchbase_truststore(manager, dest: str = "") -> None:
     """Pull secret contains base64-string contents of Couchbase truststore,
     and save it as a JKS file, i.e. ``/etc/certs/couchbase.pkcs12``.
 
-    :params manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
-    :params dest: Absolute path where generated file is located.
+    :param manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
+    :param dest: Absolute path where generated file is located.
     """
     cert_file = os.environ.get("GLUU_COUCHBASE_CERT_FILE", "/etc/certs/couchbase.crt")
     dest = dest or manager.config.get("couchbaseTrustStoreFn")
@@ -375,7 +375,7 @@ class N1qlClient(BaseClient):
     def healthcheck(self, host):
         """Run healthcheck to a host.
 
-        :params host: Hostname or IP address.
+        :param host: Hostname or IP address.
         :returns: An instance of ``requests.models.Response``.
         """
         return self.session.post(
@@ -388,8 +388,8 @@ class N1qlClient(BaseClient):
     def exec_api(self, path, **kwargs):
         """Execute a request to REST server.
 
-        :params path: Path (or sub-URL) of API server.
-        :params kwargs: Keyword-argument passed to ``requests.api.*`` function.
+        :param path: Path (or sub-URL) of API server.
+        :param kwargs: Keyword-argument passed to ``requests.api.*`` function.
         :returns: An instance of ``requests.models.Response``.
         """
         data = kwargs.get("data", {})
@@ -411,9 +411,9 @@ def build_n1ql_request_body(query: str, *args, **kwargs) -> dict:
 
     See https://docs.couchbase.com/server/current/n1ql/n1ql-rest-api/index.html for reference.
 
-    :params query: N1QL query string.
-    :params *args: Positional parameters passed as ``args`` in request body.
-    :params **kwargs: Named parameters passed as ``$``-prefixed
+    :param query: N1QL query string.
+    :param *args: Positional parameters passed as ``args`` in request body.
+    :param **kwargs: Named parameters passed as ``$``-prefixed
                       parameter in request body.
     """
     body = {"statement": query}
@@ -442,7 +442,7 @@ class RestClient(BaseClient):
     def healthcheck(self, host):
         """Run healthcheck to a host.
 
-        :params host: Hostname or IP address.
+        :param host: Hostname or IP address.
         :returns: An instance of ``requests.models.Response``.
         """
         return self.session.get(
@@ -454,8 +454,8 @@ class RestClient(BaseClient):
     def exec_api(self, path, **kwargs):
         """Execute a request to REST server.
 
-        :params path: Path (or sub-URL) of API server.
-        :params kwargs: Keyword-argument passed to ``requests.api.*`` function.
+        :param path: Path (or sub-URL) of API server.
+        :param kwargs: Keyword-argument passed to ``requests.api.*`` function.
         :returns: An instance of ``requests.models.Response``.
         """
         data = kwargs.get("data", {})
@@ -525,9 +525,9 @@ class CouchbaseClient:
     def add_bucket(self, name: str, memsize: int = 100, type_: str = "couchbase"):
         """Add new bucket.
 
-        :params name: Bucket's name.
-        :params memsize: Desired memory size of the bucket.
-        :params type\\_: Bucket's type.
+        :param name: Bucket's name.
+        :param memsize: Desired memory size of the bucket.
+        :param type\\_: Bucket's type.
         :returns: An instance of ``requests.models.Response``.
         """
         return self.rest_client.exec_api(
@@ -556,7 +556,7 @@ class CouchbaseClient:
     def exec_query(self, query: str, *args, **kwargs):
         """Execute N1QL query.
 
-        :params query: N1QL query string.
+        :param query: N1QL query string.
         :returns: An instance of ``requests.models.Response``.
         """
         data = build_n1ql_request_body(query, *args, **kwargs)

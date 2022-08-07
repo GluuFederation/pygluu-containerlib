@@ -22,9 +22,9 @@ def render_salt(manager, src: str, dest: str) -> None:
 
         encode_salt = random-salt-string
 
-    :params manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
-    :params src: Absolute path to the template.
-    :params dest: Absolute path where generated file is located.
+    :param manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
+    :param src: Absolute path to the template.
+    :param dest: Absolute path where generated file is located.
     """
     encode_salt = manager.secret.get("encoded_salt")
 
@@ -40,8 +40,8 @@ def render_gluu_properties(src: str, dest: str) -> None:
     """Render file contains properties for Gluu Server,
     i.e. ``/etc/gluu/conf/gluu.properties``.
 
-    :params src: Absolute path to the template.
-    :params dest: Absolute path where generated file is located.
+    :param src: Absolute path to the template.
+    :param dest: Absolute path where generated file is located.
     """
     with open(src) as f:
         txt = f.read()

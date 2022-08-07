@@ -48,22 +48,36 @@ Couchbase
 .. autoclass:: BaseClient
     :members:
     :private-members:
-    :undoc-members:
 
 .. autoclass:: RestClient
     :members:
     :private-members:
-    :undoc-members:
 
 .. autoclass:: N1qlClient
     :members:
     :private-members:
-    :undoc-members:
 
 .. autoclass:: CouchbaseClient
     :members:
     :private-members:
-    :undoc-members:
+
+SQL
+===
+
+.. module:: pygluu.containerlib.persistence.sql
+
+.. autoclass:: SQLClient
+    :members:
+    :private-members:
+
+Spanner
+=======
+
+.. module:: pygluu.containerlib.persistence.spanner
+
+.. autoclass:: SpannerClient
+    :members:
+    :private-members:
 
 Hybrid
 ======

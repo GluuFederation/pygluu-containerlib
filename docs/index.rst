@@ -43,5 +43,4 @@ This part of the documentation lists the API reference of public classes and fun
    persistence
    wait
    meta
-   document
    utils

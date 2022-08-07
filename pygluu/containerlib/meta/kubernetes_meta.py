@@ -40,7 +40,7 @@ class KubernetesMeta(BaseMeta):
     def get_containers(self, label: str) -> list:
         """Get list of containers based on label.
 
-        :params label: Label name, i.e. ``APP_NAME=oxauth``.
+        :param label: Label name, i.e. ``APP_NAME=oxauth``.
         :returns: List of container objects.
         """
         namespace = os.environ.get("GLUU_CONTAINER_METADATA_NAMESPACE", "default")
@@ -49,7 +49,7 @@ class KubernetesMeta(BaseMeta):
     def get_container_ip(self, container) -> str:
         """Get container's IP address.
 
-        :params container: Container object.
+        :param container: Container object.
         :returns: IP address associated with the container.
         """
         return container.status.pod_ip
@@ -57,7 +57,7 @@ class KubernetesMeta(BaseMeta):
     def get_container_name(self, container):
         """Get container's name.
 
-        :params container: Container object.
+        :param container: Container object.
         :returns: Container name.
         """
         return container.metadata.name
@@ -65,8 +65,8 @@ class KubernetesMeta(BaseMeta):
     def copy_to_container(self, container, path: str) -> None:
         """Copy path to container.
 
-        :params container: Container object.
-        :params path: Path to file or directory.
+        :param container: Container object.
+        :param path: Path to file or directory.
         """
         # make sure parent directory is created first
         dirname = os.path.dirname(path)
@@ -112,8 +112,8 @@ class KubernetesMeta(BaseMeta):
     def exec_cmd(self, container, cmd: str):
         """Run command inside container.
 
-        :params container: Container object.
-        :params cmd: String of command.
+        :param container: Container object.
+        :param cmd: String of command.
         """
         return stream(
             self.client.connect_get_namespaced_pod_exec,

@@ -131,8 +131,8 @@ class VaultSecret(BaseSecret):
     def get(self, key: str, default: Any = "") -> Any:
         """Get value based on given key.
 
-        :params key: Key name.
-        :params default: Default value if key is not exist.
+        :param key: Key name.
+        :param default: Default value if key is not exist.
         :returns: Value based on given key or default one.
         """
         self._authenticate()
@@ -145,8 +145,8 @@ class VaultSecret(BaseSecret):
     def set(self, key: str, value: Any) -> bool:
         """Set key with given value.
 
-        :params key: Key name.
-        :params value: Value of the key.
+        :param key: Key name.
+        :param value: Value of the key.
         :returns: A ``bool`` to mark whether config is set or not.
         """
         self._authenticate()
@@ -174,8 +174,8 @@ class VaultSecret(BaseSecret):
     def _request_warning(self, scheme: str, verify: bool) -> None:
         """Emit warning about unverified request to unsecure Consul address.
 
-        :params scheme: Scheme of Vault address.
-        :params verify: Mark whether client needs to verify the address.
+        :param scheme: Scheme of Vault address.
+        :param verify: Mark whether client needs to verify the address.
         """
         if scheme == "https" and verify is False:
             import urllib3
@@ -190,11 +190,11 @@ class VaultSecret(BaseSecret):
     def _verify_cert(self, scheme, verify, cacert_file, cert_file, key_file) -> Tuple[Union[None, tuple], Union[bool, str]]:
         """Verify client cert and key.
 
-        :params scheme: Scheme of Consul address.
-        :params verify: Mark whether client needs to verify the address.
-        :params cacert_file: Path to CA cert file.
-        :params cert_file: Path to client's cert file.
-        :params key_file: Path to client's key file.
+        :param scheme: Scheme of Consul address.
+        :param verify: Mark whether client needs to verify the address.
+        :param cacert_file: Path to CA cert file.
+        :param cert_file: Path to client's cert file.
+        :param key_file: Path to client's key file.
         :returns: A pair of cert key files (if exist) and verification.
         """
         cert = None

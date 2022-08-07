@@ -238,8 +238,8 @@ def encode_text(text: AnyStr, key: AnyStr) -> bytes:
         # output: b'OdiOLVWUv7f8OzfNsuB5Fg=='
         encode_text("secret text", "a" * 24)
 
-    :params text: Plain text (``str`` or ``bytes``) need to be encoded.
-    :params key: Key used for encoding salt.
+    :param text: Plain text (``str`` or ``bytes``) need to be encoded.
+    :param key: Key used for encoding salt.
     :returns: Encoded ``bytes`` text.
     """
     with contextlib.suppress(AttributeError):
@@ -270,8 +270,8 @@ def decode_text(text: AnyStr, key: AnyStr) -> bytes:
         # output: b'secret text'
         decode_text(b'OdiOLVWUv7f8OzfNsuB5Fg==', "a" * 24)
 
-    :params text: Encoded text (``str`` or ``bytes``) need to be decoded.
-    :params key: Key used for decoding salt.
+    :param text: Encoded text (``str`` or ``bytes``) need to be decoded.
+    :param key: Key used for decoding salt.
     :returns: Decoded ``bytes`` text.
     """
     encoded_text = base64.b64decode(text)

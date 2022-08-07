@@ -47,8 +47,8 @@ class ConfigManager:
     def get(self, key: str, default: Any = "") -> Any:
         """Get value based on given key.
 
-        :params key: Key name.
-        :params default: Default value if key is not exist.
+        :param key: Key name.
+        :param default: Default value if key is not exist.
         :returns: Value based on given key or default one.
         """
         return self.adapter.get(key, default)
@@ -56,8 +56,8 @@ class ConfigManager:
     def set(self, key: str, value: Any) -> bool:
         """Set key with given value.
 
-        :params key: Key name.
-        :params value: Value of the key.
+        :param key: Key name.
+        :param value: Value of the key.
         :returns: A ``bool`` to mark whether config is set or not.
         """
         return self.adapter.set(key, value)
@@ -91,8 +91,8 @@ class SecretManager:
     def get(self, key: str, default: Any = None) -> Any:
         """Get value based on given key.
 
-        :params key: Key name.
-        :params default: Default value if key is not exist.
+        :param key: Key name.
+        :param default: Default value if key is not exist.
         :returns: Value based on given key or default one.
         """
         return self.adapter.get(key, default)
@@ -100,8 +100,8 @@ class SecretManager:
     def set(self, key: str, value: Any) -> bool:  # noqa: A003
         """Set key with given value.
 
-        :params key: Key name.
-        :params value: Value of the key.
+        :param key: Key name.
+        :param value: Value of the key.
         :returns: A ``bool`` to mark whether config is set or not.
         """
         return self.adapter.set(key, value)
@@ -137,10 +137,10 @@ class SecretManager:
                 binary_mode=True,
             )
 
-        :params key: Key name in secret backend.
-        :params dest: Absolute path to file to write the secret to.
-        :params decode: Decode the content of the secret.
-        :params binary_mode: Write the file as binary.
+        :param key: Key name in secret backend.
+        :param dest: Absolute path to file to write the secret to.
+        :param decode: Decode the content of the secret.
+        :param binary_mode: Write the file as binary.
         """
         mode = "w"
         if binary_mode:
@@ -185,10 +185,10 @@ class SecretManager:
                 binary_mode=True,
             )
 
-        :params key: Key name in secret backend.
-        :params src: Absolute path to file to read the secret from.
-        :params encode: Encode the content of the file.
-        :params binary_mode: Read the file as binary.
+        :param key: Key name in secret backend.
+        :param src: Absolute path to file to read the secret from.
+        :param encode: Encode the content of the file.
+        :param binary_mode: Read the file as binary.
         """
         mode = "r"
         if binary_mode:
