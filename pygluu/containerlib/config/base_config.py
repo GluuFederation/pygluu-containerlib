@@ -22,6 +22,9 @@ class BaseConfig:
         """Get specific config.
 
         Subclass **MUST** implement this method.
+
+        :param key: Key name.
+        :param default: Default value if key is not exist.
         """
         raise NotImplementedError
 
@@ -29,6 +32,9 @@ class BaseConfig:
         """Set specific config.
 
         Subclass **MUST** implement this method.
+
+        :param key: Key name.
+        :param value: Value of the key.
         """
         raise NotImplementedError
 

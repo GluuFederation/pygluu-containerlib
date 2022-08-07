@@ -15,7 +15,7 @@ def render_hybrid_properties(dest: str) -> None:
     """Render file contains properties to connect to hybrid
     persistence, i.e. ``/etc/gluu/conf/gluu-hybrid.properties``.
 
-    :params dest: Absolute path where generated file is located.
+    :param dest: Absolute path where generated file is located.
     """
     persistence_type = os.environ.get("GLUU_PERSISTENCE_TYPE", "couchbase")
     ldap_mapping = os.environ.get("GLUU_PERSISTENCE_LDAP_MAPPING", "default")

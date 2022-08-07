@@ -233,9 +233,9 @@ class SpannerClient:
 def render_spanner_properties(manager, src: str, dest: str) -> None:
     """Render file contains properties to connect to Spanner database.
 
-    :params manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
-    :params src: Absolute path to the template.
-    :params dest: Absolute path where generated file is located.
+    :param manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
+    :param src: Absolute path to the template.
+    :param dest: Absolute path where generated file is located.
     """
 
     with open(src) as f:

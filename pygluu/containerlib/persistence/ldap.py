@@ -22,9 +22,9 @@ def render_ldap_properties(manager, src: str, dest: str) -> None:
     """Render file contains properties to connect to LDAP server,
     i.e. ``/etc/gluu/conf/gluu-ldap.properties``.
 
-    :params manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
-    :params src: Absolute path to the template.
-    :params dest: Absolute path where generated file is located.
+    :param manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
+    :param src: Absolute path to the template.
+    :param dest: Absolute path where generated file is located.
     """
     ldap_url = os.environ.get("GLUU_LDAP_URL", "localhost:1636")
     ldap_hostname = extract_ldap_host(ldap_url)
@@ -54,8 +54,8 @@ def sync_ldap_truststore(manager, dest: str = "") -> None:
     """Pull secret contains base64-string contents of LDAP truststore,
     and save it as a JKS file, i.e. ``/etc/certs/opendj.pkcs12``.
 
-    :params manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
-    :params dest: Absolute path where generated file is located.
+    :param manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
+    :param dest: Absolute path where generated file is located.
     """
     dest = dest or manager.config.get("ldapTrustStoreFn")
     manager.secret.to_file(
@@ -97,7 +97,7 @@ class LdapClient:
         """
         Initialize instance.
 
-        :params manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
+        :param manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
         """
 
         host = host or os.environ.get("GLUU_LDAP_URL", "localhost:1636")

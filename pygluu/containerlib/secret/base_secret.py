@@ -22,6 +22,9 @@ class BaseSecret(object):
         """Get specific secret.
 
         Subclass **MUST** implement this method.
+
+        :param key: Key name.
+        :param default: Default value if key is not exist.
         """
         raise NotImplementedError
 
@@ -29,6 +32,9 @@ class BaseSecret(object):
         """Set specific secret.
 
         Subclass **MUST** implement this method.
+
+        :param key: Key name.
+        :param value: Value of the key.
         """
         raise NotImplementedError
 

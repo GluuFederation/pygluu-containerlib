@@ -115,7 +115,7 @@ class SecretManager:
 
     def to_file(
         self, key: str, dest: str, decode: bool = False, binary_mode: bool = False
-    ) -> AnyStr:
+    ) -> None:
         """Pull secret and write to a file.
 
         Example:
