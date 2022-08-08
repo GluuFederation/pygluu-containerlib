@@ -1,9 +1,4 @@
-"""
-pygluu.containerlib.persistence.hybrid
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This module contains various helpers related to hybrid (LDAP + Couchbase) persistence.
-"""
+"""This module contains various helpers related to hybrid (LDAP + Couchbase) persistence."""
 
 import os
 
@@ -12,8 +7,7 @@ from pygluu.containerlib.persistence.couchbase import prefixed_couchbase_mapping
 
 
 def render_hybrid_properties(dest: str) -> None:
-    """Render file contains properties to connect to hybrid
-    persistence, i.e. ``/etc/gluu/conf/gluu-hybrid.properties``.
+    """Render file contains properties to connect to hybrid persistence.
 
     :param dest: Absolute path where generated file is located.
     """

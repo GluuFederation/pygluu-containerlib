@@ -1,10 +1,4 @@
-"""
-pygluu.containerlib.secret.kubernetes_secret
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This module contains secret adapter class to interact with
-Kubernetes Secret.
-"""
+"""This module contains secret adapter class to interact with Kubernetes Secret."""
 
 import base64
 import os
@@ -52,8 +46,7 @@ class KubernetesSecret(BaseSecret):
 
     @property
     def client(self):
-        """Lazy-loaded client to interact with Kubernetes API.
-        """
+        """Lazy-loaded client to interact with Kubernetes API."""
         if not self._client:
             if as_boolean(self.settings["GLUU_SECRET_KUBERNETES_USE_KUBE_CONFIG"]):
                 kubernetes.config.load_kube_config(self.kubeconfig_file)
@@ -73,8 +66,7 @@ class KubernetesSecret(BaseSecret):
         return result.get(key) or default
 
     def _prepare_secret(self) -> None:
-        """Create a secret name if not exist.
-        """
+        """Create a secret name if not exist."""
         if not self.name_exists:
             try:
                 self.client.read_namespaced_secret(

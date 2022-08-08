@@ -1,9 +1,4 @@
-"""
-pygluu.containerlib.wait
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-This module consists of startup order utilities.
-"""
+"""This module consists of startup order utilities."""
 
 import json
 import logging
@@ -28,8 +23,8 @@ logger = logging.getLogger(__name__)
 
 
 class WaitError(Exception):
-    """Class to mark error while running ``wait_for_*`` functions.
-    """
+    """Class to mark error while running ``wait_for_*`` functions."""
+
     pass
 
 
@@ -90,6 +85,7 @@ def get_wait_interval() -> int:
 
 
 def on_backoff(details: dict):
+    """Emit logs automatically when error is thrown while running a backoff-decorated function."""
     details["error"] = sys.exc_info()[1]
     details["kwargs"]["label"] = details["kwargs"].pop("label", "Service")
     logger.warning(
@@ -99,11 +95,13 @@ def on_backoff(details: dict):
 
 
 def on_success(details: dict):
+    """Emit logs automatically when there's no error while running a backoff-decorated function."""
     details["kwargs"]["label"] = details["kwargs"].pop("label", "Service")
     logger.info("{kwargs[label]} is ready".format(**details))
 
 
 def on_giveup(details: dict):
+    """Emit logs automatically when a backoff-decorated function exceeds allowed retries."""
     details["kwargs"]["label"] = details["kwargs"].pop("label", "Service")
     logger.error(
         "{kwargs[label]} is not ready after " "{elapsed:0.1f} seconds".format(**details)
@@ -168,7 +166,6 @@ def wait_for_ldap(manager, **kwargs):
 
     :param manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
     """
-
     persistence_type = os.environ.get("GLUU_PERSISTENCE_TYPE", "ldap")
     ldap_mapping = os.environ.get("GLUU_PERSISTENCE_LDAP_MAPPING", "default")
 
@@ -205,7 +202,6 @@ def wait_for_ldap_conn(manager, **kwargs):
 
     :param manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
     """
-
     connected = LdapClient(manager).is_connected()
     if not connected:
         raise WaitError("LDAP is unreachable")
@@ -328,8 +324,7 @@ def wait_for_oxd(manager, **kwargs):
 
 @retry_on_exception
 def wait_for_sql_conn(manager, **kwargs):
-    """Wait for readiness/liveness of an SQL database connection.
-    """
+    """Wait for readiness/liveness of an SQL database connection."""
     # checking connection
     init = SQLClient().connected()
     if not init:
@@ -338,8 +333,7 @@ def wait_for_sql_conn(manager, **kwargs):
 
 @retry_on_exception
 def wait_for_sql(manager, **kwargs):
-    """Wait for readiness/liveness of an SQL database.
-    """
+    """Wait for readiness/liveness of an SQL database."""
     init = SQLClient().row_exists("oxAuthClient", manager.config.get("oxauth_client_id"))
 
     if not init:
@@ -348,8 +342,7 @@ def wait_for_sql(manager, **kwargs):
 
 @retry_on_exception
 def wait_for_spanner_conn(manager, **kwargs):
-    """Wait for readiness/liveness of an Spanner database connection.
-    """
+    """Wait for readiness/liveness of an Spanner database connection."""
     # checking connection
     init = SpannerClient().connected()
     if not init:
@@ -358,8 +351,7 @@ def wait_for_spanner_conn(manager, **kwargs):
 
 @retry_on_exception
 def wait_for_spanner(manager, **kwargs):
-    """Wait for readiness/liveness of an Spanner database.
-    """
+    """Wait for readiness/liveness of an Spanner database."""
     init = SpannerClient().row_exists("oxAuthClient", manager.config.get("oxauth_client_id"))
 
     if not init:
@@ -367,7 +359,7 @@ def wait_for_spanner(manager, **kwargs):
 
 
 def wait_for(manager, deps=None):
-    """A high-level function to run one or more ``wait_for_*`` function(s).
+    """Dispatch appropriate ``wait_for_*`` functions (if any).
 
     The following dependencies are supported:
 

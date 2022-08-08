@@ -1,3 +1,4 @@
+# noqa: D104
 import os
 
 from pygluu.containerlib.persistence.couchbase import (  # noqa: F401
@@ -37,8 +38,7 @@ def render_salt(manager, src: str, dest: str) -> None:
 
 
 def render_gluu_properties(src: str, dest: str) -> None:
-    """Render file contains properties for Gluu Server,
-    i.e. ``/etc/gluu/conf/gluu.properties``.
+    """Render file contains properties for Gluu Server.
 
     :param src: Absolute path to the template.
     :param dest: Absolute path where generated file is located.

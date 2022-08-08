@@ -1,10 +1,4 @@
-"""
-pygluu.containerlib.persistence.spanner
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This module contains classes and functions for interacting
-with Google Spanner database.
-"""
+"""This module contains classes and functions for interacting with Google Spanner database."""
 
 import logging
 import os
@@ -19,8 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class SpannerClient:
-    """Class to interact with Spanner database.
-    """
+    """Class to interact with Spanner database."""
 
     def __init__(self):
         """Create instance of Spanner client.
@@ -33,7 +26,6 @@ class SpannerClient:
         - ``GLUU_GOOGLE_SPANNER_INSTANCE_ID``: Spanner instance ID
         - ``GLUU_GOOGLE_SPANNER_DATABASE_ID``: Spanner database ID
         """
-
         project_id = os.environ.get("GOOGLE_PROJECT_ID", "")
         client = spanner.Client(project=project_id)
         instance_id = os.environ.get("GLUU_GOOGLE_SPANNER_INSTANCE_ID", "")
@@ -43,9 +35,7 @@ class SpannerClient:
         self.database = self.instance.database(database_id)
 
     def connected(self):
-        """Check whether connection is alive by executing simple query.
-        """
-
+        """Check whether connection is alive by executing simple query."""
         cntr = 0
         with self.database.snapshot() as snapshot:
             result = snapshot.execute_sql("SELECT 1")
@@ -56,7 +46,6 @@ class SpannerClient:
 
     def create_table(self, table_name: str, column_mapping: dict, pk_column: str):
         """Create table with its columns."""
-
         columns = []
         for column_name, column_type in column_mapping.items():
             column_def = f"{self.quoted_id(column_name)} {column_type}"
@@ -80,14 +69,11 @@ class SpannerClient:
 
     def quoted_id(self, identifier):
         """Get quoted identifier name."""
-
         char = '`'
         return f"{char}{identifier}{char}"
 
     def get_table_mapping(self) -> dict:
-        """Get mapping of column name and type from all tables.
-        """
-
+        """Get mapping of column name and type from all tables."""
         table_mapping = {}
         for table in self.database.list_tables():
             with self.database.snapshot() as snapshot:
@@ -101,7 +87,6 @@ class SpannerClient:
 
     def insert_into(self, table_name, column_mapping):
         """Insert a row into a table."""
-
         # TODO: handle ARRAY<STRING(MAX)> ?
         def insert_rows(transaction):
             transaction.insert(
@@ -115,7 +100,6 @@ class SpannerClient:
 
     def row_exists(self, table_name, id_):
         """Check whether a row is exist."""
-
         exists = False
         with self.database.snapshot() as snapshot:
             result = snapshot.read(
@@ -134,7 +118,6 @@ class SpannerClient:
 
     def create_index(self, query):
         """Create index using raw query."""
-
         try:
             self.database.update_ddl([query])
         except FailedPrecondition as exc:
@@ -146,7 +129,6 @@ class SpannerClient:
 
     def create_subtable(self, table_name: str, sub_table_name: str, column_mapping: dict, pk_column: str, sub_pk_column: str):
         """Create sub table with its columns."""
-
         columns = []
         for column_name, column_type in column_mapping.items():
             column_def = f"{self.quoted_id(column_name)} {column_type}"
@@ -173,7 +155,6 @@ class SpannerClient:
 
     def get(self, table_name, id_, column_names=None) -> dict:
         """Get a row from a table with matching ID."""
-
         if not column_names:
             # TODO: faster lookup on column names
             column_names = self.get_table_mapping().get(table_name).keys()
@@ -196,7 +177,6 @@ class SpannerClient:
 
     def update(self, table_name, id_, column_mapping) -> bool:
         """Update a table row with matching ID."""
-
         # TODO: handle ARRAY<STRING(MAX)> ?
         def update_rows(transaction):
             # need to add primary key
@@ -215,7 +195,6 @@ class SpannerClient:
 
     def search(self, table_name, column_names=None) -> dict:
         """Get a row from a table with matching ID."""
-
         if not column_names:
             # TODO: faster lookup on column names
             column_names = self.get_table_mapping().get(table_name).keys()
@@ -237,7 +216,6 @@ def render_spanner_properties(manager, src: str, dest: str) -> None:
     :param src: Absolute path to the template.
     :param dest: Absolute path where generated file is located.
     """
-
     with open(src) as f:
         txt = f.read()
 

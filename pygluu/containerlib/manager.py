@@ -1,15 +1,9 @@
-"""
-pygluu.containerlib.manager
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This module contains config and secret helpers.
-"""
+"""This module contains config and secret helpers."""
 
 import os
 from collections import namedtuple
 from typing import (
     Any,
-    AnyStr,
     NamedTuple,
 )
 
@@ -35,6 +29,7 @@ class ConfigManager:
     - :class:`~pygluu.containerlib.config.consul_config.ConsulConfig`
     - :class:`~pygluu.containerlib.config.kubernetes_config.KubernetesConfig`
     """
+
     def __init__(self):
         _adapter = os.environ.get("GLUU_CONFIG_ADAPTER", "consul",)
         if _adapter == "consul":
@@ -115,7 +110,7 @@ class SecretManager:
 
     def to_file(
         self, key: str, dest: str, decode: bool = False, binary_mode: bool = False
-    ) -> None:
+    ) -> None:  # noqa: D412
         """Pull secret and write to a file.
 
         Example:
@@ -165,7 +160,7 @@ class SecretManager:
 
     def from_file(
         self, key: str, src: str, encode: bool = False, binary_mode: bool = False
-    ) -> None:
+    ) -> None:  # noqa: D412
         """Put secret from a file.
 
         Example:
@@ -214,7 +209,8 @@ _Manager = namedtuple("_Manager", ["config", "secret"])
 
 
 def get_manager() -> NamedTuple:
-    """Convenient function to get config and secret manager instances.
+    """
+    Create an instance of :class:`~jans.pycloudlib.manager._Manager` object.
 
     :returns: A ``namedtuple`` consists of :class:`~pygluu.containerlib.manager.ConfigManager`
               and :class:`~pygluu.containerlib.manager.SecretManager` instances.

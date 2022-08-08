@@ -1,9 +1,4 @@
-"""
-pygluu.containerlib.utils
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This module contains various helpers.
-"""
+"""This module contains various helpers."""
 
 import base64
 import contextlib
@@ -80,8 +75,6 @@ def get_random_chars(size: int = 12, chars: str = "") -> str:
 
     If character set is not provided, the default set (consists of digits and ASCII letters)
     will be used instead.
-
-    Example:
 
     .. code-block:: python
 
@@ -295,6 +288,21 @@ def decode_text(text: AnyStr, key: AnyStr) -> bytes:
 def generate_ssl_certkey(suffix, email, hostname, org_name, country_code,
                          state, city, base_dir="/etc/certs",
                          extra_dns=None, extra_ips=None, valid_to=365):
+    """Generate SSL public and private keys.
+
+    :param suffix: Suffix as basename (i.e. ``auth-server``)
+    :param email: Email address for subject/issuer.
+    :param hostname: Hostname (common name) for subject/issuer.
+    :param org_name: Organization name for subject/issuer.
+    :param country_code: Country name in ISO format for subject/issuer.
+    :param state: State/province name for subject/issuer.
+    :param city: City/locality name for subject/issuer.
+    :param base_dir: Directory to store generated public and private keys.
+    :param extra_dns: Additional DNS names.
+    :param extra_ips: Additional IP addresses.
+    :param valid_to: Validity length in days.
+    :returns: A pair of path to generated public and private keys.
+    """
     backend = default_backend()
 
     # generate key

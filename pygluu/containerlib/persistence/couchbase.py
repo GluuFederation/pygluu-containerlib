@@ -1,9 +1,4 @@
-"""
-pygluu.containerlib.persistence.couchbase
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This module contains various helpers related to Couchbase persistence.
-"""
+"""This module contains various helpers related to Couchbase persistence."""
 
 import json
 import logging
@@ -26,8 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_couchbase_user(manager=None) -> str:
-    """Get Couchbase username from ``GLUU_COUCHBASE_USER``
-    environment variable (default to ``admin``).
+    """Get Couchbase username from ``GLUU_COUCHBASE_USER`` environment variable.
 
     :param manager: A no-op argument, preserved for backward compatibility.
     :returns: Couchbase username.
@@ -36,8 +30,7 @@ def get_couchbase_user(manager=None) -> str:
 
 
 def get_couchbase_password(manager, plaintext: bool = True) -> str:
-    """Get Couchbase user's password from file (default to
-    ``/etc/gluu/conf/couchbase_password``).
+    """Get Couchbase user's password from file.
 
     To change the location, simply pass ``GLUU_COUCHBASE_PASSWORD_FILE`` environment variable.
 
@@ -64,8 +57,7 @@ get_encoded_couchbase_password = partial(get_couchbase_password, plaintext=False
 
 
 def get_couchbase_superuser(manager=None) -> str:
-    """Get Couchbase username from ``GLUU_COUCHBASE_SUPERUSER``
-    environment variable (default to empty-string).
+    """Get Couchbase username from ``GLUU_COUCHBASE_SUPERUSER`` environment variable.
 
     :param manager: A no-op argument, preserved for backward compatibility.
     :returns: Couchbase username.
@@ -74,8 +66,7 @@ def get_couchbase_superuser(manager=None) -> str:
 
 
 def get_couchbase_superuser_password(manager, plaintext: bool = True) -> str:
-    """Get Couchbase superuser's password from file (default to
-    ``/etc/gluu/conf/couchbase_superuser_password``).
+    """Get Couchbase superuser's password from file.
 
     To change the location, simply pass ``GLUU_COUCHBASE_SUPERUSER_PASSWORD_FILE`` environment variable.
 
@@ -102,6 +93,7 @@ get_encoded_couchbase_superuser_password = partial(get_couchbase_superuser_passw
 
 
 def prefixed_couchbase_mappings():
+    """Get mapping of couchbase buckets with their prefixes."""
     prefix = os.environ.get("GLUU_COUCHBASE_BUCKET_PREFIX", "gluu")
     mappings = {
         "default": {"bucket": prefix, "mapping": ""},
@@ -201,8 +193,7 @@ def get_couchbase_scan_consistency() -> str:
 
 
 def render_couchbase_properties(manager, src: str, dest: str) -> None:
-    """Render file contains properties to connect to Couchbase server,
-    i.e. ``/etc/gluu/conf/gluu-couchbase.properties``.
+    """Render file contains properties to connect to Couchbase server.
 
     :param manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
     :param src: Absolute path to the template.
@@ -262,14 +253,17 @@ def render_couchbase_properties(manager, src: str, dest: str) -> None:
 
 # DEPRECATED
 def sync_couchbase_cert(manager=None) -> str:
+    """Synchronize Couchbase certificate.
+
+    This function is deprecated and will be removed in future versions.
+    """
     cert_file = os.environ.get("GLUU_COUCHBASE_CERT_FILE", "/etc/certs/couchbase.crt")
     with open(cert_file) as f:
         return f.read()
 
 
 def sync_couchbase_truststore(manager, dest: str = "") -> None:
-    """Pull secret contains base64-string contents of Couchbase truststore,
-    and save it as a JKS file, i.e. ``/etc/certs/couchbase.pkcs12``.
+    """Pull secret contains base64-string contents of Couchbase truststore and save it as a JKS file.
 
     :param manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
     :param dest: Absolute path where generated file is located.
@@ -282,8 +276,7 @@ def sync_couchbase_truststore(manager, dest: str = "") -> None:
 
 
 class BaseClient:
-    """A base class for API client.
-    """
+    """A base class for API client."""
 
     def __init__(self, hosts, user, password):
         self._hosts = hosts
@@ -294,8 +287,7 @@ class BaseClient:
 
     @property
     def scheme(self):
-        """Scheme used when connecting to Couchbase server.
-        """
+        """Scheme used when connecting to Couchbase server."""
         if as_boolean(os.environ.get("GLUU_COUCHBASE_TRUSTSTORE_ENABLE", True)):
             return "https"
         return "http"
@@ -361,13 +353,11 @@ class BaseClient:
 
 
 class N1qlClient(BaseClient):
-    """This class interacts with N1QL server (part of Couchbase).
-    """
+    """This class interacts with N1QL server (part of Couchbase)."""
 
     @property
     def port(self):
-        """Port where N1QL server is bind to.
-        """
+        """Port where N1QL server is bind to."""
         if as_boolean(os.environ.get("GLUU_COUCHBASE_TRUSTSTORE_ENABLE", True)):
             return 18093
         return 8093
@@ -428,13 +418,11 @@ def build_n1ql_request_body(query: str, *args, **kwargs) -> dict:
 
 
 class RestClient(BaseClient):
-    """This class interacts with REST server (part of Couchbase).
-    """
+    """This class interacts with REST server (part of Couchbase)."""
 
     @property
     def port(self):
-        """Port where REST server is bind to.
-        """
+        """Port where REST server is bind to."""
         if as_boolean(os.environ.get("GLUU_COUCHBASE_TRUSTSTORE_ENABLE", True)):
             return 18091
         return 8091
@@ -479,8 +467,7 @@ class RestClient(BaseClient):
 
 
 class CouchbaseClient:
-    """This class interacts with Couchbase server.
-    """
+    """This class interacts with Couchbase server."""
 
     def __init__(self, hosts, user, password):
         self.hosts = hosts
@@ -491,8 +478,7 @@ class CouchbaseClient:
 
     @property
     def rest_client(self):
-        """An instance of :class:`~pygluu.containerlib.persistence.couchbase.RestClient`.
-        """
+        """Get instance of :class:`~pygluu.containerlib.persistence.couchbase.RestClient`."""
         if not self._rest_client:
             self._rest_client = RestClient(
                 self.hosts, self.user, self.password,
@@ -504,8 +490,7 @@ class CouchbaseClient:
 
     @property
     def n1ql_client(self):
-        """An instance of :class:`~pygluu.containerlib.persistence.couchbase.N1qlClient`.
-        """
+        """Get instance of :class:`~pygluu.containerlib.persistence.couchbase.N1qlClient`."""
         if not self._n1ql_client:
             self._n1ql_client = N1qlClient(
                 self.hosts, self.user, self.password,
@@ -523,11 +508,11 @@ class CouchbaseClient:
         return self.rest_client.exec_api("pools/default/buckets", method="GET",)
 
     def add_bucket(self, name: str, memsize: int = 100, type_: str = "couchbase"):
-        """Add new bucket.
+        r"""Add new bucket.
 
         :param name: Bucket's name.
         :param memsize: Desired memory size of the bucket.
-        :param type\\_: Bucket's type.
+        :param type\_: Bucket's type.
         :returns: An instance of ``requests.models.Response``.
         """
         return self.rest_client.exec_api(
@@ -563,6 +548,7 @@ class CouchbaseClient:
         return self.n1ql_client.exec_api("query/service", data=data)
 
     def create_user(self, username, password, fullname, roles):
+        """Create user by making request to REST API."""
         data = {
             "name": fullname,
             "password": password,
@@ -575,6 +561,7 @@ class CouchbaseClient:
 
 # backward-compat
 def suppress_verification_warning():
+    """Hide verification warning when using non-secure connection."""
     import urllib3
 
     if as_boolean(os.environ.get("GLUU_COUCHBASE_SUPPRESS_VERIFICATION", True)):

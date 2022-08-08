@@ -1,9 +1,4 @@
-"""
-pygluu.containerlib.persistence.ldap
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This module contains various helpers related to LDAP persistence.
-"""
+"""This module contains various helpers related to LDAP persistence."""
 
 import os
 
@@ -19,8 +14,7 @@ from pygluu.containerlib.utils import decode_text
 
 
 def render_ldap_properties(manager, src: str, dest: str) -> None:
-    """Render file contains properties to connect to LDAP server,
-    i.e. ``/etc/gluu/conf/gluu-ldap.properties``.
+    """Render file contains properties to connect to LDAP server.
 
     :param manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
     :param src: Absolute path to the template.
@@ -51,8 +45,7 @@ def render_ldap_properties(manager, src: str, dest: str) -> None:
 
 
 def sync_ldap_truststore(manager, dest: str = "") -> None:
-    """Pull secret contains base64-string contents of LDAP truststore,
-    and save it as a JKS file, i.e. ``/etc/certs/opendj.pkcs12``.
+    """Pull secret contains base64-string contents of LDAP truststore and save it as a JKS file.
 
     :param manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
     :param dest: Absolute path where generated file is located.
@@ -64,18 +57,15 @@ def sync_ldap_truststore(manager, dest: str = "") -> None:
 
 
 def extract_ldap_host(url: str) -> str:
-    """
-    Extract host part from a URL.
+    """Extract host part from a URL.
 
     :param url: URL of LDAP server, i.e. ``localhost:1636``.
     """
-
     return url.split(":", 1)[0]
 
 
 def resolve_ldap_port() -> int:
     """Determine port being used based on selected SSL or non-SSL connection."""
-
     use_ssl = as_boolean(os.environ.get("GLUU_LDAP_USE_SSL", True))
     if use_ssl:
         port = 1636
@@ -99,7 +89,6 @@ class LdapClient:
 
         :param manager: An instance of :class:`~pygluu.containerlib.manager._Manager`.
         """
-
         host = host or os.environ.get("GLUU_LDAP_URL", "localhost:1636")
         # we only need host part as port will be resolved from env that controls
         # SSL or non-SSL connetion
@@ -116,34 +105,28 @@ class LdapClient:
         self.conn = Connection(self.server, user, password)
 
     def is_connected(self):
-        """
-        Check whether client is connected by getting a simple entry.
-        """
+        """Check whether client is connected by getting a simple entry."""
         return bool(self.get("", attributes=["1.1"]))
 
     def get(self, dn, filter_="(objectClass=*)", attributes=None):
-        """
-        Get a single entry.
+        """Get a single entry.
 
         :param dn: Base DN.
         :param filter_: Search filter.
         :param attributes: List of returning attributes.
         """
-
         entries = self.search(dn, filter_=filter_, attributes=attributes, limit=1, scope=BASE)
         if not entries:
             return None
         return entries[0]
 
     def search(self, dn, filter_="(objectClass=*)", attributes=None, limit=0, scope=""):
-        """
-        Search for entries.
+        """Search for entries.
 
         :param dn: Base DN to start with.
         :param filter_: Search filter.
         :param attributes: List of returning attributes.
         """
-
         attributes = attributes or ["*"]
         scope = scope or SUBTREE
         with self.conn as conn:
@@ -160,12 +143,10 @@ class LdapClient:
             return conn.entries
 
     def delete(self, dn) -> tuple:
-        """
-        Delete entry.
+        """Delete entry.
 
         :param dn: Base DN to modify.
         """
-
         with self.conn as conn:
             conn.delete(dn)
             deleted = bool(conn.result["description"] == "success")
@@ -173,13 +154,11 @@ class LdapClient:
             return deleted, message
 
     def add(self, dn, attributes) -> tuple:
-        """
-        Add new entry.
+        """Add new entry.
 
         :param dn: New DN.
         :param changes: Entry attributes.
         """
-
         with self.conn as conn:
             conn.add(dn, attributes=attributes)
             added = bool(conn.result["description"] == "success")
@@ -187,13 +166,11 @@ class LdapClient:
             return added, message
 
     def modify(self, dn, changes) -> tuple:
-        """
-        Modify entry.
+        """Modify entry.
 
         :param dn: Base DN to modify.
         :param changes: Mapping of attributes.
         """
-
         with self.conn as conn:
             conn.modify(dn, changes)
             modified = bool(conn.result["description"] == "success")

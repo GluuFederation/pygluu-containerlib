@@ -1,9 +1,4 @@
-"""
-pygluu.containerlib.meta.docker_meta
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This module consists of class to interact with Docker API.
-"""
+"""This module consists of class to interact with Docker API."""
 
 import contextlib
 import os
@@ -16,6 +11,8 @@ from pygluu.containerlib.meta.base_meta import BaseMeta
 
 class DockerMeta(BaseMeta):
     """This class interacts with Docker API.
+
+    :param base_url: Base URL to docker daemon API.
     """
 
     def __init__(self, base_url="unix://var/run/docker.sock"):

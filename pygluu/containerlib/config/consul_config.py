@@ -1,9 +1,4 @@
-"""
-pygluu.containerlib.config.consul_config
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This module contains config adapter class to interact with Consul.
-"""
+"""This module contains config adapter class to interact with Consul."""
 
 import logging
 import os
@@ -26,7 +21,6 @@ logger = logging.getLogger(__name__)
 
 class ConsulConfig(BaseConfig):
     """This class interacts with Consul backend.
-
 
     The following environment variables are used to instantiate the client:
 

@@ -1,9 +1,4 @@
-"""
-pygluu.containerlib.secret.vault_secret
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This module contains secret adapter class to interact with Vault.
-"""
+"""This module contains secret adapter class to interact with Vault."""
 
 import logging
 import os
@@ -97,8 +92,10 @@ class VaultSecret(BaseSecret):
 
     @property
     def role_id(self):
-        """Get the Role ID from file where location is determined
-        by ``GLUU_SECRET_VAULT_ROLE_ID_FILE`` environment variable.
+        """Get the Role ID from file.
+
+        The file location is determined by ``GLUU_SECRET_VAULT_ROLE_ID_FILE``
+        environment variable.
         """
         try:
             with open(self.settings["GLUU_SECRET_VAULT_ROLE_ID_FILE"]) as f:
@@ -109,8 +106,10 @@ class VaultSecret(BaseSecret):
 
     @property
     def secret_id(self):
-        """Get the Secret ID from file where location is determined
-        by ``GLUU_SECRET_VAULT_SECRET_ID_FILE`` environment variable.
+        """Get the Secret ID from file.
+
+        The file location is determined by ``GLUU_SECRET_VAULT_SECRET_ID_FILE``
+        environment variable.
         """
         try:
             with open(self.settings["GLUU_SECRET_VAULT_SECRET_ID_FILE"]) as f:
@@ -120,8 +119,7 @@ class VaultSecret(BaseSecret):
         return secret_id
 
     def _authenticate(self) -> None:
-        """Authenticate client.
-        """
+        """Authenticate client."""
         if self.client.is_authenticated():
             return
 

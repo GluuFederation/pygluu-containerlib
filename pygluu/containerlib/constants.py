@@ -1,9 +1,4 @@
-"""
-pygluu.containerlib.constants
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This module contains values that are not supposedly modified.
-"""
+"""This module contains values that are not supposedly modified."""
 
 PERSISTENCE_TYPES = (
     "ldap",

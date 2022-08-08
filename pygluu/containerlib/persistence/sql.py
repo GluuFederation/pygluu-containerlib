@@ -1,9 +1,4 @@
-"""
-pygluu.containerlib.persistence.sql
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This module contains various helpers related to SQL persistence.
-"""
+"""This module contains various helpers related to SQL persistence."""
 
 import contextlib
 import logging
@@ -39,8 +34,7 @@ def get_sql_password() -> str:
 
 
 class SQLClient:
-    """Base class for SQL client adapter.
-    """
+    """Base class for SQL client adapter."""
 
     def __init__(self):
         self._metadata = None
@@ -54,12 +48,14 @@ class SQLClient:
 
     @property
     def engine(self):
+        """Lazy init of engine instance object."""
         if not self._engine:
             self._engine = create_engine(self.engine_url, pool_pre_ping=True, hide_parameters=True)
         return self._engine
 
     @property
     def engine_url(self) -> str:
+        """Engine connection URL."""
         host = os.environ.get("GLUU_SQL_DB_HOST", "localhost")
         port = os.environ.get("GLUU_SQL_DB_PORT", 3306)
         database = os.environ.get("GLUU_SQL_DB_NAME", "gluu")
@@ -70,7 +66,6 @@ class SQLClient:
     @property
     def metadata(self):
         """Lazy init of metadata."""
-
         if not self._metadata:
             self._metadata = MetaData(bind=self.engine)
             self._metadata.reflect()
@@ -82,17 +77,13 @@ class SQLClient:
         return self.adapter.dialect
 
     def connected(self) -> bool:
-        """Check whether connection is alive by executing simple query.
-        """
-
+        """Check whether connection is alive by executing simple query."""
         with self.engine.connect() as conn:
             result = conn.execute("SELECT 1 AS is_alive")
             return result.fetchone()[0] > 0
 
     def get_table_mapping(self) -> dict:
-        """Get mapping of column name and type from all tables.
-        """
-
+        """Get mapping of column name and type from all tables."""
         table_mapping = defaultdict(dict)
         for table_name, table in self.metadata.tables.items():
             for column in table.c:
@@ -103,7 +94,6 @@ class SQLClient:
 
     def row_exists(self, table_name, id_) -> bool:
         """Check whether a row is exist."""
-
         table = self.metadata.tables.get(table_name)
         if table is None:
             return False
@@ -121,7 +111,6 @@ class SQLClient:
 
     def create_table(self, table_name: str, column_mapping: dict, pk_column: str):
         """Create table with its columns."""
-
         columns = []
         for column_name, column_type in column_mapping.items():
             column_def = f"{self.quoted_id(column_name)} {column_type}"
@@ -144,7 +133,6 @@ class SQLClient:
 
     def create_index(self, query):
         """Create index using raw query."""
-
         with self.engine.connect() as conn:
             try:
                 conn.execute(query)
@@ -153,7 +141,6 @@ class SQLClient:
 
     def insert_into(self, table_name, column_mapping):
         """Insert a row into a table."""
-
         table = self.metadata.tables.get(table_name)
 
         for column in table.c:
@@ -173,7 +160,6 @@ class SQLClient:
 
     def get(self, table_name, id_, column_names=None) -> dict:
         """Get a row from a table with matching ID."""
-
         table = self.metadata.tables.get(table_name)
 
         attrs = column_names or []
@@ -195,7 +181,6 @@ class SQLClient:
 
     def update(self, table_name, id_, column_mapping) -> bool:
         """Update a table row with matching ID."""
-
         table = self.metadata.tables.get(table_name)
 
         query = table.update().where(table.c.doc_id == id_).values(column_mapping)
@@ -205,7 +190,6 @@ class SQLClient:
 
     def search(self, table_name, column_names=None) -> dict:
         """Get a row from a table with matching ID."""
-
         table = self.metadata.tables.get(table_name)
 
         attrs = column_names or []
@@ -237,11 +221,11 @@ class SQLClient:
 
 
 class PostgresqlAdapter:
-    """Class for PostgreSQL adapter.
-    """
+    """Class for PostgreSQL adapter."""
 
     @property
     def dialect(self):
+        """Dialect name."""
         return "pgsql"
 
     @property
@@ -255,18 +239,30 @@ class PostgresqlAdapter:
         return '"'
 
     def on_create_table_error(self, exc):
+        """Handle table creation error.
+
+        :param exc: Exception instance.
+        """
         # errors other than code listed below will be raised
         # - 42P07: relation exists
         if exc.orig.pgcode not in ["42P07"]:
             raise exc
 
     def on_create_index_error(self, exc):
+        """Handle index creation error.
+
+        :param exc: Exception instance.
+        """
         # errors other than code listed below will be raised
         # - 42P07: relation exists
         if exc.orig.pgcode not in ["42P07"]:
             raise exc
 
     def on_insert_into_error(self, exc):
+        """Handle row insertion error.
+
+        :param exc: Exception instance.
+        """
         # errors other than code listed below will be raised
         # - 23505: unique violation
         if exc.orig.pgcode not in ["23505"]:
@@ -279,11 +275,11 @@ class PostgresqlAdapter:
 
 
 class MysqlAdapter:
-    """Class for MySQL adapter.
-    """
+    """Class for MySQL adapter."""
 
     @property
     def dialect(self):
+        """Dialect name."""
         return "mysql"
 
     @property
@@ -297,18 +293,30 @@ class MysqlAdapter:
         return "`"
 
     def on_create_table_error(self, exc):
+        """Handle table creation error.
+
+        :param exc: Exception instance.
+        """
         # errors other than code listed below will be raised
         # - 1050: table exists
         if exc.orig.args[0] not in [1050]:
             raise exc
 
     def on_create_index_error(self, exc):
+        """Handle index creation error.
+
+        :param exc: Exception instance.
+        """
         # errors other than code listed below will be raised
         # - 1061: duplicate key name (index)
         if exc.orig.args[0] not in [1061]:
             raise exc
 
     def on_insert_into_error(self, exc):
+        """Handle row insertion error.
+
+        :param exc: Exception instance.
+        """
         # errors other than code listed below will be raised
         # - 1062: duplicate entry
         if exc.orig.args[0] not in [1062]:
@@ -327,7 +335,6 @@ def render_sql_properties(manager, src: str, dest: str) -> None:
     :param src: Absolute path to the template.
     :param dest: Absolute path where generated file is located.
     """
-
     with open(src) as f:
         txt = f.read()
 

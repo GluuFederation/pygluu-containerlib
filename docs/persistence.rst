@@ -16,6 +16,10 @@ LDAP
 
 .. autofunction:: sync_ldap_truststore
 
+.. autoclass:: LdapClient
+    :members:
+    :private-members:
+
 Couchbase
 =========
 
