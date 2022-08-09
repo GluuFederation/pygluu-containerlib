@@ -2,6 +2,15 @@
 
 Here you can see an overview of changes between each release.
 
+## Version 2.14.0
+
+Released on August 9th, 2022.
+
+* Set Python 3.7 onwards as supported versions.
+* Fixed docstrings reported by `pydocstyle`.
+* Upgraded `backoff` version to v2.1.2 at minimum.
+* Replaced hardcoded Couchbase truststore password in favor of random string.
+
 ## Version 2.13.0
 
 Released on June 8th, 2022.
