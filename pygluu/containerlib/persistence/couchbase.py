@@ -13,9 +13,8 @@ from pygluu.containerlib.utils import (
     encode_text,
     cert_to_truststore,
     as_boolean,
+    get_random_chars,
 )
-
-GLUU_COUCHBASE_TRUSTSTORE_PASSWORD = "newsecret"
 
 logger = logging.getLogger(__name__)
 
@@ -239,7 +238,7 @@ def render_couchbase_properties(manager, src: str, dest: str) -> None:
                 )).lower(),
                 "couchbaseTrustStoreFn": manager.config.get("couchbaseTrustStoreFn"),
                 "encoded_couchbaseTrustStorePass": encode_text(
-                    GLUU_COUCHBASE_TRUSTSTORE_PASSWORD,
+                    resolve_couchbase_truststore_pw(manager),
                     manager.secret.get("encoded_salt"),
                 ).decode(),
                 "couchbase_conn_timeout": get_couchbase_conn_timeout(),
@@ -271,7 +270,7 @@ def sync_couchbase_truststore(manager, dest: str = "") -> None:
     cert_file = os.environ.get("GLUU_COUCHBASE_CERT_FILE", "/etc/certs/couchbase.crt")
     dest = dest or manager.config.get("couchbaseTrustStoreFn")
     cert_to_truststore(
-        "gluu_couchbase", cert_file, dest, GLUU_COUCHBASE_TRUSTSTORE_PASSWORD,
+        "gluu_couchbase", cert_file, dest, resolve_couchbase_truststore_pw(manager),
     )
 
 
@@ -614,3 +613,12 @@ def id_from_dn(dn: str) -> str:
 
     # the actual key
     return "_".join(dns) or "_"
+
+
+def resolve_couchbase_truststore_pw(manager):
+    """Resolve password for Couchbase truststore."""
+    pw = manager.secret.get("couchbase_truststore_pw")
+    if not pw:
+        pw = get_random_chars()
+        manager.secret.set("couchbase_truststore_pw", pw)
+    return pw

@@ -78,6 +78,7 @@ def gmanager(gconsul_config, gvault_secret):
             "encoded_ldapTrustStorePass": "YgH8NDxhxmA=",
             "ldap_pkcs12_base64": "YgH8NDxhxmA=",
             "encoded_salt": "7MEDWVFAG3DmakHRyjMqp5EE",
+            "couchbase_truststore_pw": "dN6xQg8kJkdt",
         }
         return ctx.get(key) or default
 
