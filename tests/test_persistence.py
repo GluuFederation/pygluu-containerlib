@@ -560,25 +560,31 @@ def test_get_sql_password(monkeypatch, tmpdir):
     assert get_sql_password() == "secret"
 
 
-def test_render_sql_properties(monkeypatch, tmpdir, gmanager):
+@pytest.mark.parametrize("dialect, port, schema, jdbc_driver", [
+    ("mysql", 3306, "gluu", "mysql"),
+    ("pgsql", 5432, "public", "postgresql"),
+])
+def test_render_sql_properties(monkeypatch, tmpdir, gmanager, dialect, port, schema, jdbc_driver):
     from pygluu.containerlib.persistence.sql import render_sql_properties
 
     passwd = tmpdir.join("sql_password")
     passwd.write("secret")
 
     monkeypatch.setenv("GLUU_SQL_PASSWORD_FILE", str(passwd))
+    monkeypatch.setenv("GLUU_SQL_DB_DIALECT", dialect)
+    monkeypatch.setenv("GLUU_SQL_DB_PORT", str(port))
 
     tmpl = """
-db.schema.name=%(rdbm_db)s
+db.schema.name=%(rdbm_schema)s
 connection.uri=jdbc:%(rdbm_type)s://%(rdbm_host)s:%(rdbm_port)s/%(rdbm_db)s
 connection.driver-property.serverTimezone=%(server_time_zone)s
 auth.userName=%(rdbm_user)s
 auth.userPassword=%(rdbm_password_enc)s
 """.strip()
 
-    expected = """
-db.schema.name=gluu
-connection.uri=jdbc:mysql://localhost:3306/gluu
+    expected = f"""
+db.schema.name={schema}
+connection.uri=jdbc:{jdbc_driver}://localhost:{port}/gluu
 connection.driver-property.serverTimezone=UTC
 auth.userName=gluu
 auth.userPassword=fHL54sT5qHk=

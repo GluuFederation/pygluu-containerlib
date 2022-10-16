@@ -4,12 +4,14 @@ import contextlib
 import logging
 import os
 import re
+import warnings
 from collections import defaultdict
 
 from sqlalchemy import create_engine
 from sqlalchemy import MetaData
 from sqlalchemy import func
 from sqlalchemy import select
+from sqlalchemy.exc import SAWarning
 from ldap3.utils import dn as dnutils
 
 from pygluu.containerlib.utils import encode_text
@@ -66,10 +68,22 @@ class SQLClient:
     @property
     def metadata(self):
         """Lazy init of metadata."""
-        if not self._metadata:
-            self._metadata = MetaData(bind=self.engine)
-            self._metadata.reflect()
-        return self._metadata
+        with warnings.catch_warnings():
+            # postgresql driver will show warnings about unsupported reflection
+            # on expression-based index, i.e. `lower(uid::text)`; but we don't
+            # want to clutter the logs with these warnings, hence we suppress the
+            # warnings
+            warnings.filterwarnings(
+                "ignore",
+                message="Skipped unsupported reflection of expression-based index",
+                category=SAWarning,
+            )
+
+            if not self._metadata:
+                # do reflection on database table
+                self._metadata = MetaData(bind=self.engine)
+                self._metadata.reflect()
+            return self._metadata
 
     @property
     def dialect(self) -> str:
@@ -339,9 +353,21 @@ def render_sql_properties(manager, src: str, dest: str) -> None:
         txt = f.read()
 
     with open(dest, "w") as f:
+        db_dialect = os.environ.get("GLUU_SQL_DB_DIALECT", "mysql")
+        db_name = os.environ.get("GLUU_SQL_DB_NAME", "gluu")
+
+        # In MySQL, physically, a schema is synonymous with a database
+        if db_dialect == "mysql":
+            default_schema = db_name
+        else:  # likely postgres
+            # by default, PostgreSQL creates schema called `public` upon database creation
+            default_schema = "public"
+        db_schema = os.environ.get("GLUU_SQL_DB_SCHEMA", "") or default_schema
+
         rendered_txt = txt % {
-            "rdbm_db": os.environ.get("GLUU_SQL_DB_NAME", "gluu"),
-            "rdbm_type": os.environ.get("GLUU_SQL_DB_DIALECT", "mysql"),
+            "rdbm_db": db_name,
+            "rdbm_schema": db_schema,
+            "rdbm_type": "postgresql" if db_dialect == "pgsql" else "mysql",
             "rdbm_host": os.environ.get("GLUU_SQL_DB_HOST", "localhost"),
             "rdbm_port": os.environ.get("GLUU_SQL_DB_PORT", 3306),
             "rdbm_user": os.environ.get("GLUU_SQL_DB_USER", "gluu"),
