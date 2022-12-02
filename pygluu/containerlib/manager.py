@@ -10,10 +10,12 @@ from typing import (
 from pygluu.containerlib.config import (
     ConsulConfig,
     KubernetesConfig,
+    AwsConfig,
 )
 from pygluu.containerlib.secret import (
     KubernetesSecret,
     VaultSecret,
+    AwsSecret,
 )
 from pygluu.containerlib.utils import (
     decode_text,
@@ -28,6 +30,7 @@ class ConfigManager:
 
     - :class:`~pygluu.containerlib.config.consul_config.ConsulConfig`
     - :class:`~pygluu.containerlib.config.kubernetes_config.KubernetesConfig`
+    - :class:`~pygluu.containerlib.config.aws_config.AwsConfig`
     """
 
     def __init__(self):
@@ -36,6 +39,8 @@ class ConfigManager:
             self.adapter = ConsulConfig()
         elif _adapter == "kubernetes":
             self.adapter = KubernetesConfig()
+        elif _adapter == "aws":
+            self.adapter = AwsConfig()
         else:
             self.adapter = None
 
@@ -72,6 +77,7 @@ class SecretManager:
 
     - :class:`~pygluu.containerlib.secret.vault_secret.VaultSecret`
     - :class:`~pygluu.containerlib.secret.kubernetes_secret.KubernetesSecret`
+    - :class:`~pygluu.containerlib.secret.aws_secret.AwsSecret`
     """
 
     def __init__(self):
@@ -80,6 +86,8 @@ class SecretManager:
             self.adapter = VaultSecret()
         elif _adapter == "kubernetes":
             self.adapter = KubernetesSecret()
+        elif _adapter == "aws":
+            self.adapter = AwsSecret()
         else:
             self.adapter = None
 
@@ -210,7 +218,7 @@ _Manager = namedtuple("_Manager", ["config", "secret"])
 
 def get_manager() -> NamedTuple:
     """
-    Create an instance of :class:`~jans.pycloudlib.manager._Manager` object.
+    Create an instance of :class:`~pygluu.containerlib.manager._Manager` object.
 
     :returns: A ``namedtuple`` consists of :class:`~pygluu.containerlib.manager.ConfigManager`
               and :class:`~pygluu.containerlib.manager.SecretManager` instances.
