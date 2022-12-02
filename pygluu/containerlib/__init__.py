@@ -7,4 +7,4 @@ from pygluu.containerlib.constants import (  # noqa: F401
     PERSISTENCE_LDAP_MAPPINGS,
 )
 
-__version__ = "2.14.0"
+__version__ = "2.15.0"

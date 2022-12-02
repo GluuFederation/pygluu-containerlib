@@ -2,6 +2,12 @@
 
 Here you can see an overview of changes between each release.
 
+## Version 2.15.0
+
+Released on December 2nd, 2022.
+
+* Added support for PostgreSQL persistence.
+
 ## Version 2.14.0
 
 Released on August 9th, 2022.
