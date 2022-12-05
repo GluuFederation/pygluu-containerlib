@@ -2,6 +2,12 @@
 
 Here you can see an overview of changes between each release.
 
+## Version 2.16.0
+
+Released on December 5th, 2022.
+
+* Added support for AWS Secrets Manager configuration.
+
 ## Version 2.15.0
 
 Released on December 2nd, 2022.
