@@ -1,5 +1,7 @@
 """This module contains config adapter class to interact with AWS Secrets Manager."""
 
+from __future__ import annotations
+
 import json
 import logging
 import os
