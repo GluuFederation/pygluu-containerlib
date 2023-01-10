@@ -136,6 +136,9 @@ class AwsConfig(BaseConfig):
         # SecretString is a `dict` data type
         data: dict[str, _t.Any] = _load_value(resp["SecretString"])
         return data
+    
+    def all(self) -> dict:
+        return self.get_all()
 
     def get(self, key: str, default: _t.Any = "") -> _t.Any:
         """Get value based on given key.
