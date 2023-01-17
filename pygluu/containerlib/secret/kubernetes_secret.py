@@ -1,5 +1,7 @@
 """This module contains secret adapter class to interact with Kubernetes Secret."""
 
+from __future__ import annotations
+
 import base64
 import os
 from typing import (
@@ -62,7 +64,7 @@ class KubernetesSecret(BaseSecret):
         :param default: Default value if key is not exist.
         :returns: Value based on given key or default one.
         """
-        result = self.all()
+        result = self.get_all()
         return result.get(key) or default
 
     def _prepare_secret(self) -> None:
@@ -115,6 +117,9 @@ class KubernetesSecret(BaseSecret):
         return bool(ret)
 
     def all(self) -> dict:
+        return self.get_all()
+
+    def get_all(self) -> dict:
         """Get all key-value pairs.
 
         :returns: A ``dict`` of key-value pairs (if any).
@@ -127,3 +132,26 @@ class KubernetesSecret(BaseSecret):
 
         data = result.data or {}
         return {k: base64.b64decode(v).decode() for k, v in data.items()}
+
+    def set_all(self, data: dict[str, Any]) -> bool:
+        """Set all key-value pairs.
+
+        :param data: Key-value pairs.
+        :returns: A boolean to mark whether config is set or not.
+        """
+        self._prepare_secret()
+        body = {
+            "kind": "Secret",
+            "apiVersion": "v1",
+            "metadata": {"name": self.settings["GLUU_SECRET_KUBERNETES_SECRET"]},
+            "data": {
+                key: base64.b64encode(safe_value(value).encode()).decode()
+                for key, value in data.items()
+            },
+        }
+        ret = self.client.patch_namespaced_secret(
+            self.settings["GLUU_SECRET_KUBERNETES_SECRET"],
+            self.settings["GLUU_SECRET_KUBERNETES_NAMESPACE"],
+            body=body,
+        )
+        return bool(ret)

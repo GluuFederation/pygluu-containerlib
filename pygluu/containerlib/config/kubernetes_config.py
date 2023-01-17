@@ -1,5 +1,7 @@
 """This module contains config adapter class to interact with Kubernetes ConfigMap."""
 
+from __future__ import annotations
+
 import os
 from typing import Any
 
@@ -50,7 +52,7 @@ class KubernetesConfig(BaseConfig):
         :param default: Default value if key is not exist.
         :returns: Value based on given key or default one.
         """
-        result = self.all()
+        result = self.get_all()
         return result.get(key, default)
 
     @property
@@ -113,7 +115,10 @@ class KubernetesConfig(BaseConfig):
         )
         return bool(ret)
 
-    def all(self) -> dict:
+    def all(self) -> dict[str, Any]:
+        return self.get_all()
+
+    def get_all(self) -> dict[str, Any]:
         """Get all key-value pairs.
 
         :returns: A ``dict`` of key-value pairs (if any).
@@ -124,3 +129,22 @@ class KubernetesConfig(BaseConfig):
             self.settings["GLUU_CONFIG_KUBERNETES_NAMESPACE"],
         )
         return result.data or {}
+
+    def set_all(self, data: dict[str, Any]) -> bool:
+        """Set all key-value pairs.
+        Returns:
+            A boolean indicating operation is succeed or not.
+        """
+        self._prepare_configmap()
+        body = {
+            "kind": "ConfigMap",
+            "apiVersion": "v1",
+            "metadata": {"name": self.settings["GLUU_CONFIG_KUBERNETES_CONFIGMAP"]},
+            "data": {key: safe_value(value) for key, value in data.items()},
+        }
+        ret = self.client.patch_namespaced_config_map(
+            self.settings["GLUU_CONFIG_KUBERNETES_CONFIGMAP"],
+            self.settings["GLUU_CONFIG_KUBERNETES_NAMESPACE"],
+            body=body,
+        )
+        return bool(ret)
