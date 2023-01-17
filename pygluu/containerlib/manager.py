@@ -1,5 +1,7 @@
 """This module contains config and secret helpers."""
 
+from __future__ import annotations
+
 import os
 from collections import namedtuple
 from typing import (
@@ -62,12 +64,29 @@ class ConfigManager:
         """
         return self.adapter.set(key, value)
 
-    def all(self) -> dict:
+    def all(self) -> dict[str, Any]:
         """Get all key-value pairs.
+
+        This method is deprecated in favor of ``get_all`` method.
 
         :returns: A ``dict`` of key-value pairs (if any).
         """
-        return {k: v for k, v in self.adapter.all().items()}
+        return self.get_all()
+
+    def get_all(self) -> dict[str, Any]:
+        """Get all key-value pairs.
+
+        :returns: A mapping of configuration (if any).
+        """
+        return self.adapter.get_all()
+
+    def set_all(self, data: dict[str, Any]) -> bool:
+        """Set all key-value pairs.
+
+        :param data: Key-value pairs.
+        :returns: A boolean to mark whether configuration is set or not.
+        """
+        return self.adapter.set_all(data)
 
 
 class SecretManager:
@@ -109,12 +128,21 @@ class SecretManager:
         """
         return self.adapter.set(key, value)
 
-    def all(self) -> dict:  # noqa: A003
+    def all(self) -> dict[str, Any]:
+        """Get all key-value pairs.
+
+        This method is deprecated in favor of ``get_all`` method.
+
+        :returns: A ``dict`` of key-value pairs (if any).
+        """
+        return self.get_all()
+
+    def get_all(self) -> dict[str, Any]:
         """Get all key-value pairs.
 
         :returns: A ``dict`` of key-value pairs (if any).
         """
-        return self.adapter.all()
+        return self.adapter.get_all()
 
     def to_file(
         self, key: str, dest: str, decode: bool = False, binary_mode: bool = False

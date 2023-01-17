@@ -1,5 +1,7 @@
 """This module contains config adapter class to interact with Consul."""
 
+from __future__ import annotations
+
 import logging
 import os
 from typing import (
@@ -143,7 +145,10 @@ class ConsulConfig(BaseConfig):
         """
         return self.client.kv.put(self._merge_path(key), safe_value(value))
 
-    def all(self) -> dict:
+    def all(self) -> dict[str, Any]:
+        return self.get_all()
+
+    def get_all(self) -> dict[str, Any]:
         """Get all key-value pairs.
 
         :returns: A ``dict`` of key-value pairs (if any).
@@ -157,6 +162,16 @@ class ConsulConfig(BaseConfig):
             self._unmerge_path(item["Key"]): item["Value"].decode()
             for item in resultset
         }
+
+    def set_all(self, data: dict[str, Any]) -> bool:
+        """Set key-value pairs.
+
+        :param data: Key-value pairs.
+        :returns: A boolean to mark whether config is set or not.
+        """
+        for k, v in data.items():
+            self.set(k, v)
+        return True
 
     def _request_warning(self, scheme: str, verify: bool) -> None:
         """Emit warning about unverified request to unsecure Consul address.

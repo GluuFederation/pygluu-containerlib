@@ -1,5 +1,7 @@
 """This module contains base class for config adapter."""
 
+from __future__ import annotations
+
 from typing import (
     Any,
     NoReturn,
@@ -34,9 +36,22 @@ class BaseConfig:
         """
         raise NotImplementedError
 
-    def all(self) -> NoReturn:
-        """Get all config.
+    def all(self):
+        # this method is deprecated
+        return self.get_all()
+
+    def get_all(self) -> NoReturn:
+        """Get all key-value pairs.
 
         Subclass **MUST** implement this method.
+        """
+        raise NotImplementedError
+
+    def set_all(self, data: dict[str, Any]) -> NoReturn:
+        """Set all key-value pairs.
+
+        Subclass **MUST** implement this method.
+
+        :param data: Key-value pairs.
         """
         raise NotImplementedError

@@ -1,5 +1,7 @@
 """This module contains secret adapter class to interact with Vault."""
 
+from __future__ import annotations
+
 import logging
 import os
 from typing import (
@@ -159,6 +161,9 @@ class VaultSecret(BaseSecret):
         return response.status_code == 204
 
     def all(self) -> dict:
+        return self.get_all()
+
+    def get_all(self) -> dict:
         """Get all key-value pairs.
 
         :returns: A ``dict`` of key-value pairs (if any).
@@ -168,6 +173,16 @@ class VaultSecret(BaseSecret):
         if not result:
             return {}
         return {key: self.get(key) for key in result["data"]["keys"]}
+
+    def set_all(self, data: dict[str, Any]) -> bool:
+        """Set key-value pairs.
+
+        :param data: Key-value pairs.
+        :returns: A boolean to mark whether secret is set or not.
+        """
+        for k, v in data.items():
+            self.set(k, v)
+        return True
 
     def _request_warning(self, scheme: str, verify: bool) -> None:
         """Emit warning about unverified request to unsecure Consul address.

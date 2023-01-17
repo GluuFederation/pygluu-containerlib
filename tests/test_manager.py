@@ -8,10 +8,16 @@ class GAdapter(object):
         return "GET"
 
     def set(self, k, v):
-        return "SET"
+        return True
 
     def all(self):
         return {}
+
+    def get_all(self):
+        return {}
+
+    def set_all(self):
+        return True
 
 
 @pytest.mark.parametrize("adapter, adapter_cls", [
