@@ -2,6 +2,13 @@
 
 Here you can see an overview of changes between each release.
 
+## Version 2.17.0
+
+Released on January 17th, 2023.
+
+* Fixed missing methods of AWS config/secret classes (https://github.com/GluuFederation/pygluu-containerlib/issues/37)
+* Added method to get/set all configs/secrets (https://github.com/GluuFederation/pygluu-containerlib/issues/39)
+
 ## Version 2.16.0
 
 Released on December 5th, 2022.
