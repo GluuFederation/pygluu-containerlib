@@ -144,6 +144,14 @@ class SecretManager:
         """
         return self.adapter.get_all()
 
+    def set_all(self, data: dict[str, Any]) -> bool:
+        """Set all key-value pairs.
+
+        :param data: Key-value pairs.
+        :returns: A boolean to mark whether configuration is set or not.
+        """
+        return self.adapter.set_all(data)
+
     def to_file(
         self, key: str, dest: str, decode: bool = False, binary_mode: bool = False
     ) -> None:  # noqa: D412
