@@ -9,6 +9,14 @@ on:
       - "pygluu/**"
       - "tests/**"
       - "setup.py"
+  pull_request:
+    branches:
+      - master
+      - v2
+    paths:
+      - "pygluu/**"
+      - "tests/**"
+      - "setup.py"
 
 jobs:
   build:
