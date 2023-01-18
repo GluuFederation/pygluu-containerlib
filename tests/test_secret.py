@@ -30,6 +30,18 @@ def test_secret_all(gsecret):
     assert "" in str(exc.value)
 
 
+def test_secret_get_all(gsecret):
+    with pytest.raises(NotImplementedError) as exc:
+        gsecret.get_all()
+    assert "" in str(exc.value)
+
+
+def test_secret_set_all(gsecret):
+    with pytest.raises(NotImplementedError) as exc:
+        gsecret.set_all({})
+    assert "" in str(exc.value)
+
+
 # ============
 # vault secret
 # ============
@@ -141,7 +153,7 @@ def test_vault_secret_set(gvault_secret, monkeypatch):
     assert gvault_secret.set("foo", "bar") is True
 
 
-def test_vault_secret_all(gvault_secret, monkeypatch):
+def test_vault_secret_get_all(gvault_secret, monkeypatch):
     monkeypatch.setattr(
         "hvac.Client.is_authenticated",
         lambda cls: True,
@@ -155,7 +167,7 @@ def test_vault_secret_all(gvault_secret, monkeypatch):
         "hvac.Client.read",
         lambda cls, key: {"data": {"value": "bar"}},
     )
-    assert gvault_secret.all() == {"foo": "bar"}
+    assert gvault_secret.get_all() == {"foo": "bar"}
 
 
 def test_vault_secret_all_empty(gvault_secret, monkeypatch):
@@ -167,12 +179,28 @@ def test_vault_secret_all_empty(gvault_secret, monkeypatch):
         "hvac.Client.list",
         lambda cls, key: None,
     )
-    assert gvault_secret.all() == {}
+    assert gvault_secret.get_all() == {}
 
 
 def test_vault_secret_request_warning(gvault_secret, caplog):
     gvault_secret._request_warning("https", False)
     assert "All requests to Vault will be unverified" in caplog.records[0].message
+
+
+def test_vault_secret_set_all(gvault_secret, monkeypatch):
+    from collections import namedtuple
+
+    Response = namedtuple("Response", ["status_code"])
+
+    monkeypatch.setattr(
+        "hvac.Client.is_authenticated",
+        lambda cls: True,
+    )
+    monkeypatch.setattr(
+        "hvac.adapters.Request.post",
+        lambda cls, url, json: Response(204),
+    )
+    assert gvault_secret.set_all({"foo": "bar"}) is True
 
 
 # =================
@@ -264,3 +292,13 @@ def test_k8s_secret_incluster():
 
     with pytest.raises(kubernetes.config.config_exception.ConfigException):
         secret.client
+
+
+def test_k8s_secret_set_all(gk8s_secret, monkeypatch):
+    gk8s_secret.name_exists = True
+
+    monkeypatch.setattr(
+        "kubernetes.client.CoreV1Api.patch_namespaced_secret",
+        lambda cls, n, ns, body: True
+    )
+    assert gk8s_secret.set_all({"foo": "bar"}) is True

@@ -145,7 +145,7 @@ class ConsulConfig(BaseConfig):
         """
         return self.client.kv.put(self._merge_path(key), safe_value(value))
 
-    def all(self) -> dict[str, Any]:
+    def all(self) -> dict[str, Any]:  # pragma: no cover
         return self.get_all()
 
     def get_all(self) -> dict[str, Any]:

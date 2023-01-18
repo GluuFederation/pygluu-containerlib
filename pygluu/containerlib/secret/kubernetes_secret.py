@@ -116,7 +116,7 @@ class KubernetesSecret(BaseSecret):
         )
         return bool(ret)
 
-    def all(self) -> dict:
+    def all(self) -> dict:  # pragma: no cover
         return self.get_all()
 
     def get_all(self) -> dict:
