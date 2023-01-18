@@ -115,7 +115,7 @@ class KubernetesConfig(BaseConfig):
         )
         return bool(ret)
 
-    def all(self) -> dict[str, Any]:
+    def all(self) -> dict[str, Any]:  # pragma: no cover
         return self.get_all()
 
     def get_all(self) -> dict[str, Any]:
