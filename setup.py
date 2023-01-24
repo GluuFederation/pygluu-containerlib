@@ -38,7 +38,7 @@ setup(
         "requests-toolbelt>=0.9.1",
         "cryptography>=2.8",
         "pymysql>=1.0.2",
-        "sqlalchemy>=1.3,<1.4",
+        "sqlalchemy>=1.3,<1.5",
         "psycopg2>=2.8.6",
         "google-cloud-spanner>=3.3.0",
         "boto3>=1.26.21",
