@@ -16,6 +16,7 @@ import boto3
 from botocore.exceptions import ClientError
 from botocore.exceptions import NoCredentialsError
 from botocore.exceptions import NoRegionError
+from math import ceil
 
 from pygluu.containerlib.secret.base_secret import BaseSecret
 from pygluu.containerlib.utils import safe_value
@@ -49,6 +50,7 @@ def _load_value(value: bytes) -> _t.Any:
 
 class AwsSecret(BaseSecret):
     """This class interacts with AWS Secrets Manager backend.
+    If the secret's size is larger than the size limit (64KB), it will be stored in multiple secrets (maximum 10).
 
     The instance of this class is configured via environment variables.
 
@@ -103,10 +105,15 @@ class AwsSecret(BaseSecret):
 
         # the secrets name will use `_` instead of `-` char to avoid clashing with generated suffix by AWS;
         # see https://docs.aws.amazon.com/cli/latest/reference/secretsmanager/create-secret.html#options
-        self.basepath = f"{prefix}_secrets"
+        self.basepath = f"{prefix}_secrets_"
 
         # flag to determine whether AWS secrets already created
         self.basepath_exists = False
+
+        #multipart variables
+        self.parts = None
+        self.multiheader_start = '[MULTIPART:'
+        self.multiheader_end = ']'
 
     @cached_property
     def client(self) -> boto3.session.Session.client:
@@ -135,11 +142,28 @@ class AwsSecret(BaseSecret):
             A mapping of secrets (if any).
         """
         self._prepare_secret()
-        resp = self.client.get_secret_value(SecretId=self.basepath)
 
-        # SecretBinary is a `dict` data type
-        data: dict[str, _t.Any] = _load_value(resp["SecretBinary"])
-        return data
+        try:
+            if self.parts == 1:
+                resp = self.client.get_secret_value(SecretId=self.basepath + '1')
+                # SecretBinary is a `dict` data type
+                data: dict[str, _t.Any] = _load_value(resp["SecretBinary"])
+                return data
+
+            #multipart secret
+            elif self.parts > 1:
+                binary = []
+                for part in range(1,self.parts + 1):
+                    resp = self.client.get_secret_value(SecretId=self.basepath + str(part))
+                    binary.append(resp["SecretBinary"])
+                #remove multipart header
+                binary[0] = binary[0][len(self.multiheader_start + str(self.parts) + self.multiheader_end):None]
+                data: dict[str, _t.Any] = _load_value(b''.join(binary))
+                return data
+
+        except ClientError as e:
+            raise RuntimeError(f"Unable to fetch secret; reason={e}")
+
 
     def get(self, key: str, default: _t.Any = "") -> _t.Any:
         """Get value based on given key.
@@ -154,6 +178,47 @@ class AwsSecret(BaseSecret):
         data = self.get_all()
         return data.get(key) or default
 
+    def update_secret_multipart(self, data: bytes) -> bool:
+        max_partsize = 65536
+        max_parts = 10
+        data_length = len(data)
+        parts = ceil(data_length / max_partsize)
+
+        try:
+            #fits into one secret
+            if parts == 1:
+                self.parts = 1
+                self._prepare_secret()
+                resp = self.client.update_secret(
+                    SecretId=self.basepath + '1',
+                    SecretBinary=data,
+                )
+                return bool(resp)
+
+            #multipart secret
+            elif parts > 1:
+                #add multipart header
+                data = b''.join([f'{self.multiheader_start}{parts}{self.multiheader_end}'.encode(), data])
+                data_length = len(data)
+                parts = ceil(data_length / max_partsize)
+                if parts <= max_parts:
+                    if (not self.basepath_exists) or (parts != self.parts):
+                        self.parts = parts
+                        self.basepath_exists = False
+                    self._prepare_secret()
+                    for part in range(1, parts + 1):
+                        self.client.update_secret(
+                            SecretId=self.basepath + str(part),
+                            SecretBinary=data[(part-1) * max_partsize: part * max_partsize],
+                        )
+                    return True
+                else:
+                    return False
+
+        except ClientError as e:
+            raise RuntimeError(f"Unable to update secret; reason={e}")
+
+
     def set(self, key: str, value: _t.Any) -> bool:
         """Set key with given value.
 
@@ -162,16 +227,12 @@ class AwsSecret(BaseSecret):
             value: Value of the key.
 
         Returns:
-            A boolean to mark whether config is set or not.
+            A boolean to indicate if secret was set successfully.
         """
         data = self.get_all()
         data[key] = safe_value(value)
 
-        resp = self.client.update_secret(
-            SecretId=self.basepath,
-            SecretBinary=_dump_value(data),
-        )
-        return bool(resp)
+        return self.update_secret_multipart(_dump_value(data))
 
     def set_all(self, data: dict[str, _t.Any]) -> bool:
         """Set all key-value pairs.
@@ -180,32 +241,21 @@ class AwsSecret(BaseSecret):
             data: key-value pairs of secrets.
 
         Returns:
-            A boolean indicating operation is succeed or not.
+            A boolean indicating if the operation was successful.
         """
-        self._prepare_secret()
-
-        resp = self.client.update_secret(
-            SecretId=self.basepath,
-            SecretBinary=_dump_value(
+        return self.update_secret_multipart(_dump_value(
                 # ensure key-value that has bytes is converted to text
-                {k: safe_value(v) for k, v in data.items()}
-            ),
-        )
-        return bool(resp)
+                {k: safe_value(v) for k, v in data.items()}))
 
-    def _prepare_secret(self) -> None:
-        """Prepare (create if missing) secrets with empty value."""
-        # check whether secrets already exists
-        if self.basepath_exists:
-            return
+    def _check_parts(self, part: int = 1) -> None:
+        """Check individual secrets if they exist or create new secrets with empty value if they don't.
 
+        Args:
+            part: part number of a multipart secret, by default 1.
+        """
         try:
             # get the secret
-            self.client.get_secret_value(SecretId=self.basepath)
-
-            # mark the secret as exists so subsequent checks made by
-            # client instance won't need to make requests to AWS service
-            self.basepath_exists = True
+            self.client.get_secret_value(SecretId=self.basepath + str(part))
 
         except ClientError as exc:
             # raise exception if not related to missing secrets;
@@ -215,7 +265,7 @@ class AwsSecret(BaseSecret):
 
             create_secret = partial(
                 self.client.create_secret,
-                Name=self.basepath,
+                Name=self.basepath + str(part),
                 SecretBinary=_dump_value({}),
                 Description="Secrets for Gluu cluster",
             )
@@ -231,10 +281,6 @@ class AwsSecret(BaseSecret):
             # run the actual secrets creation
             create_secret()
 
-            # mark the secrets as exists so subsequent checks made by
-            # client instance won't need to make requests to AWS service
-            self.basepath_exists = True
-
         except NoCredentialsError:
             raise RuntimeError(
                 "AWS credentials are not specified. Please specify the credentials "
@@ -242,6 +288,27 @@ class AwsSecret(BaseSecret):
                 "by AWS_SHARED_CREDENTIALS_FILE environment variable, or specify profile "
                 "name via AWS_PROFILE environment variable."
             )
+
+    def _prepare_secret(self) -> None:
+        """Prepare (create if missing) secrets with empty value."""
+        # check whether secrets already exists
+        if self.basepath_exists:
+            return
+
+        if not self.parts:
+            self._check_parts(1)
+            secret = self.client.get_secret_value(SecretId=self.basepath + '1')
+            if secret['SecretBinary'][:len(self.multiheader_start)] == self.multiheader_start.encode():
+                self.parts = int(secret['SecretBinary'][len(self.multiheader_start):secret['SecretBinary'][:len(self.multiheader_start + self.multiheader_end) + 2].find(self.multiheader_end.encode())])
+            else:
+                self.parts = 1
+
+        for part in range(1, self.parts + 1):
+            self._check_parts(part)
+
+        # mark the secrets as exists so subsequent checks made by
+        # client instance won't need to make requests to AWS service
+        self.basepath_exists = True
 
     @cached_property
     def replica_regions(self) -> list[dict[str, _t.Any]]:
