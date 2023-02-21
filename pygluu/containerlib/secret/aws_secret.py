@@ -25,30 +25,6 @@ from pygluu.containerlib.utils import safe_value
 logger = logging.getLogger(__name__)
 
 
-def _dump_value(value: _t.Any) -> bytes:
-    """Dump compressed bytes from any Python data type.
-
-    Args:
-        value: Any given value.
-
-    Returns:
-        Compressed bytes contains the value.
-    """
-    return lzma.compress(json.dumps(value).encode())
-
-
-def _load_value(value: bytes) -> _t.Any:
-    """Load compressed bytes into any Python data type.
-
-    Args:
-        value: Any given value
-
-    Returns:
-        Any Python data type.
-    """
-    return json.loads(lzma.decompress(value).decode())
-
-
 class AwsSecret(BaseSecret):
     """This class interacts with AWS Secrets Manager backend.
 
@@ -154,7 +130,13 @@ class AwsSecret(BaseSecret):
             self.client.get_secret_value(SecretId=name)["SecretBinary"]
             for name in names
         ])
-        data: dict[str, _t.Any] = _load_value(payload)
+
+        try:
+            # previously data is compressed using lzma
+            data = json.loads(lzma.decompress(payload).decode())
+            logger.warning("Loaded legacy data.")
+        except lzma.LZMAError:
+            data = json.loads(payload.decode())
         return data
 
     def get(self, key: str, default: _t.Any = "") -> _t.Any:
@@ -182,7 +164,7 @@ class AwsSecret(BaseSecret):
         """
         data = self.get_all()
         data[key] = safe_value(value)
-        return self._update_secret_multipart(_dump_value(data))
+        return self._update_secret_multipart(json.dumps(data))
 
     def set_all(self, data: dict[str, _t.Any]) -> bool:
         """Set all key-value pairs.
@@ -200,7 +182,7 @@ class AwsSecret(BaseSecret):
         for k, v in data.items():
             # ensure key-value that has bytes is converted to text
             payload[k] = safe_value(v)
-        return self._update_secret_multipart(_dump_value(payload))
+        return self._update_secret_multipart(json.dumps(payload))
 
     @cached_property
     def replica_regions(self) -> list[dict[str, _t.Any]]:
@@ -225,8 +207,15 @@ class AwsSecret(BaseSecret):
                 ]
         return regions
 
-    def _update_secret_multipart(self, data: bytes) -> bool:  # noqa: D102
-        data_length = sys.getsizeof(data)
+    def _update_secret_multipart(self, payload: _t.AnyStr) -> bool:  # noqa: D102
+        if isinstance(payload, str):
+            # Convert the string payload into a bytes. This step can be omitted if you
+            # pass in bytes instead of a str for the payload argument.
+            payload_bytes = payload.encode()
+        else:
+            payload_bytes = payload
+
+        data_length = sys.getsizeof(payload_bytes)
         parts = ceil(data_length / self.max_payload_size)
 
         if parts > 1:
@@ -239,7 +228,7 @@ class AwsSecret(BaseSecret):
             name = self._prepare_secret_multipart(part)
             start_bytes = part * self.max_payload_size
             stop_bytes = (part + 1) * self.max_payload_size
-            fragment = data[start_bytes:stop_bytes]
+            fragment = payload_bytes[start_bytes:stop_bytes]
             self.client.update_secret(SecretId=name, SecretBinary=fragment)
         return True
 
@@ -277,7 +266,7 @@ class AwsSecret(BaseSecret):
             create_secret = partial(
                 self.client.create_secret,
                 Name=name,
-                SecretBinary=_dump_value({}),
+                SecretBinary=json.dumps({}),
                 Description="Secrets for Gluu cluster",
                 Tags=[{"Key": "multipart_enabled", "Value": "true"}],
             )
