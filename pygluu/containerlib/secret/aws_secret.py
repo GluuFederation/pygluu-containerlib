@@ -6,6 +6,7 @@ import json
 import logging
 import lzma
 import os
+import sys
 import typing as _t
 from contextlib import suppress
 from functools import cached_property
@@ -108,13 +109,11 @@ class AwsSecret(BaseSecret):
         # see https://docs.aws.amazon.com/cli/latest/reference/secretsmanager/create-secret.html#options
         self.basepath = f"{prefix}_secrets_"
 
-        # flag to determine whether AWS secrets already created
-        self.basepath_exists = False
+        # iterable contains multipart secret names
+        self.multiparts: list[str] = []
 
-        # multipart variables
-        self.parts = None
-        self.multiheader_start = '[MULTIPART:'
-        self.multiheader_end = ']'
+        # max size of payload (currently 64K)
+        self.max_payload_size = 65536
 
     @cached_property
     def client(self) -> boto3.session.Session.client:
@@ -142,28 +141,21 @@ class AwsSecret(BaseSecret):
         Returns:
             A mapping of secrets (if any).
         """
-        self._prepare_secret()
+        # get all existing multipart secrets
+        resp = self.client.list_secrets(
+            Filters=[{"Key": "name", "Values": [self.basepath]}],
+        )
+        names = [secret["Name"] for secret in resp["SecretList"]]
 
-        try:
-            if self.parts == 1:
-                resp = self.client.get_secret_value(SecretId=self.basepath + '1')
-                # SecretBinary is a `dict` data type
-                data: dict[str, _t.Any] = _load_value(resp["SecretBinary"])
-                return data
+        if not names:
+            return {}
 
-            # multipart secret
-            elif self.parts > 1:
-                binary = []
-                for part in range(1, self.parts + 1):
-                    resp = self.client.get_secret_value(SecretId=self.basepath + str(part))
-                    binary.append(resp["SecretBinary"])
-                # remove multipart header
-                binary[0] = binary[0][len(self.multiheader_start + str(self.parts) + self.multiheader_end):None]
-                data: dict[str, _t.Any] = _load_value(b''.join(binary))
-                return data
-
-        except ClientError as e:
-            raise RuntimeError(f"Unable to fetch secret; reason={e}")
+        payload = b"".join([
+            self.client.get_secret_value(SecretId=name)["SecretBinary"]
+            for name in names
+        ])
+        data: dict[str, _t.Any] = _load_value(payload)
+        return data
 
     def get(self, key: str, default: _t.Any = "") -> _t.Any:
         """Get value based on given key.
@@ -178,46 +170,6 @@ class AwsSecret(BaseSecret):
         data = self.get_all()
         return data.get(key) or default
 
-    def update_secret_multipart(self, data: bytes) -> bool:  # noqa: D102
-        max_partsize = 65536
-        max_parts = 10
-        data_length = len(data)
-        parts = ceil(data_length / max_partsize)
-
-        try:
-            # fits into one secret
-            if parts == 1:
-                self.parts = 1
-                self._prepare_secret()
-                resp = self.client.update_secret(
-                    SecretId=self.basepath + '1',
-                    SecretBinary=data,
-                )
-                return bool(resp)
-
-            # multipart secret
-            elif parts > 1:
-                # add multipart header
-                data = b''.join([f'{self.multiheader_start}{parts}{self.multiheader_end}'.encode(), data])
-                data_length = len(data)
-                parts = ceil(data_length / max_partsize)
-                if parts <= max_parts:
-                    if (not self.basepath_exists) or (parts != self.parts):
-                        self.parts = parts
-                        self.basepath_exists = False
-                    self._prepare_secret()
-                    for part in range(1, parts + 1):
-                        self.client.update_secret(
-                            SecretId=self.basepath + str(part),
-                            SecretBinary=data[(part - 1) * max_partsize: part * max_partsize],
-                        )
-                    return True
-                else:
-                    return False
-
-        except ClientError as e:
-            raise RuntimeError(f"Unable to update secret; reason={e}")
-
     def set(self, key: str, value: _t.Any) -> bool:
         """Set key with given value.
 
@@ -230,8 +182,7 @@ class AwsSecret(BaseSecret):
         """
         data = self.get_all()
         data[key] = safe_value(value)
-
-        return self.update_secret_multipart(_dump_value(data))
+        return self._update_secret_multipart(_dump_value(data))
 
     def set_all(self, data: dict[str, _t.Any]) -> bool:
         """Set all key-value pairs.
@@ -242,73 +193,10 @@ class AwsSecret(BaseSecret):
         Returns:
             A boolean indicating if the operation was successful.
         """
-        return self.update_secret_multipart(_dump_value(
+        return self._update_secret_multipart(_dump_value(
             # ensure key-value that has bytes is converted to text
             {k: safe_value(v) for k, v in data.items()}
         ))
-
-    def _check_parts(self, part: int = 1) -> None:
-        """Check individual secrets if they exist or create new secrets with empty value if they don't.
-
-        Args:
-            part: part number of a multipart secret, by default 1.
-        """
-        try:
-            # get the secret
-            self.client.get_secret_value(SecretId=self.basepath + str(part))
-
-        except ClientError as exc:
-            # raise exception if not related to missing secrets;
-            # note that missing secrets will be created
-            if exc.response["Error"]["Code"] != "ResourceNotFoundException":
-                raise RuntimeError(f"Unable to access AWS Secrets Manager service; reason={exc}")
-
-            create_secret = partial(
-                self.client.create_secret,
-                Name=self.basepath + str(part),
-                SecretBinary=_dump_value({}),
-                Description="Secrets for Gluu cluster",
-            )
-
-            if self.replica_regions:
-                # if there's replica regions, pass `AddReplicaRegions` argument;
-                # this will create replica in the specified regions, but note that
-                # a replica secret can't be updated independently from its primary secret,
-                # except for its encryption key.
-                create_secret.keywords["AddReplicaRegions"] = self.replica_regions
-                create_secret.keywords["ForceOverwriteReplicaSecret"] = True
-
-            # run the actual secrets creation
-            create_secret()
-
-        except NoCredentialsError:
-            raise RuntimeError(
-                "AWS credentials are not specified. Please specify the credentials "
-                "(contains AWS access key ID and secret access key) in a file pointed "
-                "by AWS_SHARED_CREDENTIALS_FILE environment variable, or specify profile "
-                "name via AWS_PROFILE environment variable."
-            )
-
-    def _prepare_secret(self) -> None:
-        """Prepare (create if missing) secrets with empty value."""
-        # check whether secrets already exists
-        if self.basepath_exists:
-            return
-
-        if not self.parts:
-            self._check_parts(1)
-            secret = self.client.get_secret_value(SecretId=self.basepath + '1')
-            if secret['SecretBinary'][:len(self.multiheader_start)] == self.multiheader_start.encode():
-                self.parts = int(secret['SecretBinary'][len(self.multiheader_start):secret['SecretBinary'][:len(self.multiheader_start + self.multiheader_end) + 2].find(self.multiheader_end.encode())])
-            else:
-                self.parts = 1
-
-        for part in range(1, self.parts + 1):
-            self._check_parts(part)
-
-        # mark the secrets as exists so subsequent checks made by
-        # client instance won't need to make requests to AWS service
-        self.basepath_exists = True
 
     @cached_property
     def replica_regions(self) -> list[dict[str, _t.Any]]:
@@ -332,3 +220,76 @@ class AwsSecret(BaseSecret):
                     if region["Region"] != self.client.meta.region_name
                 ]
         return regions
+
+    def _update_secret_multipart(self, data: bytes) -> bool:  # noqa: D102
+        data_length = sys.getsizeof(data)
+        parts = ceil(data_length / self.max_payload_size)
+
+        for part in range(1, parts + 1):
+            self._prepare_secret_multipart(part)
+
+            start_bytes = (part - 1) * self.max_payload_size
+            stop_bytes = part * self.max_payload_size
+            fragment = data[start_bytes:stop_bytes]
+
+            self.client.update_secret(
+                SecretId=self.basepath + str(part),
+                SecretBinary=fragment,
+            )
+        return True
+
+    def _prepare_secret_multipart(self, part: int) -> None:
+        """Check individual secrets if they exist or create new secrets with empty value if they don't.
+
+        Args:
+            part: part number of a multipart secret.
+        """
+        name = self.basepath + str(part)
+
+        if name in self.multiparts:
+            return
+
+        try:
+            # get the secret
+            self.client.get_secret_value(SecretId=self.basepath + str(part))
+
+            # mark the secret as exists so subsequent checks made by
+            # client instance won't need to make requests to AWS service
+            self.multiparts.append(name)
+
+        except ClientError as exc:
+            # raise exception if not related to missing secrets;
+            # note that missing secrets will be created
+            if exc.response["Error"]["Code"] != "ResourceNotFoundException":
+                raise RuntimeError(f"Unable to access AWS Secrets Manager service; reason={exc}")
+
+            create_secret = partial(
+                self.client.create_secret,
+                Name=self.basepath + str(part),
+                SecretBinary=_dump_value({}),
+                Description="Secrets for Gluu cluster",
+                Tags=[{"Key": "multipart_enabled", "Value": "true"}],
+            )
+
+            if self.replica_regions:
+                # if there's replica regions, pass `AddReplicaRegions` argument;
+                # this will create replica in the specified regions, but note that
+                # a replica secret can't be updated independently from its primary secret,
+                # except for its encryption key.
+                create_secret.keywords["AddReplicaRegions"] = self.replica_regions
+                create_secret.keywords["ForceOverwriteReplicaSecret"] = True
+
+            # run the actual secrets creation
+            create_secret()
+
+            # mark the secret as exists so subsequent checks made by
+            # client instance won't need to make requests to AWS service
+            self.multiparts.append(name)
+
+        except NoCredentialsError:
+            raise RuntimeError(
+                "AWS credentials are not specified. Please specify the credentials "
+                "(contains AWS access key ID and secret access key) in a file pointed "
+                "by AWS_SHARED_CREDENTIALS_FILE environment variable, or specify profile "
+                "name via AWS_PROFILE environment variable."
+            )
