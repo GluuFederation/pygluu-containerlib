@@ -50,6 +50,7 @@ def _load_value(value: bytes) -> _t.Any:
 
 class AwsSecret(BaseSecret):
     """This class interacts with AWS Secrets Manager backend.
+
     If the secret's size is larger than the size limit (64KB), it will be stored in multiple secrets (maximum 10).
 
     The instance of this class is configured via environment variables.
@@ -98,7 +99,7 @@ class AwsSecret(BaseSecret):
     ```
     """
 
-    def __init__(self) -> None:
+    def __init__(self) -> None:  # noqa: D107
         # unique name used as prefix to distinguish with other secrets
         # a typical usage is to use vendor/organization name
         prefix = os.environ.get("GLUU_AWS_SECRETS_PREFIX", "gluu")
@@ -110,7 +111,7 @@ class AwsSecret(BaseSecret):
         # flag to determine whether AWS secrets already created
         self.basepath_exists = False
 
-        #multipart variables
+        # multipart variables
         self.parts = None
         self.multiheader_start = '[MULTIPART:'
         self.multiheader_end = ']'
@@ -132,7 +133,7 @@ class AwsSecret(BaseSecret):
                 "via AWS_DEFAULT_REGION environment variable."
             )
 
-    def all(self) -> dict[str, _t.Any]:
+    def all(self) -> dict[str, _t.Any]:  # noqa: D102
         return self.get_all()
 
     def get_all(self) -> dict[str, _t.Any]:
@@ -150,20 +151,19 @@ class AwsSecret(BaseSecret):
                 data: dict[str, _t.Any] = _load_value(resp["SecretBinary"])
                 return data
 
-            #multipart secret
+            # multipart secret
             elif self.parts > 1:
                 binary = []
-                for part in range(1,self.parts + 1):
+                for part in range(1, self.parts + 1):
                     resp = self.client.get_secret_value(SecretId=self.basepath + str(part))
                     binary.append(resp["SecretBinary"])
-                #remove multipart header
+                # remove multipart header
                 binary[0] = binary[0][len(self.multiheader_start + str(self.parts) + self.multiheader_end):None]
                 data: dict[str, _t.Any] = _load_value(b''.join(binary))
                 return data
 
         except ClientError as e:
             raise RuntimeError(f"Unable to fetch secret; reason={e}")
-
 
     def get(self, key: str, default: _t.Any = "") -> _t.Any:
         """Get value based on given key.
@@ -178,14 +178,14 @@ class AwsSecret(BaseSecret):
         data = self.get_all()
         return data.get(key) or default
 
-    def update_secret_multipart(self, data: bytes) -> bool:
+    def update_secret_multipart(self, data: bytes) -> bool:  # noqa: D102
         max_partsize = 65536
         max_parts = 10
         data_length = len(data)
         parts = ceil(data_length / max_partsize)
 
         try:
-            #fits into one secret
+            # fits into one secret
             if parts == 1:
                 self.parts = 1
                 self._prepare_secret()
@@ -195,9 +195,9 @@ class AwsSecret(BaseSecret):
                 )
                 return bool(resp)
 
-            #multipart secret
+            # multipart secret
             elif parts > 1:
-                #add multipart header
+                # add multipart header
                 data = b''.join([f'{self.multiheader_start}{parts}{self.multiheader_end}'.encode(), data])
                 data_length = len(data)
                 parts = ceil(data_length / max_partsize)
@@ -209,7 +209,7 @@ class AwsSecret(BaseSecret):
                     for part in range(1, parts + 1):
                         self.client.update_secret(
                             SecretId=self.basepath + str(part),
-                            SecretBinary=data[(part-1) * max_partsize: part * max_partsize],
+                            SecretBinary=data[(part - 1) * max_partsize: part * max_partsize],
                         )
                     return True
                 else:
@@ -217,7 +217,6 @@ class AwsSecret(BaseSecret):
 
         except ClientError as e:
             raise RuntimeError(f"Unable to update secret; reason={e}")
-
 
     def set(self, key: str, value: _t.Any) -> bool:
         """Set key with given value.
@@ -244,8 +243,9 @@ class AwsSecret(BaseSecret):
             A boolean indicating if the operation was successful.
         """
         return self.update_secret_multipart(_dump_value(
-                # ensure key-value that has bytes is converted to text
-                {k: safe_value(v) for k, v in data.items()}))
+            # ensure key-value that has bytes is converted to text
+            {k: safe_value(v) for k, v in data.items()}
+        ))
 
     def _check_parts(self, part: int = 1) -> None:
         """Check individual secrets if they exist or create new secrets with empty value if they don't.
