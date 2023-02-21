@@ -107,7 +107,7 @@ class AwsSecret(BaseSecret):
 
         # the secrets name will use `_` instead of `-` char to avoid clashing with generated suffix by AWS;
         # see https://docs.aws.amazon.com/cli/latest/reference/secretsmanager/create-secret.html#options
-        self.basepath = f"{prefix}_secrets_"
+        self.basepath = f"{prefix}_secrets"
 
         # iterable contains multipart secret names
         self.multiparts: list[str] = []
@@ -225,33 +225,40 @@ class AwsSecret(BaseSecret):
         data_length = sys.getsizeof(data)
         parts = ceil(data_length / self.max_payload_size)
 
-        for part in range(1, parts + 1):
-            self._prepare_secret_multipart(part)
-
-            start_bytes = (part - 1) * self.max_payload_size
-            stop_bytes = part * self.max_payload_size
-            fragment = data[start_bytes:stop_bytes]
-
-            self.client.update_secret(
-                SecretId=self.basepath + str(part),
-                SecretBinary=fragment,
+        if parts > 1:
+            logger.warning(
+                f"The secret payload size is {data_length} bytes and is exceeding max. size of {self.max_payload_size} bytes. "
+                f"It will be splitted into {parts} parts."
             )
+
+        for part in range(0, parts):
+            name = self._prepare_secret_multipart(part)
+            start_bytes = part * self.max_payload_size
+            stop_bytes = (part + 1) * self.max_payload_size
+            fragment = data[start_bytes:stop_bytes]
+            self.client.update_secret(SecretId=name, SecretBinary=fragment)
         return True
 
-    def _prepare_secret_multipart(self, part: int) -> None:
+    def _prepare_secret_multipart(self, part: int) -> str:
         """Check individual secrets if they exist or create new secrets with empty value if they don't.
 
         Args:
             part: part number of a multipart secret.
+
+        Returns:
+            Newly created secret's name
         """
-        name = self.basepath + str(part)
+        name = self.basepath
+
+        if part > 0:
+            name = f"{self.basepath}_{part}"
 
         if name in self.multiparts:
-            return
+            return name
 
         try:
             # get the secret
-            self.client.get_secret_value(SecretId=self.basepath + str(part))
+            self.client.get_secret_value(SecretId=name)
 
             # mark the secret as exists so subsequent checks made by
             # client instance won't need to make requests to AWS service
@@ -265,7 +272,7 @@ class AwsSecret(BaseSecret):
 
             create_secret = partial(
                 self.client.create_secret,
-                Name=self.basepath + str(part),
+                Name=name,
                 SecretBinary=_dump_value({}),
                 Description="Secrets for Gluu cluster",
                 Tags=[{"Key": "multipart_enabled", "Value": "true"}],
@@ -282,6 +289,8 @@ class AwsSecret(BaseSecret):
             # run the actual secrets creation
             create_secret()
 
+            logger.info(f"Created secret: {name}")
+
             # mark the secret as exists so subsequent checks made by
             # client instance won't need to make requests to AWS service
             self.multiparts.append(name)
@@ -293,3 +302,4 @@ class AwsSecret(BaseSecret):
                 "by AWS_SHARED_CREDENTIALS_FILE environment variable, or specify profile "
                 "name via AWS_PROFILE environment variable."
             )
+        return name
