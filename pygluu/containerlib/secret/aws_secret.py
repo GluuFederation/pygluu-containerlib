@@ -193,10 +193,14 @@ class AwsSecret(BaseSecret):
         Returns:
             A boolean indicating if the operation was successful.
         """
-        return self._update_secret_multipart(_dump_value(
+        # fetch existing data (if any) as we will merge them;
+        # note that existing value will be overwritten
+        payload = self.get_all()
+
+        for k, v in data.items():
             # ensure key-value that has bytes is converted to text
-            {k: safe_value(v) for k, v in data.items()}
-        ))
+            payload[k] = safe_value(v)
+        return self._update_secret_multipart(_dump_value(payload))
 
     @cached_property
     def replica_regions(self) -> list[dict[str, _t.Any]]:
