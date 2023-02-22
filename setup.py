@@ -42,6 +42,7 @@ setup(
         "psycopg2>=2.8.6",
         "google-cloud-spanner>=3.3.0",
         "boto3>=1.26.21",
+        "google-cloud-secret-manager>=2.2.0",
     ],
     classifiers=[
         "Intended Audience :: Developers",
