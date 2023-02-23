@@ -13,11 +13,13 @@ from pygluu.containerlib.config import (
     ConsulConfig,
     KubernetesConfig,
     AwsConfig,
+    GoogleConfig,
 )
 from pygluu.containerlib.secret import (
     KubernetesSecret,
     VaultSecret,
     AwsSecret,
+    GoogleSecret,
 )
 from pygluu.containerlib.utils import (
     decode_text,
@@ -35,7 +37,7 @@ class ConfigManager:
     - :class:`~pygluu.containerlib.config.aws_config.AwsConfig`
     """
 
-    def __init__(self):
+    def __init__(self):  # noqa: D107
         _adapter = os.environ.get("GLUU_CONFIG_ADAPTER", "consul",)
         if _adapter == "consul":
             self.adapter = ConsulConfig()
@@ -43,6 +45,8 @@ class ConfigManager:
             self.adapter = KubernetesConfig()
         elif _adapter == "aws":
             self.adapter = AwsConfig()
+        elif _adapter == "google":
+            self.adapter = GoogleConfig()
         else:
             self.adapter = None
 
@@ -99,7 +103,7 @@ class SecretManager:
     - :class:`~pygluu.containerlib.secret.aws_secret.AwsSecret`
     """
 
-    def __init__(self):
+    def __init__(self):  # noqa: D107
         _adapter = os.environ.get("GLUU_SECRET_ADAPTER", "vault",)
         if _adapter == "vault":
             self.adapter = VaultSecret()
@@ -107,6 +111,8 @@ class SecretManager:
             self.adapter = KubernetesSecret()
         elif _adapter == "aws":
             self.adapter = AwsSecret()
+        elif _adapter == "google":
+            self.adapter = GoogleSecret()
         else:
             self.adapter = None
 
