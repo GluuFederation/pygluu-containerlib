@@ -2,6 +2,13 @@
 
 Here you can see an overview of changes between each release.
 
+## Version 2.18.0
+
+Released on February 24th, 2023.
+
+* Fixed AWS secret insufficient size (https://github.com/GluuFederation/pygluu-containerlib/issues/45).
+* Added Google secret integration.
+
 ## Version 2.17.0
 
 Released on January 17th, 2023.
