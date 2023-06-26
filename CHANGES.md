@@ -2,6 +2,12 @@
 
 Here you can see an overview of changes between each release.
 
+## Version 2.18.1
+
+Released on June 26th, 2023.
+
+* Fixed parsing MySQL server version (https://github.com/GluuFederation/pygluu-containerlib/issues/51).
+
 ## Version 2.18.0
 
 Released on February 24th, 2023.
