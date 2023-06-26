@@ -701,3 +701,19 @@ def test_doc_id_from_dn(dn, doc_id):
 def test_id_from_dn(dn, id_):
     from pygluu.containerlib.persistence.couchbase import id_from_dn
     assert id_from_dn(dn) == id_
+
+
+@pytest.mark.parametrize("given, expected", [
+    ("8.0.30", (8, 0, 30)),
+    ("5.7.22-standard", (5, 7, 22)),
+    ("8.0.25-221000 MySQL Community Server", (8, 0, 25)),
+])
+def test_get_server_version(given, expected):
+    from pygluu.containerlib.persistence.sql import SQLClient
+
+    def patched_server_version(cls):
+        return given
+
+    SQLClient.server_version = property(patched_server_version)
+    client = SQLClient()
+    assert client.get_server_version() == expected

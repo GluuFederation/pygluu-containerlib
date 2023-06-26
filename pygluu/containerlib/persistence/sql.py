@@ -18,7 +18,7 @@ from pygluu.containerlib.utils import encode_text
 
 logger = logging.getLogger(__name__)
 
-SERVER_VERSION_RE = re.compile(r"\d+(.\d+)+")
+SERVER_VERSION_RE = re.compile(r"[\d.]+")
 
 
 def get_sql_password() -> str:
@@ -233,8 +233,8 @@ class SQLClient:
 
     def get_server_version(self):
         """Get server version as tuple."""
-        # major and minor format
-        version = [0, 0]
+        # major.minor.patch format
+        version = [0, 0, 0]
 
         pattern = SERVER_VERSION_RE.search(self.server_version)
         if pattern:
