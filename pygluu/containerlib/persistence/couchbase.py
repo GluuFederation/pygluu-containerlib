@@ -381,12 +381,14 @@ class N1qlClient(BaseClient):
         :param kwargs: Keyword-argument passed to ``requests.api.*`` function.
         :returns: An instance of ``requests.models.Response``.
         """
-        data = kwargs.get("data", {})
+        data = kwargs.pop("data", {})
+        timeout = kwargs.pop("timeout", 60)
 
         resp = self.session.post(
             f"{self.scheme}://{self.host}:{self.port}/{path}",
             data=data,
             auth=(self.user, self.password),
+            timeout=timeout,
         )
         return resp
 
@@ -445,8 +447,9 @@ class RestClient(BaseClient):
         :param kwargs: Keyword-argument passed to ``requests.api.*`` function.
         :returns: An instance of ``requests.models.Response``.
         """
-        data = kwargs.get("data", {})
-        method = kwargs.get("method")
+        data = kwargs.pop("data", {})
+        method = kwargs.pop("method", "")
+        timeout = kwargs.pop("timeout", 60)
 
         callbacks = {
             "GET": self.session.get,
@@ -461,6 +464,7 @@ class RestClient(BaseClient):
         resp = req(
             f"{self.scheme}://{self.host}:{self.port}/{path}",
             auth=(self.user, self.password),
+            timeout=timeout,
         )
         return resp
 
@@ -543,8 +547,9 @@ class CouchbaseClient:
         :param query: N1QL query string.
         :returns: An instance of ``requests.models.Response``.
         """
+        timeout = kwargs.pop("timeout", 60)
         data = build_n1ql_request_body(query, *args, **kwargs)
-        return self.n1ql_client.exec_api("query/service", data=data)
+        return self.n1ql_client.exec_api("query/service", data=data, timeout=timeout)
 
     def create_user(self, username, password, fullname, roles):
         """Create user by making request to REST API."""
