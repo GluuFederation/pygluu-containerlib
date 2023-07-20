@@ -2,6 +2,12 @@
 
 Here you can see an overview of changes between each release.
 
+## Version 2.18.2
+
+Released on July 20th, 2023.
+
+* Fixed missing timeout option in CouchbaseClient (https://github.com/GluuFederation/pygluu-containerlib/issues/52).
+
 ## Version 2.18.1
 
 Released on June 26th, 2023.
