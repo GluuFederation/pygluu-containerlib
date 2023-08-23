@@ -73,7 +73,7 @@ class GoogleSecret(BaseSecret):
         resp = self.client.list_secrets(
             request={
                 "parent": f"projects/{self.project_id}",
-                "filter": f"name:{self.google_secret_name}",
+                "filter": f"name:secrets/{self.google_secret_name}",
             }
         )
 
